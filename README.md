@@ -3,6 +3,7 @@
 Interfaces with multiple Cannabis APIs.
 Normalizes to the OpenTHC API models.
 
+
 ## Connect
 
 ```php
@@ -10,6 +11,7 @@ $bong = new \OpenTHC\CRE\Bong($cfg);
 $bong->auth($cfg_auth);
 // do stuff
 ```
+
 
 ## Sync & Cache
 
@@ -41,4 +43,3 @@ $obj = $bong->lot()->single($oid);
 $obj_list = $bong->lot()->search($arg);
 $res = $bong->lot()->update($obj);
 ```
-

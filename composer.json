@@ -1,29 +1,24 @@
 {
-	"name": "openthc/pipe",
-	"description": "OpenTHC CRE API Proxy Service",
+	"name": "openthc/bong",
+	"description": "OpenTHC CRE Object Normalization Service",
 	"license": "GPL-3.0-only",
 	"autoload": {
 		"psr-4": {
-			"App\\": "./lib",
+			"OpenTHC\\Bong\\": "./lib",
 			"Custom\\": "./custom"
 		}
 	},
 	"require": {
-		"php": ">=7.2.0",
-		"ext-curl": "*",
-		"ext-date": "*",
-		"ext-json": "*",
-		"ext-PDO": "*",
-		"ext-session": "*",
-		"ext-sockets": "*",
+		"php": ">=7.3.0",
+		"edoceo/lowline_php": "dev-master",
 		"edoceo/radix": "dev-master",
 		"openthc/common": "dev-master",
 		"openthc/cre-adapter": "dev-master"
 	},
 	"require-dev": {
-		"behat/behat": "3.4.3",
-		"phpstan/phpstan": "0.11.16",
-		"phpunit/phpunit": "8.2.3",
-		"sebastian/phpcpd": "4.1.0"
+		"behat/behat": "3.7.0",
+		"phpstan/phpstan": "0.12.49",
+		"phpunit/phpunit": "9.4.1",
+		"sebastian/phpcpd": "6.0.2"
 	}
 }
