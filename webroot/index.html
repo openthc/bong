@@ -1,34 +1,68 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en-us">
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#247420">
-<meta name="viewport" content="initial-scale=1, user-scalable=yes">
+<title>OpenTHC :: BONG</title>
 <style>
-body {
-	background: #343a40;
-	color: #fdfdfd;
-	font-family: sans-serif;
-	margin: 0;
-	padding: .5rem 1.5rem;
+#img-wrap {
+	margin: 10vh auto;
+	padding: 0;
+	text-align:center;
 }
-h1 {
-	font-size: 32px;
+
+body {
+	background: #101010;
+	color: #fdfdfd;
+	font-family:sans-serif;
 	margin: 0;
 	padding: 0;
-}
-h1 img {
-	vertical-align: text-bottom;
 }
 a {
 	color: #0000cc;
 }
+h1 {
+	text-align:center;
+	margin: 0 0 1em 0;
+}
+p {
+	text-align:center;
+	margin: 0 0 1em 0;
+}
+
 </style>
-<title>OpenTHC :: BONG</title>
 </head>
 <body>
-	<h1><img alt="OpenTHC Icon" src="https://cdn.openthc.com/img/icon/icon-w-32.png"> BONG</h1>
-	<p>Basic Object Normalisation Gateway</p>
-	<p>More information at <a href="https://openthc.com/bong">openthc.com/bong</a></p>
+
+<div id="img-wrap">
+	<img src="https://cdn.openthc.com/img/icon.png">
+</div>
+
+<h1>BONG</h1>
+<p>Basic Object Normalisation Gateway</p>
+<p>More information at <a href="https://openthc.com/bong">openthc.com/bong</a></p>
+
+<script>
+var usp = new URLSearchParams(window.location.search);
+if (usp.has('h')) {
+	var h = document.querySelector('h1');
+	if (h) {
+		h.innerText = usp.get('h');
+	}
+}
+if (usp.has('r')) {
+	debugger;
+	var r = usp.get('r');
+
+	var f = document.querySelector('footer');
+	if (f) {
+		f.innerText = 'Sending you to: ' + r;
+	}
+
+	window.location = r;
+}
+</script>
+
 </body>
 </html>
