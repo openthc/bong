@@ -48,7 +48,20 @@
 <form action="/auth/open" method="post">
 <div class="form-group">
 <div class="input-group">
-	<input class="form-control" name="license" value="{{ cre_meta_license }}">
+	<?php
+	if (!empty($_SESSION['license-list'])) {
+		echo '<select class="form-control" name="license">';
+		foreach ($_SESSION['license-list'] as $l) {
+			$val = $l['License']['Number'];
+			$sel = ($val == $_SESSION['cre-auth']['license'] ? ' selected' : null);
+			$txt = h(sprintf('%s #%s', $l['Name'], $val));
+			echo sprintf('<option%s>%s</option>', $css, $val, $txt);
+		}
+		echo '</select>';
+	} else {
+		echo sprintf('<input class="form-control" name="license" value="%s">', h($data['cre_meta_license']));
+	}
+	?>
 	<div class="input-group-append">
 		<button class="btn btn-outline-secondary" name="a" value="set-license"><i class="fas fa-save"></i></button>
 	</div>
