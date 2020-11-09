@@ -1,17 +1,11 @@
 <!DOCTYPE html>
-<html lang="en-us">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#247420">
 <title>OpenTHC :: BONG</title>
 <style>
-#img-wrap {
-	margin: 10vh auto;
-	padding: 0;
-	text-align:center;
-}
-
 body {
 	background: #101010;
 	color: #fdfdfd;
@@ -20,17 +14,19 @@ body {
 	padding: 0;
 }
 a {
-	color: #0000cc;
+	color: #247420;
+	font-weight: bold;
 }
-h1 {
-	text-align:center;
-	margin: 0 0 1em 0;
-}
-p {
-	text-align:center;
+h1, p {
+	text-align: center;
 	margin: 0 0 1em 0;
 }
 
+#img-wrap {
+	margin: 10vh auto;
+	padding: 0;
+	text-align:center;
+}
 </style>
 </head>
 <body>
@@ -42,27 +38,6 @@ p {
 <h1>BONG</h1>
 <p>Basic Object Normalisation Gateway</p>
 <p>More information at <a href="https://openthc.com/bong">openthc.com/bong</a></p>
-
-<script>
-var usp = new URLSearchParams(window.location.search);
-if (usp.has('h')) {
-	var h = document.querySelector('h1');
-	if (h) {
-		h.innerText = usp.get('h');
-	}
-}
-if (usp.has('r')) {
-	debugger;
-	var r = usp.get('r');
-
-	var f = document.querySelector('footer');
-	if (f) {
-		f.innerText = 'Sending you to: ' + r;
-	}
-
-	window.location = r;
-}
-</script>
 
 </body>
 </html>
