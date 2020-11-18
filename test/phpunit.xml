@@ -31,6 +31,9 @@
 
 		<env name="test-host" value="sso.openthc.dev"/>
 		<env name="test-hash" value="CONFIG_AND_PUT_A_SECRET_HERE" />
+		<env name="api-uri" value="SET_YOUR_API_BASE_HERE" />
+		<env name="api-vendor-key" value="SET_YOUR_VENDOR_KEY_HERE" />
+		<env name="api-client-key" value="SET_YOUR_CLIENT_KEY_HERE" />
 
 		<const name="TEST_BROWSERSTACK_USER" value=""/>
 		<const name="TEST_BROWSERSTACK_AUTH" value=""/>
@@ -55,4 +58,5 @@
 		<junit outputFile="../webroot/test-output/output.xml" />
 		<!-- <log type="testdox-html" target="../webroot/test-output/testdox.html" /> -->
 	</logging>
+
 </phpunit>

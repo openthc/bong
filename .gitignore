@@ -1,11 +1,16 @@
+# dirs
+.vscode/
+Custom/
+lib/RBE/
+var/
+vendor/
 
+# files
 composer.lock
 
 etc/app.ini
 etc/cre.ini
 
-Custom/
-custom/
-lib/RBE/
-var/
-vendor/
+test/report.xsl
+
+webroot/test-output/
