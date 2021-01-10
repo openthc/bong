@@ -1,11 +1,9 @@
 <?php
 /**
+ * Authenticate
  */
 
 use Edoceo\Radix\Layout;
-
-// {% extends "layout/html.html" %}
-// $this->layout('html.php');
 
 ?>
 
@@ -21,7 +19,6 @@ use Edoceo\Radix\Layout;
 	<select class="form-control" id="cre" name="cre">
 	<option value="">- Select CRE -</option>
 	<?php
-	// {% for cre_stub, cre_data in cre_list %}
 	foreach ($data['cre_list'] as $cre_stub => $cre_data) {
 		$sel = ($cre_stub == $data['cre_code'] ? ' selected ' : null);
 	?>
@@ -29,7 +26,6 @@ use Edoceo\Radix\Layout;
 			<?= h($cre_data['name'] ?: $cre_stub )?>
 		</option>
 	<?php
-	// {% endfor %}
 	}
 	?>
 	</select>
@@ -128,11 +124,11 @@ $(function() {
 	});
 
 	$('.company-autocomplete').autocomplete({
-		source: 'https://directory.openthc.com/api/autocomplete/company',
+		source: 'https://<?= $data['OpenTHC']['dir']['hostname'] ?>/api/autocomplete/company',
 	});
 
 	$('.license-autocomplete').autocomplete({
-		source: 'https://directory.openthc.com/api/autocomplete/license',
+		source: 'https://<?= $data['OpenTHC']['dir']['hostname'] ?>/api/autocomplete/license',
 	});
 
 });
