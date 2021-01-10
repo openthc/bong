@@ -11,6 +11,7 @@
 	"require": {
 		"php": ">=7.3.0",
 		"edoceo/lowline_php": "dev-master",
+		"edoceo/radix": "dev-master",
 		"openthc/common": "dev-master",
 		"openthc/cre-adapter": "dev-master"
 	},
