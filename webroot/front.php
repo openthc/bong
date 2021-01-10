@@ -7,7 +7,7 @@ require_once(dirname(dirname(__FILE__)) . '/boot.php');
 
 // Slim Application
 $cfg = [];
-// $cfg['debug'] = true;
+$cfg['debug'] = true;
 $app = new \OpenTHC\App($cfg);
 
 // Container Stuff
@@ -23,7 +23,7 @@ $app->group('/auth', 'OpenTHC\Bong\Module\Auth')
 
 
 // Browse Data
-$app->get('/browse', 'OpenTHC\Bong\Controller\Browse')
+$app->map([ 'GET', 'POST' ], '/browse', 'OpenTHC\Bong\Controller\Browse')
 	->add('OpenTHC\Bong\Middleware\Database')
 	->add('OpenTHC\Bong\Middleware\CRE')
 	->add('OpenTHC\Middleware\Session');

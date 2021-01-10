@@ -71,6 +71,16 @@
 </form>
 </div>
 
+<div class="mb-4">
+<h2>Synchronization</h2>
+<form method="post">
+<pre>Some times of the last update from the upstream</pre>
+
+<button class="btn btn-outline-secondary" name="a" value="sync"><i class="fas fa-sync"></i> Sync</button>
+
+</form>
+</div>
+
 
 <div class="mb-4">
 <h2>Core Data</h2>
