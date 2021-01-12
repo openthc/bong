@@ -5,7 +5,7 @@
 
 namespace OpenTHC\Bong\Controller;
 
-class Browse extends \OpenTHC\Bong\Controller\Base
+class Browse extends \OpenTHC\Controller\Base
 {
 	function __invoke($REQ, $RES, $ARG)
 	{
@@ -16,8 +16,13 @@ class Browse extends \OpenTHC\Bong\Controller\Base
 		$data['cre_auth'] = $_SESSION['cre-auth'];
 		$data['cre_meta_license'] = $_SESSION['cre-auth']['license'];
 
+		$dbc = $REQ->getAttribute('dbc');
+		$data['cre_sync'] = $dbc->fetchAll("SELECT * FROM base_option WHERE key LIKE 'sync-%' ORDER BY key");
+
 		switch ($_POST['a']) {
 			case 'sync':
+
+				$out_html = [];
 
 				$data = $_SESSION;
 
@@ -29,31 +34,34 @@ class Browse extends \OpenTHC\Bong\Controller\Base
 
 				$data = json_encode($data, JSON_PRETTY_PRINT);
 				$hash = sha1($data);
+				$out_html[] = "<p>Generated Hash: $hash</p>";
 
 				$file = sprintf('%s/var/%s.json', APP_ROOT, $hash);
-
 				file_put_contents($file, $data);
+				$out_html[] = "<p>Stashed File: $file</p>";
 
 				$cmd = [];
 				$cmd[] = sprintf('%s/bin/sync.php --config=%s', APP_ROOT, $file);
-				$cmd[] = '2>&1';
 				$cmd[] = sprintf('>%s/var/sync-%s.log', APP_ROOT, $hash);
+				$cmd[] = '2>&1';
 				$cmd[] = '&';
 				$cmd[] = 'echo $!';
 				$cmd = implode(' ', $cmd);
-				var_dump($cmd);
+				$out_html[] = "<p>Command:</p><pre>$cmd</pre>";
 
 				$buf = shell_exec($cmd);
-				var_dump($buf);
+				$out_html[] = "<p>Output <small>(pid)</small>:</p><pre>$buf</code>";
 
 				// Alert?
-				_exit_html('<p>Sync Started. Back to <a href="/browse">/browse</a>.</p>');
+				$out_html[] = '<p>Sync Started. Back to <a href="/browse">/browse</a>.</p>';
 
-				exit(0);
+				_exit_html(implode("\n", $out_html));
 
 		}
 
-		return $this->render($RES, 'browse.php', $data);
+		$html = $this->render('browse.php', $data);
+
+		return $RES->write($html);
 
 	}
 }
