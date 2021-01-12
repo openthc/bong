@@ -1,13 +1,13 @@
 <?php
 /**
- * App System Controller
+ * Common Controller for Single Object
  */
 
 namespace OpenTHC\Bong\Controller;
 
 use OpenTHC\Bong\CRE;
 
-class Single extends \OpenTHC\Bong\Controller\Base
+class Single extends \OpenTHC\Controller\Base
 {
 	public $tab = null;
 

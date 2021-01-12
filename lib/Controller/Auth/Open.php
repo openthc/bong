@@ -7,7 +7,7 @@ namespace OpenTHC\Bong\Controller\Auth;
 
 use OpenTHC\Bong\CRE;
 
-class Open extends \OpenTHC\Bong\Controller\Base
+class Open extends \OpenTHC\Controller\Base
 {
 
 	function __invoke($REQ, $RES, $ARG)
@@ -104,8 +104,9 @@ class Open extends \OpenTHC\Bong\Controller\Base
 			$data['cre_code'] = $_GET['cre'];
 		}
 
-		return $this->render($RES, 'auth.php', $data);
-		return $RES;
+		$html = $this->render('auth.php', $data);
+
+		return $RES->write($html);
 
 	}
 
@@ -182,13 +183,13 @@ class Open extends \OpenTHC\Bong\Controller\Base
 
 		if (!preg_match('/^(G|J|L|M|R|T)\w+$/', $lic)) {
 			return $RES->withJSON(array(
-				'meta' => [ 'detail' => 'Invalid License [CAO#209]' ],
+				'meta' => [ 'detail' => 'Invalid License [CAO-209]' ],
 			), 400);
 		}
 
 		if (empty($key)) {
 			return $RES->withJSON(array(
-				'meta' => [ 'detail' => 'Invalid API Key [CAO#216]' ],
+				'meta' => [ 'detail' => 'Invalid API Key [CAO-216]' ],
 			), 400);
 		}
 
@@ -197,12 +198,14 @@ class Open extends \OpenTHC\Bong\Controller\Base
 			'license-key' => $key,
 		);
 
-		$cre = CRE::factory($_SESSION['cre']);
+		$cfg = array_merge($_SESSION['cre'], $_SESSION['cre-auth']);
+
+		$cre = CRE::factory($cfg);
 		$res = $cre->ping();
 
 		if (empty($res)) {
 			return $RES->withJSON(array(
-				'meta' => [ 'detail' => 'Invalid License or API Key [CAO#239]' ],
+				'meta' => [ 'detail' => 'Invalid License or API Key [CAO-239]' ],
 			), 403);
 		}
 
