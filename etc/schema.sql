@@ -1,8 +1,15 @@
 --
 -- BONG Database
 -- Make one per License
+--
 
--- All the tables are really the same
+create table base_option (
+	id varchar(64) PRIMARY KEY,
+	created_at timestamp with time zone NOT NULL DEFAULT now(),
+	updated_at timestamp with time zone NOT NULL DEFAULT now(),
+	key varchar(256),
+	val jsonb
+);
 
 create table company (
 	id varchar(64) PRIMARY KEY,
@@ -77,12 +84,12 @@ create table lot (
 );
 
 create table lot_delta (
-        id varchar(64) PRIMARY KEY,
+	id varchar(64) PRIMARY KEY,
 	lot_id varchar(64) NOT NULL,
-        created_at timestamp with time zone NOT NULL DEFAULT now(),
-        updated_at timestamp with time zone NOT NULL DEFAULT now(),
-        hash varchar(64),
-        data jsonb
+	created_at timestamp with time zone NOT NULL DEFAULT now(),
+	updated_at timestamp with time zone NOT NULL DEFAULT now(),
+	hash varchar(64),
+	data jsonb
 );
 
 
@@ -117,4 +124,12 @@ create table b2c_sale (
 	updated_at timestamp with time zone NOT NULL DEFAULT now(),
 	hash varchar(64),
 	data jsonb
+);
+
+create table log_delta (
+	id bigserial primary key,
+	subject varchar(64) not null,
+	subject_id varchar(64) not null,
+	v0 jsonb,
+	v1 jsonb
 );
