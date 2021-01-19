@@ -126,8 +126,19 @@ create table b2c_sale (
 	data jsonb
 );
 
+create table disposal (
+	id varchar(64) PRIMARY KEY,
+	created_at timestamp with time zone NOT NULL DEFAULT now(),
+	updated_at timestamp with time zone NOT NULL DEFAULT now(),
+	hash varchar(64),
+	data jsonb
+);
+
+
 create table log_delta (
 	id bigserial primary key,
+	created_at timestamp with time zone NOT NULL DEFAULT now(),
+	command varchar(8) not null,
 	subject varchar(64) not null,
 	subject_id varchar(64) not null,
 	v0 jsonb,
