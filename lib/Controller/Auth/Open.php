@@ -85,7 +85,7 @@ class Open extends \OpenTHC\Controller\Base
 
 		$data = [];
 		$data['Page'] = [ 'title' => 'Authenticate' ];
-		$data['cre_list'] = CRE::getEngineList();
+		$data['cre_list'] = \OpenTHC\CRE::getEngineList();
 		$data['cre_code'] = $_SESSION['cre']['code'];
 		$data['cre_company'] = $_SESSION['cre-auth']['company'];
 		$data['cre_license'] = $_SESSION['cre-auth']['license'];
@@ -135,7 +135,7 @@ class Open extends \OpenTHC\Controller\Base
 
 		$ext = trim($_POST['company']);
 
-		$cre = CRE::factory($_SESSION['cre']);
+		$cre = \OpenTHC\CRE::factory($_SESSION['cre']);
 		// $cre->setTestMode();
 		$chk = $cre->login($ext, $uid, $pwd);
 
@@ -200,7 +200,7 @@ class Open extends \OpenTHC\Controller\Base
 
 		$cfg = array_merge($_SESSION['cre'], $_SESSION['cre-auth']);
 
-		$cre = CRE::factory($cfg);
+		$cre = \OpenTHC\CRE::factory($cfg);
 		$res = $cre->ping();
 
 		if (empty($res)) {
@@ -233,7 +233,7 @@ class Open extends \OpenTHC\Controller\Base
 		$cfg = $_SESSION['cre'];
 		$cfg = array_merge($cfg, $_SESSION['cre-auth']);
 
-		$cre = CRE::factory($cfg);
+		$cre = \OpenTHC\CRE::factory($cfg);
 
 		// $res = $cre->ping();
 
@@ -297,7 +297,7 @@ class Open extends \OpenTHC\Controller\Base
 	private function validateCRE()
 	{
 		$cre_want = strtolower(trim($_POST['cre']));
-		$cre_info = CRE::getEngine($cre_want);
+		$cre_info = \OpenTHC\CRE::getEngine($cre_want);
 
 		if (!empty($cre_info)) {
 			return $cre_info;
