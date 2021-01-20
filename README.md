@@ -3,13 +3,23 @@
 Interfaces with multiple Cannabis APIs.
 Normalizes to the OpenTHC API models.
 
+## Install
+
+1. Clone this Repository to somewhere clever `git clone $REPO /opt/openthc/bong`
+1. Update the Apache Config (use `etc/apache2.conf` as a template)
+1. Create the Base Database from `etc/schema.sql` and add the triggers.
+1. Configure in `etc/database`
+
 
 ## Connect
 
+You can use BONG through it's normal web-interface to view objects in real time or view logs.
+
+BONG also provides and API -- so that other services can consume the data from the different back-ends easier.
+
+
 ```php
-$bong = new \OpenTHC\CRE\Bong($cfg);
-$bong->auth($cfg_auth);
-// do stuff
+curl --cookie=cookie-file.dat https://$BONG/auth/open
 ```
 
 
@@ -19,7 +29,7 @@ The APIs that BONG interfaces with don't all agree on how to do pages of data, o
 BONG has tools that work in the background to pull and cache data.
 
 ```php
-$stat = $bong->getStatus();
+curl https://$BONG/status
 ```
 
 
@@ -29,17 +39,5 @@ A low level, GET and POST/PUT interface exists.
 
 
 ```php
-$res = $bong->get('/object?page=0&sort=created_at');
-```
-
-
-## High Level API
-
-It's also possible to interface with the objects at a higher level.
-
-
-```php
-$obj = $bong->lot()->single($oid);
-$obj_list = $bong->lot()->search($arg);
-$res = $bong->lot()->update($obj);
+curl https://$BONG/license
 ```

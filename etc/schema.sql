@@ -119,7 +119,7 @@ create table b2b_sale (
 
 create table b2b_sale_item (
 	id varchar(64) PRIMARY KEY,
-	b2b_sale_id varchar(64) NOT NULL
+	b2b_sale_id varchar(64) NOT NULL,
 	created_at timestamp with time zone NOT NULL DEFAULT now(),
 	updated_at timestamp with time zone NOT NULL DEFAULT now(),
 	hash varchar(64),
@@ -133,6 +133,16 @@ create table b2c_sale (
 	hash varchar(64),
 	data jsonb
 );
+
+create table b2c_sale_item (
+	id varchar(64) PRIMARY KEY,
+	b2c_sale_id varchar(64) NOT NULL,
+	created_at timestamp with time zone NOT NULL DEFAULT now(),
+	updated_at timestamp with time zone NOT NULL DEFAULT now(),
+	hash varchar(64),
+	data jsonb
+);
+
 
 create table disposal (
 	id varchar(64) PRIMARY KEY,
