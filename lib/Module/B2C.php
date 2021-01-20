@@ -18,5 +18,26 @@ class B2C extends \OpenTHC\Module\Base
 
 		});
 
+		// $a->get('', function($REQ, $RES, $ARG) {
+		// 	return _from_cre_file('retail/search.php', $RES, $ARG);
+		// });
+
+		$a->post('', function($REQ, $RES, $ARG) {
+			return _from_cre_file('retail/create.php', $RES, $ARG);
+		});
+
+		$a->get('/{id}', function($REQ, $RES, $ARG) {
+			return $RES->withJSON(array('status' => 'failure', 'detail' => 'Not Implemented'), 500);
+		});
+
+		$a->post('/{id}', function($REQ, $RES, $ARG) {
+			return $RES->withJSON(array('status' => 'failure', 'detail' => 'Not Implemented'), 500);
+		});
+
+		$a->delete('/{id}', function($REQ, $RES, $ARG) {
+			return $RES->withJSON(array('status' => 'failure', 'detail' => 'Not Implemented'), 500);
+		});
+
+
 	}
 }
