@@ -16,7 +16,7 @@ class Log extends \OpenTHC\Controller\Base
 	 */
 	function __invoke($REQ, $RES, $ARG)
 	{
-		if (empty($_SESSION['sql-good'])) {
+		if (empty($_SESSION['sql-conn'])) {
 			_exit_html('<h1>Invalid Session</h1><p>you must <a href="/auth/open">sign in</a> again.</p>', 403);
 		}
 
