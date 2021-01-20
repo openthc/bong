@@ -42,4 +42,20 @@ function _from_cre_file($f0, $RES, $ARG)
 
 	return $out;
 
-};
+}
+
+/**
+ * Set Option
+ */
+function _set_option($dbc, $key, $val)
+{
+	if ($dbc->fetchOne("SELECT id FROM base_option WHERE key = :k", [ ':k' => $key ])) {
+		$dbc->update('base_option', [ 'val' => $val ], [ 'key' => $key ]);
+	} else {
+		$dbc->insert('base_option', [
+			'id' => _ulid(),
+			'key' => $key,
+			'val' => $val,
+		]);
+	}
+}
