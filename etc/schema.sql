@@ -67,6 +67,14 @@ create table variety (
 	data jsonb
 );
 
+create table batch (
+	id varchar(64) PRIMARY KEY,
+	created_at timestamp with time zone NOT NULL DEFAULT now(),
+	updated_at timestamp with time zone NOT NULL DEFAULT now(),
+	hash varchar(64),
+	data jsonb
+);
+
 create table crop (
 	id varchar(64) PRIMARY KEY,
 	created_at timestamp with time zone NOT NULL DEFAULT now(),

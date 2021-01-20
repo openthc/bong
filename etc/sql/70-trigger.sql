@@ -32,6 +32,12 @@ CREATE TRIGGER log_delta_b2c_sale
 	FOR EACH ROW
 	EXECUTE PROCEDURE log_delta_trigger();
 
+CREATE TRIGGER log_delta_batch
+	AFTER INSERT OR UPDATE OR DELETE
+	ON batch
+	FOR EACH ROW
+	EXECUTE PROCEDURE log_delta_trigger();
+
 CREATE TRIGGER log_delta_company
 	AFTER INSERT OR UPDATE OR DELETE
 	ON company
