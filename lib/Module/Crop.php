@@ -53,9 +53,7 @@ class Crop extends \OpenTHC\Module\Base
 		});
 
 		//$a->post('/{id}/collect', function($REQ, $RES, $ARG) {
-		//	$f = sprintf('%s/controller/%s/plants-get.php', APP_ROOT, $_SESSION['cre-base']);
-		//	require_once($f);
-		//	return $RES;
+		//	return _from_cre_file('crop/collect.php', $RES, $ARG);
 		//});
 
 	}

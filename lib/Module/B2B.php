@@ -26,11 +26,9 @@ class B2B extends \OpenTHC\Module\Base
 			return _from_cre_file('b2b/outgoing/single.php', $RES, $ARG);
 		});
 
-		//$this->post('/outgoing/{guid:[\w\.]+}/accept', function($REQ, $RES, $ARG) {
-		//	$f = sprintf('%s/controller/%s/transfer-accept.php', APP_ROOT, $_SESSION['cre-base']);
-		//	$RES = require_once($f);
-		//	return $RES;
-		//});
+		$a->post('/outgoing/{guid:[\w\.]+}/commit', function($REQ, $RES, $ARG) {
+			return _from_cre_file('b2b/outgoing/commit.php', $RES, $ARG);
+		});
 
 		/*
 			Incoming Transfers

@@ -18,13 +18,13 @@ require_once(APP_ROOT . '/vendor/autoload.php');
 function _from_cre_file($f0, $RES, $ARG)
 {
 	$f0 = trim($f0, '/');
-	$f1 = sprintf('%s/controller/%s/%s', APP_ROOT, $_SESSION['cre-base'], $f0);
+	$f1 = sprintf('%s/controller/%s/%s', APP_ROOT, $_SESSION['cre']['engine'], $f0);
 	if (!is_file($f1)) {
 
 		return $RES->withJSON([
 			'data' => null,
 			'meta' => [
-				'cre' => $_SESSION['cre-base'],
+				'cre' => $_SESSION['cre']['engine'],
 				'detail' => 'Interface not implemented [APP#046]',
 			]
 		], 501, JSON_PRETTY_PRINT);

@@ -50,7 +50,6 @@ class Open extends \OpenTHC\Controller\Base
 
 		$_SESSION['cre'] = $cre;
 		$_SESSION['cre-auth'] = array();
-		$_SESSION['cre-base'] = null;
 		$_SESSION['sql-name'] = null;
 
 		switch ($cre['engine']) {
@@ -158,7 +157,6 @@ class Open extends \OpenTHC\Controller\Base
 			$_SESSION['cre-auth']['password'] = $pwd;
 			$_SESSION['cre-auth']['session'] = $chk['sessionid'];
 
-			$_SESSION['cre-base'] = 'biotrack';
 			$_SESSION['sql-name'] = sprintf('openthc_bong_%s', md5($_SESSION['cre-auth']['company']));
 
 			return $RES->withJson(array(
@@ -209,7 +207,6 @@ class Open extends \OpenTHC\Controller\Base
 			), 403);
 		}
 
-		$_SESSION['cre-base'] = 'leafdata';
 		$_SESSION['sql-name'] = sprintf('openthc_bong_%s', md5($_SESSION['cre-auth']['license']));
 
 		return $RES->withJSON([
@@ -244,7 +241,6 @@ class Open extends \OpenTHC\Controller\Base
 
 		if ($res) {
 
-			$_SESSION['cre-base'] = 'metrc';
 			$_SESSION['sql-name'] = sprintf('openthc_bong_%s', md5($_SESSION['cre-auth']['license']));
 
 			$ret = [
