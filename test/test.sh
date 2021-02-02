@@ -3,7 +3,7 @@
 # OpenTHC Test Runner
 #
 
-#set -o errexit
+set -o errexit
 set -o nounset
 # set -o pipefail
 
@@ -13,33 +13,35 @@ dt=$(date)
 
 cd "$d"
 
-output_path="../webroot/test-output"
-if [ ! -d "$output_path" ]
-then
-	mkdir "$output_path"
-fi
-
-output_main="$output_path/index.html"
-
-echo '<h1>Tests Started</h1>' > "$output_main"
+output_base="../webroot/test-output"
+output_main="$output_base/index.html"
+mkdir -p "$output_base"
 
 
 #
+# Lint
+echo '<h1>Linting</h1>' > "$output_main"
+find ../api/ ../bin/ ../lib/ ../sbin/ ../view/ -type f -name '*.php' -exec php -l {} \; \
+	| grep -v 'No syntax' || true
+
+
 #
+# PHPUnit
+echo '<h1>Running Tests</h1>' > "$output_main"
 ../vendor/bin/phpunit \
-	"$@" 2>&1 | tee "$output_path/output.txt"
-	#--log-junit "$output_path/output.xml" \
-	#--testdox-html "$output_path/testdox.html" \
-	#--testdox-text "$output_path/testdox.txt" \
-	#--testdox-xml "$output_path/testdox.xml" \
-	#--verbose \
+	--verbose \
+	"$@" 2>&1 | tee "$output_base/output.txt"
+	#--log-junit "$output_base/output.xml" \
+	#--testdox-html "$output_base/testdox.html" \
+	#--testdox-text "$output_base/testdox.txt" \
+	#--testdox-xml "$output_base/testdox.xml" \
 
 # if [[ $ret != 0 ]]
 # then
 # 	echo "PHPUnit Failed"
 # 	exit 1;
 # fi
-note=$(tail -n1 "$output_path/output.txt")
+note=$(tail -n1 "$output_base/output.txt")
 
 echo '<h1>Tests Completed</h1>' > "$output_main"
 
@@ -49,9 +51,9 @@ echo '<h1>Transforming...</h1>' > "$output_main"
 curl -qs https://openthc.com/pub/phpunit/report.xsl > report.xsl
 xsltproc \
 	--nomkdir \
-	--output "$output_path/output.html" \
+	--output "$output_base/output.html" \
 	report.xsl \
-	"$output_path/output.xml"
+	"$output_base/output.xml"
 
 #
 # Final Ouptut
