@@ -10,6 +10,35 @@
 <h1>BONG</h1>
 <p>Browse the object-interfaces available via the <em>BONG</em> service</p>
 
+<section class="mb-4">
+<h2>Selected License</h2>
+<form action="/auth/open" method="post">
+<div class="form-group">
+<div class="input-group">
+	<?php
+	if (!empty($_SESSION['license-list'])) {
+		echo '<select class="form-control" name="license">';
+		foreach ($_SESSION['license-list'] as $l) {
+			$val = $l['License']['Number'];
+			$sel = ($val == $_SESSION['cre-auth']['license'] ? ' selected' : null);
+			$txt = h(sprintf('%s #%s', $l['Name'], $val));
+			echo sprintf('<option%s>%s</option>', $css, $val, $txt);
+		}
+		echo '</select>';
+	} else {
+		echo sprintf('<input class="form-control" name="license" value="%s">', h($data['cre_meta_license']));
+	}
+	?>
+	<div class="input-group-append">
+		<button class="btn btn-outline-secondary" name="a" value="set-license"><i class="fas fa-save"></i></button>
+	</div>
+</div>
+<span class="form-text">These systems require a license for many, if not all API calls, see /license for possible values.</span>
+</div>
+</form>
+</section>
+
+
 <div class="mb-4">
 <h2>Auth</h2>
 <ul class="list-group">
@@ -42,44 +71,36 @@
 </ul>
 </div>
 
+<section class="mb-4">
 
-<div class="mb-4">
-<h2>Selected License</h2>
-<form action="/auth/open" method="post">
-<div class="form-group">
-<div class="input-group">
-	<?php
-	if (!empty($_SESSION['license-list'])) {
-		echo '<select class="form-control" name="license">';
-		foreach ($_SESSION['license-list'] as $l) {
-			$val = $l['License']['Number'];
-			$sel = ($val == $_SESSION['cre-auth']['license'] ? ' selected' : null);
-			$txt = h(sprintf('%s #%s', $l['Name'], $val));
-			echo sprintf('<option%s>%s</option>', $css, $val, $txt);
-		}
-		echo '</select>';
-	} else {
-		echo sprintf('<input class="form-control" name="license" value="%s">', h($data['cre_meta_license']));
-	}
-	?>
-	<div class="input-group-append">
-		<button class="btn btn-outline-secondary" name="a" value="set-license"><i class="fas fa-save"></i></button>
+	<h2>Synchronization</h2>
+	<form method="post">
+	<div>
+		<button class="btn btn-outline-secondary" name="a" value="sync">Sync <i class="fas fa-sync"></i></button>
+		<a class="btn btn-outline-secondary" href="/log" target="_blank">View Logs <i class="far fa-list-alt"></i></a>
 	</div>
-</div>
-<span class="form-text">These systems require a license for many, if not all API calls, see /license for possible values.</span>
-</div>
-</form>
-</div>
+	</form>
 
-<div class="mb-4">
-<h2>Synchronization</h2>
-<form method="post">
-<pre>Some times of the last update from the upstream</pre>
+<pre><?php
+$sync_info = [];
+foreach ($data['cre_sync'] as $x) {
+	$sync_info[ $x['key'] ] = $x['val'];
+}
+$t0 = $sync_info['sync-time-alpha'];
+unset($sync_info['sync-time-alpha']);
+$t1 = $sync_info['sync-time-omega'];
+unset($sync_info['sync-time-omega']);
 
-<button class="btn btn-outline-secondary" name="a" value="sync"><i class="fas fa-sync"></i> Sync</button>
+$fmt = "% -30s == %s\n";
 
-</form>
-</div>
+printf($fmt, 'sync-time-alpha', $t0);
+foreach ($sync_info as $k => $v) {
+	printf($fmt, $k, $v);
+}
+printf($fmt, 'sync-time-omega', $t1);
+?></pre>
+
+</section>
 
 
 <div class="mb-4">
