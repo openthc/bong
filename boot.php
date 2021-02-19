@@ -11,6 +11,7 @@ openlog('openthc-bong', LOG_ODELAY|LOG_PID, LOG_LOCAL0);
 
 require_once(APP_ROOT . '/vendor/autoload.php');
 
+\OpenTHC\Config::init(APP_ROOT);
 
 /**
  * Hands work Directly to View Script

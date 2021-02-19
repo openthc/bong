@@ -28,6 +28,14 @@ $app->map([ 'GET', 'POST' ], '/browse', 'OpenTHC\Bong\Controller\Browse')
 	->add('OpenTHC\Bong\Middleware\CRE')
 	->add('OpenTHC\Middleware\Session');
 
+// Types
+$app->get('/license-type', 'OpenTHC\Bong\Controller\System:license_type')
+	->add('OpenTHC\Bong\Middleware\CRE')
+	->add('OpenTHC\Middleware\Session');
+
+$app->get('/product-type', 'OpenTHC\Bong\Controller\System:product_type')
+	->add('OpenTHC\Bong\Middleware\CRE')
+	->add('OpenTHC\Middleware\Session');
 
 // Core System Objects
 $app->group('/company', 'OpenTHC\Bong\Module\Company')
@@ -40,17 +48,10 @@ $app->group('/contact', 'OpenTHC\Bong\Module\Contact')
 	->add('OpenTHC\Bong\Middleware\CRE')
 	->add('OpenTHC\Middleware\Session');
 
-// $app->group('/license-type', 'OpenTHC\Bong\Module\License');
 $app->group('/license', 'OpenTHC\Bong\Module\License')
 	->add('OpenTHC\Bong\Middleware\Database')
 	->add('OpenTHC\Bong\Middleware\CRE')
 	->add('OpenTHC\Middleware\Session');
-
-
-// $app->group('/product-type', 'OpenTHC\Bong\Module\Product')
-// 	->add('OpenTHC\Bong\Middleware\Database')
-// 	->add('OpenTHC\Bong\Middleware\CRE')
-// 	->add('OpenTHC\Middleware\Session');
 
 // Core Company Specific Objects
 $app->group('/product', 'OpenTHC\Bong\Module\Product')
@@ -135,6 +136,11 @@ $app->group('/b2c', 'OpenTHC\Bong\Module\B2C')
 //->add('OpenTHC\Bong\Middleware\CRE')
 //->add('OpenTHC\Bong\Middleware\Database')
 //->add('OpenTHC\Middleware\Session');
+
+// Log Access
+$app->map([ 'GET', 'POST' ], '/log', 'OpenTHC\Bong\Controller\Log')
+	->add('OpenTHC\Bong\Middleware\Database')
+	->add('OpenTHC\Middleware\Session');
 
 // Display System Info
 $app->get('/system', 'OpenTHC\Bong\Controller\System');
