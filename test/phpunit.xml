@@ -7,7 +7,7 @@
 	xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/9.3/phpunit.xsd"
 	backupGlobals="false"
 	backupStaticAttributes="false"
-	bootstrap="boot.php"
+	bootstrap="../boot.php"
 	cacheResult="false"
 	colors="true"
 	convertErrorsToExceptions="true"
@@ -32,5 +32,11 @@
 		<env name="api-vendor-key" value="SET_YOUR_VENDOR_KEY_HERE" />
 		<env name="api-client-key" value="SET_YOUR_CLIENT_KEY_HERE" />
 	</php>
+
+	<testsuites>
+		<testsuite name="All">
+			<directory>.</directory>
+		</testsuite>
+	</testsuites>
 
 </phpunit>

@@ -5,6 +5,7 @@
 	"autoload": {
 		"psr-4": {
 			"OpenTHC\\Bong\\": "./lib",
+			"Test\\": "./test",
 			"Custom\\": "./custom"
 		}
 	},
