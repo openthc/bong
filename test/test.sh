@@ -28,7 +28,7 @@ search_list="
 #
 # Lint
 echo '<h1>Linting...</h1>' > "$output_main"
-find $search_list  -type f -name '*.php' -exec php -l {} \; \
+find $search_list -type f -name '*.php' -exec php -l {} \; \
 	| grep -v 'No syntax' || true \
 	2>&1 >"$output_base/phplint.txt"
 [ -s "$output_base/phplint.txt" ] || echo "Linting OK" >"$output_base/phplint.txt"

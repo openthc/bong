@@ -3,8 +3,6 @@
  * Authenticate
  */
 
-use Edoceo\Radix\Layout;
-
 ?>
 
 <form autocomplete="x" method="post">
@@ -103,9 +101,6 @@ if (!empty($data['google_recaptcha_v2'])) {
 </form>
 
 
-<?php
-ob_start();
-?>
 <script>
 $(function() {
 
@@ -133,7 +128,3 @@ $(function() {
 
 });
 </script>
-<?php
-// $this->append('foot_script', $code);
-$code = ob_get_clean();
-Layout::addScript($code);
