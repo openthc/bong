@@ -52,7 +52,7 @@ _set_option($dbc, 'sync-time-omega', json_encode(date(\DateTime::RFC3339)));
 /**
  * Table Name Mapper
  */
-function _tab_name_map($obj)
+function _tab_name_map($obj): string
 {
 	$ret = null;
 	switch ($obj) {
@@ -65,26 +65,32 @@ function _tab_name_map($obj)
 		case 'lot_delta':
 		case 'product':
 		case 'section':
+		case 'uom':
 		case 'variety':
 			$ret = $obj;
-		break;
+			break;
 		case 'b2b':
 		case 'b2b_sale':
 			$ret = 'b2b_sale';
-		break;
+			break;
 		case 'b2c':
 		case 'b2c_sale':
 			$ret = 'b2c_sale';
-		break;
+			break;
 		case 'crop':
 		case 'plant':
 			$ret = 'crop';
-		break;
-		// case 'lot_adjustment':
-		// case 'lot-adjustment':
-		// 	//$ret = 'lot_adjust'; //
-		// 	$ret = null;
-		// break;
+			break;
+		case 'harvest':
+			$ret = 'crop_collect';
+			break;
+		case 'lab-result':
+		case 'lab_result':
+			$ret = 'lab_result';
+			break;
+		case 'plantbatch':
+			$ret = 'batch';
+			break;
 		default:
 			throw new \Exception(sprintf('Object Table "%s" Not Handled', $obj));
 	}
