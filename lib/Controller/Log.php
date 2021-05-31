@@ -8,6 +8,7 @@ namespace OpenTHC\Bong\Controller;
 class Log extends \OpenTHC\Controller\Base
 {
 	private $query_limit = 25;
+	private $query_offset = 0;
 
 	private $sql_debug;
 
@@ -20,14 +21,15 @@ class Log extends \OpenTHC\Controller\Base
 			_exit_html('<h1>Invalid Session</h1><p>you must <a href="/auth/open">sign in</a> again.</p>', 403);
 		}
 
+		$this->query_offset = max(0, intval($_GET['o']));
+
 		$res = $this->_sql_query($REQ);
 
-		// ob_start();
-		// require_once(APP_ROOT . '/view/log.php');
-		// $output_html = ob_get_clean();
-
 		$data = [
+			'Page' => [ 'title' => 'Log Search :: OpenTHC BONG' ],
 			'tz' => \OpenTHC\Config::get('tz'),
+			'link_newer' => http_build_query(array_merge($_GET, [ 'o' => max(0, $this->query_offset - $this->query_limit) ] )),
+			'link_older' => http_build_query(array_merge($_GET, [ 'o' => $this->query_offset + $this->query_limit ] )),
 			'log_delta' => $res,
 			'sql_debug' => $this->sql_debug,
 		];
@@ -44,7 +46,7 @@ class Log extends \OpenTHC\Controller\Base
 			return $RES->withRedirect($output_link);
 		}
 
-		return $RES->write($html); // _exit_html($output_html);
+		return $RES->write($html);
 
 	}
 
@@ -61,6 +63,7 @@ class Log extends \OpenTHC\Controller\Base
 
 		// Specific Delta ID?
 		if (!empty($_GET['id'])) {
+			// @todo Allow Comma Separated List
 			$sql = str_replace('{WHERE}', 'WHERE id = :pk', $sql);
 			$arg = [ ':pk' => $_GET['id'] ];
 			$this->sql_debug = $dbc->_sql_debug($sql, $arg);
@@ -69,22 +72,24 @@ class Log extends \OpenTHC\Controller\Base
 		}
 
 		// Subject
-		if (!empty($_GET['st'])) {
+		if (!empty($_GET['subject'])) {
 			$sql_filter[] = 'subject = :s0';
-			$arg[':s0'] = $_GET['st'];
+			$arg[':s0'] = $_GET['subject'];
 		}
 
 		// Subject ID
-		if (!empty($_GET['si'])) {
+		if (!empty($_GET['q'])) {
 			$sql_filter[] = 'subject_id = :s1';
-			$arg[':s1'] = $_GET['si'];
+			$arg[':s1'] = $_GET['q'];
 		}
 
 		// Date Lo
-		if (!empty($_GET['dt0'])) {
+		if (!empty($_GET['d0']) || !empty($_GET['t0'])) {
 
-			$dt = new \DateTime($_GET['dt0']);
-			$sql_filter[] = 'id >= :dt0';
+			$ts = trim(sprintf('%s %s', $_GET['d0'], $_GET['t0']));
+			$dt = new \DateTime($ts);
+
+			$sql_filter[] = 'created_at >= :dt0';
 			$arg[':dt0'] = $dt->format(\DateTime::RFC3339);
 
 		}

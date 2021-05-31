@@ -1,67 +1,67 @@
 <?php
 /**
- *
+ * View the Delta Log
  */
 
 $tz = new \DateTimezone($data['tz']);
 
-$l = $this->query_limit;
-$offset = intval($_GET['o']);
-
-$link_back = http_build_query(array_merge($_GET, [ 'o' => max(0, $offset - $l) ] ));
-$link_next = http_build_query(array_merge($_GET, [ 'o' => $offset + $l ] ));
-
 ?>
-<html>
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="initial-scale=1, user-scalable=yes">
-<meta name="application-name" content="OpenTHC BONG">
-<link rel="stylesheet" href="/css/app.css" crossorigin="anonymous">
-<title>Log Search :: OpenTHC BONG</title>
-</head>
-<body>
+
+<h1><?= $data['Page']['title'] ?></h1>
 
 <form autocomplete="off">
 <div class="search-filter">
 	<div>
-		<input list="subject-list" name="subject" placeholder="Type to search...">
+		<a class="btn btn-sm btn-outline-secondary" href="/browse">Browse <i class="far fa-folder-open"></i></a>
+	</div>
+	<div>
+		<input class="form-control form-control-sm" list="subject-list" name="subject" placeholder="Type to search...">
 		<datalist id="subject-list">
 			<option>- any -</option>
+			<option>license</option>
+			<option>section</option>
+			<option>product</option>
+			<option>variety</option>
+			<option>crop</option>
+			<option>lot</option>
+			<option>lab_result</option>
 			<option>b2b_sale</option>
 			<option>b2c_sale</option>
-			<option>disposal</option>
-			<option>crop</option>
-			<option>lab_result</option>
-			<option>license</option>
-			<option>lot</option>
 			<option>lot_delta</option>
-			<option>section</option>
-			<option>variety</option>
+			<option>disposal</option>
 		</datalist>
 	</div>
 	<div>
-		<input autocomplete="off" autofocus name="q" placeholder="search" value="<?= h($_GET['q']) ?>">
+		<input autocomplete="off" autofocus class="form-control form-control-sm" name="q" placeholder="search" value="<?= h($_GET['q']) ?>">
 	</div>
 	<div>
-		<input name="dt0" placeholder="after" type="date" value="<?= h($_GET['dt0']) ?>">
+		<input class="form-control form-control-sm" name="d0" type="date" value="<?= h($_GET['d0']) ?>">
 	</div>
 	<div>
-		<input name="dt1" placeholder="before" type="date" value="<?= h($_GET['dt1']) ?>">
+		<input class="form-control form-control-sm" name="t0" type="time" value="<?= h($_GET['t0']) ?>">
 	</div>
 	<div>
-		<button type="submit">Go</button>
+		<input class="form-control form-control-sm" name="d1" type="date" value="<?= h($_GET['d1']) ?>">
 	</div>
 	<div>
-		<button formtarget="_blank" name="a" type="submit" value="snap">Snap</button>
+		<input class="form-control form-control-sm" name="t1" type="time" value="<?= h($_GET['t1']) ?>">
 	</div>
-	<div style="padding: 0 0.50rem;">
-		<a href="?<?= $link_back ?>">Back</a> | <a href="?<?= $link_next ?>">Next</a>
+	<div>
+		<button class="btn btn-sm btn-outline-secondary" type="submit">Go <i class="fas fa-search"></i></button>
+	</div>
+	<div>
+		<button class="btn btn-sm btn-outline-secondary" formtarget="_blank" name="a" type="submit" value="snap">Snap <i class="fas fa-file-export"></i></button>
+	</div>
+	<div>
+		<div class="btn-group btn-group-sm">
+			<a class="btn btn-sm btn-outline-secondary" href="?<?= $data['link_newer'] ?>"><i class="fas fa-arrow-left"></i> Newer</a>
+			<a class="btn btn-sm btn-outline-secondary" href="?<?= $data['link_older'] ?>">Older <i class="fas fa-arrow-right"></i></a>
+		</div>
 	</div>
 </div>
 </form>
 
-<div class="sql-debug"><?= h(trim($data['sql_debug'])) ?></div>
+<pre class="sql-debug"><?= h(trim($data['sql_debug'])) ?></pre>
 
 <table>
 <thead>
@@ -82,49 +82,32 @@ foreach ($data['log_delta'] as $rec) {
 	$dt0 = new \DateTime($rec['created_at']);
 	$dt0->setTimezone($tz);
 
-	printf('<tr class="tr1" id="row-%d-1">', $idx);
-	printf('<td class="c"><a href="/log?id=%s">%d</a></td>', $rec['id'], $idx);
-	printf('<td title="%s">%s</td>', h($rec['created_at']), $dt0->format('m/d H:i:s'));
-	printf('<td>%s</td>', $rec['command']);
-	printf('<td>%s:%s</td>', $rec['subject'], $rec['subject_id']);
-	// echo '<td>' . h($req) . '</td>';
-	// echo '<td>' . h($res) . '</td>';
-	// echo '<td class="r">' . strlen($rec['res_body']) . ' bytes</td>';
-	echo '</tr>';
-
 	// Show Diff
 	$v0 = json_decode($rec['v0'], true);
 	$v1 = json_decode($rec['v1'], true);
 
 	$diff = __array_diff_keyval_r($v0, $v1);
+	__ksort_r($diff);
 
-	$key_list = array_keys($diff);
-	sort($key_list);
+	// Lead Row
+	printf('<tr class="tr1" id="row-%d-1">', $idx);
+	printf('<td class="c"><a href="/log?id=%s">%d</a></td>', $rec['id'], $idx);
+	printf('<td title="%s">%s</td>', h($rec['created_at']), $dt0->format('m/d H:i:s'));
+	printf('<td>%s</td>', $rec['command']);
+	printf('<td>%s:%s</td>', $rec['subject'], $rec['subject_id']);
+	echo '</tr>';
 
+	// Diff Row
 	printf('<tr class="tr2" id="row-%d-2">', $idx);
 	echo '<td></td>';
 	echo '<td colspan="3" style="padding:0;">';
 
-		echo '<table>';
-		echo '<thead><tr><th>Key</th><th>Old</th><th>New</th></tr></thead>';
+		echo '<table class="diff table-hover">';
+		echo '<thead><tr><th class="key">Key</th><th class="old">Old</th><th class="new">New</th></tr></thead>';
 		echo '<tbody>';
 
-		foreach ($key_list as $k) {
+		_echo_diff('$', $diff);
 
-			$v0 = $diff[$k]['old'];
-			$v1 = $diff[$k]['new'];
-
-			if (is_array($v0) || is_array($v1)) {
-				_echo_sub_diff($k, $v0, $v1);
-			} else {
-				echo '<tr>';
-				printf('<td>%s</td>', $k);
-				printf('<td class="old">%s</td>', $v0);
-				printf('<td class="new">%s</td>', $v1);
-				echo '</tr>';
-			}
-
-		}
 		echo '</tbody>';
 		echo '</table>';
 
@@ -136,7 +119,6 @@ foreach ($data['log_delta'] as $rec) {
 </tbody>
 </table>
 
-<script src="https://cdn.openthc.com/zepto/1.2.0/zepto.js" integrity="sha256-vrn14y7WH7zgEElyQqm2uCGSQrX/xjYDjniRUQx3NyU=" crossorigin="anonymous"></script>
 
 <script>
 function rowOpen(row)
@@ -195,10 +177,41 @@ $(function() {
 
 });
 </script>
-</body>
-</html>
+
 
 <?php
+/**
+ * Echo the DIFF
+ */
+function _echo_diff($p0, $d0)
+{
+	if (!is_array($d0)) {
+		var_dump($d0); exit;
+	}
+
+	$key_list = array_keys($d0);
+	sort($key_list);
+
+	foreach ($key_list as $k0) {
+
+		$k1 = sprintf('%s.%s', $p0, $k0);
+		$v0 = $d0[$k0];
+
+		if (array_key_exists('old', $v0) && array_key_exists('new', $v0)) {
+			echo '<tr>';
+			printf('<td class="key">%s</td>', $k1);
+			printf('<td class="old">%s</td>', $v0['old']);
+			printf('<td class="new">%s</td>', $v0['new']);
+			echo '</tr>';
+		} else {
+			_echo_diff($k1, $v0);
+		}
+
+	}
+
+}
+
+
 /**
  * Sanatize REQ or RES
  */
@@ -216,44 +229,5 @@ function _view_data_scrub($x)
 	$x = preg_replace('/"vehicle_vin":\s*"[^"]+"/im', '"vehicle_license_plate":"**redacted**"', $x);
 
 	return $x;
-
-}
-
-function _echo_sub_diff($pre, $v0, $v1)
-{
-	if (empty($v0)) {
-		$v0 = [];
-	}
-	if (empty($v1)) {
-		$v1 = [];
-	}
-
-	$key_list = [];
-	if (is_array($v0)) {
-		$key_list = array_keys($v0);
-	}
-
-	if (is_array($v1)) {
-		$key_list += array_keys($v1);
-	}
-
-	sort($key_list);
-
-	// var_dump($key_list); exit;
-	foreach ($key_list as $k) {
-
-		$v0v = $v0[$k];
-		$v1v = $v1[$k];
-
-		if (is_array($v0v) || is_array($v1v)) {
-			_echo_sub_diff($k, $v0v, $v1v);
-		} else {
-			echo '<tr>';
-			printf('<td>%s -&gt; %s</td>', $pre, $k);
-			printf('<td class="old">%s</td>', $v0v);
-			printf('<td class="new">%s</td>', $v1v);
-			echo '</tr>';
-		}
-	}
 
 }
