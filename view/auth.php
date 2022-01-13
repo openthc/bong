@@ -29,25 +29,25 @@
 	</select>
 </div>
 
-<div class="form-group" data-metrc="true">
+<div class="form-group" data-ccrs="true" data-metrc="true">
 	<label>Service API Key:</label>
 	<input autocomplete="x"
 		class="form-control" name="service-key"
-		placeholder="METRC" value="<?= h($data['cre_service_key']) ?>">
+		placeholder="CCRS, METRC" value="<?= h($data['cre_service_key']) ?>">
 </div>
 
-<div class="form-group" data-biotrack="true" data-leafdata="true">
+<div class="form-group" data-ccrs="true" data-biotrack="true" data-leafdata="true">
 	<label>Company:</label>
 	<input autocomplete="x"
 		class="form-control company-autocomplete" name="company"
-		placeholder="Company ID, like a UBI or something - BioTrack, LeafData" value="<?= h($data['cre_company']) ?>">
+		placeholder="Company ID, like a UBI or something - CCRS, BioTrack, LeafData" value="<?= h($data['cre_company']) ?>">
 </div>
 
-<div class="form-group" data-leafdata="true" data-metrc="true">
+<div class="form-group" data-ccrs="true" data-leafdata="true" data-metrc="true">
 	<label>License:</label>
 	<input autocomplete="x"
 		class="form-control license-autocomplete" name="license"
-		placeholder="LeafData, METRC*" value="<?= h($data['cre_license']) ?>">
+		placeholder="CCRS, LeafData, METRC*" value="<?= h($data['cre_license']) ?>">
 </div>
 
 <div class="form-group" data-leafdata="true" data-metrc="true">

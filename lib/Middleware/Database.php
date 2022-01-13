@@ -11,8 +11,10 @@ class Database extends \OpenTHC\Middleware\Base
 {
 	public function __invoke($REQ, $RES, $NMW)
 	{
-		if (empty($_SESSION['sql-name'])) {
-			_exit_html('<h1>Invalid Session</h1><p>you must <a href="/auth/open">sign in</a> again.</p>', 403);
+		if (empty($_SESSION['sql-conn'])) {
+			if (empty($_SESSION['sql-name'])) {
+				_exit_html('<h1>Invalid Session [LMD-016]</h1><p>you must <a href="/auth/open">sign in</a> again.</p>', 403);
+			}
 		}
 
 		$dbc = $this->connect();
@@ -57,6 +59,7 @@ class Database extends \OpenTHC\Middleware\Base
 		}
 
 		$dbc = new SQL($_SESSION['sql-conn']);
+
 		return $dbc;
 
 	}
