@@ -1,6 +1,8 @@
 <?php
 /**
  * Connect and Authenticate to a CRE
+ *
+ * SPDX-License-Identifier: GPL-3.0-only
  */
 
 namespace OpenTHC\Bong\Controller\Auth;
@@ -184,11 +186,11 @@ class Open extends \OpenTHC\Controller\Base
 		$hash = md5($_POST['service-key'] . $_POST['company'] . $_POST['license']);
 
 		$sql_file = sprintf('%s/var/%s.sqlite', APP_ROOT, $hash);
-		$sql_conn = sprintf('sqlite:%s', $sql_file);
+		$_SESSION['sql-conn'] = sprintf('sqlite:%s', $sql_file);
 
 		if ( ! is_file($sql_file)) {
 
-			$dbc = new \Edoceo\Radix\DB\SQL($sql_conn);
+			$dbc = new \Edoceo\Radix\DB\SQL($_SESSION['sql-conn']);
 			$dbc->query('CREATE TABLE base_option (key PRIMARY KEY, val)');
 
 			$dbc->query('CREATE TABLE company (id PRIMARY KEY, hash, created_at, updated_at, data)');
@@ -213,8 +215,6 @@ class Open extends \OpenTHC\Controller\Base
 			$dbc->query('CREATE TABLE b2c_outgoing_item (id PRIMARY KEY, b2c_outgoing_id, hash, created_at, updated_at, data)');
 
 			$dbc->query('CREATE TABLE ccrs_outgoing (id PRIMARY KEY, type, data)');
-
-			$_SESSION['sql-conn'] = $sql_conn;
 
 		}
 

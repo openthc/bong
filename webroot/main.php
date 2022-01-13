@@ -1,6 +1,8 @@
 <?php
 /**
- * OpenTHC BONG Front Controller
+ * OpenTHC BONG Main Controller
+ *
+ * SPDX-License-Identifier: GPL-3.0-only
  */
 
 require_once(dirname(dirname(__FILE__)) . '/boot.php');

@@ -1,6 +1,8 @@
 <?php
 /**
+ * Interface to Vehicle Data
  *
+ * SPDX-License-Identifier: GPL-3.0-only
  */
 
 namespace OpenTHC\Bong\Module;
@@ -10,12 +12,10 @@ class Vehicle extends \OpenTHC\Module\Base
 	function __invoke($a)
 	{
 		$a->get('', function($REQ, $RES, $ARG) {
-
-			$dbc = $REQ->getAttribute('dbc');
-			$res = $dbc->fetchAll('SELECT id, hash, updated_at FROM vehicle ORDER BY updated_at DESC');
-
-			return $RES->withJSON($res);
-
+			return _from_cre_file('vehicle/search.php', $RES, $ARG);
+			// $dbc = $REQ->getAttribute('dbc');
+			// $res = $dbc->fetchAll('SELECT id, hash, updated_at FROM vehicle ORDER BY updated_at DESC');
+			// return $RES->withJSON($res);
 		});
 
 		// Single
