@@ -23,7 +23,7 @@ if ( ! \OpenTHC\Config::init(APP_ROOT) ) {
 function _from_cre_file($f0, $RES, $ARG)
 {
 	$f0 = trim($f0, '/');
-	$f1 = sprintf('%s/controller/%s/%s', APP_ROOT, $_SESSION['cre']['engine'], $f0);
+	$f1 = sprintf('%s/CRE/%s/%s', APP_ROOT, $_SESSION['cre']['engine'], $f0);
 	if (!is_file($f1)) {
 
 		return $RES->withJSON([
