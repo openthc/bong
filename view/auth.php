@@ -40,7 +40,7 @@
 	<label>Company:</label>
 	<input autocomplete="x"
 		class="form-control company-autocomplete" name="company"
-		placeholder="Company ID, like a UBI or something - CCRS, BioTrack, LeafData" value="<?= h($data['cre_company']) ?>">
+		placeholder="Company ID, like a UBI or something - BioTrack, CCRS, LeafData" value="<?= h($data['cre_company']) ?>">
 </div>
 
 <div class="form-group" data-ccrs="true" data-leafdata="true" data-metrc="true">
@@ -117,6 +117,7 @@ $(function() {
 		$(sel).show();
 
 	});
+	$('#cre').trigger('change');
 
 	$('.company-autocomplete').autocomplete({
 		source: 'https://<?= $data['OpenTHC']['dir']['hostname'] ?>/api/autocomplete/company',

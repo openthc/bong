@@ -49,7 +49,8 @@ class Open extends \OpenTHC\Controller\Base
 		}
 
 		$_SESSION['cre'] = $cre;
-		$_SESSION['cre-auth'] = array();
+		$_SESSION['cre-auth'] = [];
+		$_SESSION['sql-conn'] = null;
 		$_SESSION['sql-name'] = null;
 
 		switch ($cre['engine']) {
@@ -173,19 +174,14 @@ class Open extends \OpenTHC\Controller\Base
 	}
 
 	/**
-	* "Authenticate" to CCRS
-	*/
+	 * "Authenticate" to CCRS
+	 */
 	function _ccrs($RES)
 	{
-
-		$_SESSION['cre-auth'] = [];
-		$_SESSION['sql-conn'] = null;
-		$_SESSION['sql-name'] = null;
-
 		$_SESSION['cre-auth']['company'] = $_POST['company'];
 		$_SESSION['cre-auth']['license'] = $_POST['license'];
 
-		$hash = md5($_POST['company'] . $_POST['license']);
+		$hash = md5($_POST['service-key'] . $_POST['company'] . $_POST['license']);
 
 		$sql_file = sprintf('%s/var/%s.sqlite', APP_ROOT, $hash);
 		$sql_conn = sprintf('sqlite:%s', $sql_file);
@@ -193,8 +189,8 @@ class Open extends \OpenTHC\Controller\Base
 		if ( ! is_file($sql_file)) {
 
 			$dbc = new \Edoceo\Radix\DB\SQL($sql_conn);
-			$dbc->query('CREATE TABLE ccrs_outgoing (id PRIMARY KEY, type, data)');
 			$dbc->query('CREATE TABLE base_option (key PRIMARY KEY, val)');
+
 			$dbc->query('CREATE TABLE company (id PRIMARY KEY, hash, created_at, updated_at, data)');
 			$dbc->query('CREATE TABLE license (id PRIMARY KEY, hash, created_at, updated_at, data)');
 			$dbc->query('CREATE TABLE product (id PRIMARY KEY, hash, created_at, updated_at, data)');
@@ -216,13 +212,15 @@ class Open extends \OpenTHC\Controller\Base
 			$dbc->query('CREATE TABLE b2c_outgoing (id PRIMARY KEY, hash, created_at, updated_at, data)');
 			$dbc->query('CREATE TABLE b2c_outgoing_item (id PRIMARY KEY, b2c_outgoing_id, hash, created_at, updated_at, data)');
 
+			$dbc->query('CREATE TABLE ccrs_outgoing (id PRIMARY KEY, type, data)');
+
 			$_SESSION['sql-conn'] = $sql_conn;
-			//$_SESSION['sql-name'] = $hash;
+
 		}
 
 		return $RES->withJSON([
-				'data' => session_id(),
-				'meta' => [],
+			'data' => session_id(),
+			'meta' => [],
 		]);
 
 	}
