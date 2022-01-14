@@ -146,7 +146,6 @@ $app->map([ 'GET', 'POST' ], '/log', 'OpenTHC\Bong\Controller\Log')
 
 // Display System Info
 $app->get('/system', 'OpenTHC\Bong\Controller\System');
-$app->get('/system/ping', 'OpenTHC\Bong\Controller\System:ping');
 
 // Return a list of supported CREs
 // $app->get('/system/cre', function($REQ, $RES, $ARG) {
@@ -159,6 +158,10 @@ $app->get('/system/ping', 'OpenTHC\Bong\Controller\System:ping');
 // 	], 200, JSON_PRETTY_PRINT);
 
 // });
+$app->get('/system/ping', 'OpenTHC\Bong\Controller\System:ping');
+
+
+$app->post('/upload', 'OpenTHC\Bong\Controller\Upload');
 
 
 // Custom Middleware?
