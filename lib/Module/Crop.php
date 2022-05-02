@@ -1,6 +1,8 @@
 <?php
 /**
+ * Crop Interfaces
  *
+ * SPDX-License-Identifier: GPL-3.0-only
  */
 
 namespace OpenTHC\Bong\Module;
@@ -26,7 +28,7 @@ class Crop extends \OpenTHC\Module\Base
 
 		// Search
 		// $a->get('', function($REQ, $RES, $ARG) {
-		// 	return _from_cre_file('plant/search.php', $RES, $ARG);
+		// 	return _from_cre_file('crop/search.php', $RES, $ARG);
 		// });
 
 		// Create
@@ -44,12 +46,17 @@ class Crop extends \OpenTHC\Module\Base
 
 		// Update
 		$a->post('/{id}', function($REQ, $RES, $ARG) {
-			return _from_cre_file('plant/update.php', $RES, $ARG);
+			return _from_cre_file('crop/update.php', $RES, $ARG);
+		});
+
+		// Delete
+		$a->delete('/{id}', function($REQ, $RES, $ARG) {
+			return _from_cre_file('crop/delete.php', $RES, $ARG);
 		});
 
 		// Convenience Functions
 		$a->post('/{id}/move', function($REQ, $RES, $ARG) {
-			return _from_cre_file('plant/update.php', $RES, $ARG);
+			return _from_cre_file('crop/update.php', $RES, $ARG);
 		});
 
 		//$a->post('/{id}/collect', function($REQ, $RES, $ARG) {

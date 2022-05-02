@@ -1,6 +1,8 @@
 <?php
 /**
  * Load the CRE
+ *
+ * SPDX-License-Identifier: GPL-3.0-only
  */
 
 namespace OpenTHC\Bong\Middleware;
@@ -10,7 +12,6 @@ class CRE extends \OpenTHC\Middleware\Base
 
 	public function __invoke($REQ, $RES, $NMW)
 	{
-
 		if (empty($_SESSION['cre'])) {
 			return $RES->withJSON([
 				'data' => null,
