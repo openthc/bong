@@ -31,7 +31,7 @@ $url0 = $page->getCurrentUrl();
 echo "url0:{$url0}\n";
 
 // Needs Authentication?
-if (preg_match('/^https:\/\/secureaccess.wa.gov\/FIM2\/sps\/auth/', $url0)) {
+if (preg_match('/^https:\/\/secureaccess\.wa\.gov\/FIM2\/sps\/auth/', $url0)) {
 
 	// POST the Form?
 	$code = sprintf('document.querySelector("#username").value = "%s";', \OpenTHC\Config::get('cre/usa/wa/ccrs/username'));
