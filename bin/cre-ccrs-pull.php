@@ -23,23 +23,23 @@ $file_list = glob('/opt/openthc/bong/var/ccrs-incoming/*.csv');
 foreach ($file_list as $file) {
 
 	// Patch Text Errors? (see ccrs-incoming in OPS)
+	_csv_file_patch($file);
 	_process_csv_file($file);
 
 }
 
 exit(0);
 
-function _process_csv_file($file)
+/**
+ * Patch bullshit we find in these files
+ */
+function _csv_file_patch($csv_file)
 {
-	global $dbc;
-
-	echo "CSV File: $file\n";
-
 	// Patch the WHOLE BLOB
-	$data = file_get_contents($file);
+	$csv_data = file_get_contents($csv_file);
 
 	// // Fix some bullshit they put in the CSVs (Bug #38)
-	$data = str_replace('Insert, Update or Delete', 'INSERT UPDATE or DELETE', $data);
+	$csv_data = str_replace('Insert, Update or Delete', 'INSERT UPDATE or DELETE', $csv_data);
 	// // $part_body = str_replace('Operation is invalid must be Insert,  Update or Delete'
 	// // 	, 'Operation is invalid must be INSERT UPDATE or DELETE'
 	// // 	, $part_body);
@@ -49,14 +49,25 @@ function _process_csv_file($file)
 	// $part_body = preg_replace('/found, CheckSum/i', 'found: CheckSum', $part_body);
 
 	// This one always goes "comma space space CheckSum"
-	$data = preg_replace('/(date|licensee), CheckSum and/', '$1: CheckSum and', $data);
+	$csv_data = preg_replace('/(date|licensee), CheckSum and/', '$1: CheckSum and', $csv_data);
 	// $data = preg_replace('/found, CheckSum/i', 'found: CheckSum', $data);
-	file_put_contents($file, $data);
+	file_put_contents($csv_file, $csv_data);
+
+}
+
+/**
+ *
+ */
+function _process_csv_file($csv_file)
+{
+	global $dbc;
+
+	echo "CSV File: $csv_file\n";
 
 	// Need to actually keep file name to understand the ?
-	$csv_file = fopen($file, 'r');
+	$csv_pipe = fopen($csv_file, 'r');
 	$idx_line = 1;
-	$csv_head = fgetcsv($csv_file);
+	$csv_head = fgetcsv($csv_pipe);
 	$csv_head = array_values($csv_head);
 	$row_size = count($csv_head);
 
@@ -98,7 +109,7 @@ function _process_csv_file($file)
 			break;
 		case 'Strain,StrainType,CreatedBy,CreatedDate,ErrorMessage':
 			// @todo this one needs special processing ?
-			return _process_csv_file_variety($csv_file, $csv_head);
+			return _process_csv_file_variety($csv_file, $csv_pipe, $csv_head);
 			break;
 		default:
 			echo "CSV Header Not Handled\n$tab_name";
@@ -109,7 +120,7 @@ function _process_csv_file($file)
 	// echo "CSV Type: $tab_name\n";
 
 	// Canary Line
-	$csv_line = fgetcsv($csv_file);
+	$csv_line = fgetcsv($csv_pipe);
 	$idx_line++;
 
 	// It's our canary line
@@ -130,7 +141,7 @@ function _process_csv_file($file)
 	// Should spin the whole file once to verify all the good lines
 	// Then spin a second time
 
-	while ($csv_line = fgetcsv($csv_file)) {
+	while ($csv_line = fgetcsv($csv_pipe)) {
 
 		$idx_line++;
 		//echo sprintf("%04d:%s\n", $idx_line, implode(', ', $csv_line));
@@ -210,7 +221,7 @@ function _process_csv_file($file)
 		if (empty($rec_data)) {
 			// Fake It
 			$rec_data = [
-				'soruce' => $csv_line,
+				'source' => $csv_line,
 			];
 		} else {
 			$rec_data = json_decode($rec_data, true);
@@ -275,11 +286,16 @@ function _process_csv_file($file)
 /**
  *
  */
-function _process_csv_file_variety($csv_file, $csv_head)
+function _process_csv_file_variety($csv_file, $csv_pipe, $csv_head)
 {
 	$csv_pkid = 'Strain';
 	$tab_name = 'variety';
-	unlink($file);
+
+	// Do Something
+	// while ()
+
+	unlink($csv_file);
+
 	return(0);
 
 }
@@ -313,6 +329,7 @@ function _process_err_list($csv_line)
 			case 'LicenseNumber is required':
 			case 'LicenseNumber must be numeric':
 			case 'Name is over 50 characters':
+			case 'Name is over 75 characters':
 			case 'Name is required':
 			case 'Operation is invalid must be INSERT UPDATE or DELETE':
 			case 'QuantityOnHand must be numeric':

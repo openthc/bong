@@ -39,8 +39,8 @@ if ('200' != $inf['http_code']) {
 	echo "Not Authenticated\n";
 	exit(1);
 }
-// echo "Authenticated\n";
 
+// I hate parsing HTML w/regex
 $rvt_code = preg_match('/<input name="__RequestVerificationToken" type="hidden" value="([^"]+)" \/>/', $res, $m) ? $m[1] : null;
 if (empty($rvt_code)) {
 	echo "Cannot find RVT\n";
@@ -50,10 +50,6 @@ if (empty($rvt_code)) {
 
 $part_mark = '----WebKitFormBoundaryAAAA8cKhBUv35ObB';
 $post = [];
-// $post[] = sprintf('--%s', $part_mark);
-// $post[] = sprintf('content-disposition: form-data; name="%s"', );
-// $post[] = '';
-// $post[] = 'value';
 
 foreach ($file_list as $f) {
 	$post[] = sprintf('--%s', $part_mark);
@@ -77,28 +73,10 @@ $post[] = 'content-disposition: form-data; name="__RequestVerificationToken"';
 $post[] = '';
 $post[] = $rvt_code; // Where to get this text?
 
+// Closer and Combine
 $post[] = sprintf('--%s--', $part_mark);
 $post = implode("\r\n", $post);
 
-// echo "post:\n$post\n";
-// exit;
-
-
-/*
-------WebKitFormBoundaryhB7VsePb8DbSizH6
-Content-Disposition: form-data; name="username"
-
-code@openthc.com
-------WebKitFormBoundaryhB7VsePb8DbSizH6
-Content-Disposition: form-data; name="__RequestVerificationToken"
-
-CfDJ8HwZQcUQ6A9OunFapsY6AFwLJof-W8owun_A16RQG48aB8EJfJor_V00DKLcwujyYbsUBbRg5I8zfMK_N8phdp69EscQkSTX-DMaLBtjs31B
-m0xNy2OFjL6h6GidAoxLLX_2e5zQ9PSyqISb4xZ6b6lrkdfJsdhjYjG7rrGy3sp90VgpzUZ5yKJZN4Z_6jiyIw
-------WebKitFormBoundaryhB7VsePb8DbSizH6--
-*/
-
-// echo "$post\n";
-// echo "Uploading\n";
 
 $req = __curl_init('https://cannabisreporting.lcb.wa.gov/Home/Upload');
 // curl_setopt($req, CURLOPT_VERBOSE, true);
@@ -139,9 +117,10 @@ if (preg_match('/(Your submission was received at .+ Pacific Time)/', $res, $m))
 
 	echo "Uploaded At: {$m[1]}\n";
 
-	// foreach ($file_list as $file) {
-	// 	unlink($file);
-	// }
+	// Remove Files
+	foreach ($file_list as $file) {
+		unlink($file);
+	}
 
 } else {
 	echo "No Match on Upload Stuff\n";

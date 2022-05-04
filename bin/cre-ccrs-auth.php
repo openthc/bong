@@ -31,7 +31,7 @@ $url0 = $page->getCurrentUrl();
 echo "url0:{$url0}\n";
 
 // Needs Authentication?
-if (preg_match('/^https:\/\/secureaccess.wa.gov\/FIM2\/sps\/auth\?FedName=sawidp&FedId=/', $url0)) {
+if (preg_match('/^https:\/\/secureaccess.wa.gov\/FIM2\/sps\/auth/', $url0)) {
 
 	// POST the Form?
 	$code = sprintf('document.querySelector("#username").value = "%s";', \OpenTHC\Config::get('cre/usa/wa/ccrs/username'));
@@ -50,8 +50,9 @@ if (preg_match('/^https:\/\/secureaccess.wa.gov\/FIM2\/sps\/auth\?FedName=sawidp
 	$url1 = $page->getCurrentUrl();
 	echo "url1:{$url1}\n";
 	// $page->screenshot()->saveToFile('ccrs1.png');
-
-} elseif (preg_match('/^https:\/\/cannabisreporting\.lcb\.wa\.gov\/', $url0)) {
+} elseif (preg_match('/https:\/\/secureaccess\.wa\.gov\/FIM2\/sps\/sawidp\/saml20\/login/', $url0)) {
+	// OK ? Only see this one intermittently
+} elseif (preg_match('/^https:\/\/cannabisreporting\.lcb\.wa\.gov\//', $url0)) {
 	// Authenticated
 } else {
 	echo "No Match: $url0\n";
