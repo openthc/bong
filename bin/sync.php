@@ -2,6 +2,8 @@
 <?php
 /**
  * Sync a License & Data to the Database
+ *
+ * SPDX-License-Identifier: MIT
  */
 
 use OpenTHC\Bong\CRE;

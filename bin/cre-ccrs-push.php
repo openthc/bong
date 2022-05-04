@@ -4,7 +4,7 @@
  * Use Curl to upload to the CCRS site
  * Get the cookies from var/
  *
- * SPDX-License-Identifier: GPL-3.0-only
+ * SPDX-License-Identifier: MIT
  */
 
 use OpenTHC\Bong\CRE;

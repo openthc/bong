@@ -2,7 +2,7 @@
 /**
  * OpenTHC BONG Main Controller
  *
- * SPDX-License-Identifier: GPL-3.0-only
+ * SPDX-License-Identifier: MIT
  */
 
 require_once(dirname(dirname(__FILE__)) . '/boot.php');

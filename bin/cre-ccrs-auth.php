@@ -4,7 +4,7 @@
  * This routine simply authenticates to the CCRS platform and stores the cookies
  * The CCRS system appears to have a 15 minute timeout.
  *
- * SPDX-License-Identifier: GPL-3.0-only
+ * SPDX-License-Identifier: MIT
  */
 
 use HeadlessChromium\BrowserFactory;

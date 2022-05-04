@@ -2,7 +2,7 @@
 /**
  * Connect and Authenticate to a CRE
  *
- * SPDX-License-Identifier: GPL-3.0-only
+ * SPDX-License-Identifier: MIT
  */
 
 namespace OpenTHC\Bong\Controller\Auth;
@@ -11,7 +11,9 @@ use OpenTHC\Bong\CRE;
 
 class Open extends \OpenTHC\Controller\Base
 {
-
+	/**
+	 *
+	 */
 	function __invoke($REQ, $RES, $ARG)
 	{
 		switch ($REQ->getMethod()) {
@@ -351,7 +353,7 @@ class Open extends \OpenTHC\Controller\Base
 		$cre_want = strtolower(trim($_POST['cre']));
 		$cre_info = \OpenTHC\CRE::getEngine($cre_want);
 
-		if (!empty($cre_info)) {
+		if ( ! empty($cre_info)) {
 			return $cre_info;
 		}
 
