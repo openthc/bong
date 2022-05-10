@@ -247,7 +247,7 @@ function _process_csv_file($csv_file)
 			// ':cs' => $cre_stat,
 		];
 		$chk = $dbc->query($sql, $arg);
-		echo "UPDATE: $rec_guid == $chk\n";
+		// echo "UPDATE: $rec_guid == $chk\n";
 
 	}
 
@@ -258,7 +258,7 @@ function _process_csv_file($csv_file)
 	}
 
 
-	unlink($file);
+	unlink($csv_file);
 
 	// Necessary or only on ping?
 	// if ('Section' == $tab_name) {
@@ -284,15 +284,40 @@ function _process_csv_file($csv_file)
 }
 
 /**
- *
+ * Special Case for Variety
  */
 function _process_csv_file_variety($csv_file, $csv_pipe, $csv_head)
 {
 	$csv_pkid = 'Strain';
 	$tab_name = 'variety';
 
-	// Do Something
-	// while ()
+	// Canary Line
+	$csv_line = fgetcsv($csv_pipe);
+	$idx_line++;
+
+	// It's our canary line
+	$csv_line_text = implode(',', $csv_line);
+	if (preg_match('/VARIETY UPLOAD (01\w{24})/', $csv_line_text, $m)) {
+		echo "Canary1: '{$m[1]}'\n";
+	}
+
+	while ($csv_line = fgetcsv($csv_pipe)) {
+
+		$idx_line++;
+
+		switch ($csv_line[4]) {
+			case 'CheckSum and number of records don\'t match':
+				// Error Source File -- How to Find?
+				break;
+			case 'Duplicate Strain/StrainType':
+				// Ignore
+				break;
+			default:
+				echo sprintf("Error Line: %04d:%s\n", $idx_line, implode(', ', $csv_line));
+				exit(1);
+		}
+
+	}
 
 	unlink($csv_file);
 
