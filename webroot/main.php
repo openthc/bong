@@ -18,6 +18,11 @@ if (!empty($cfg['debug'])) {
 	unset($con['errorHandler']);
 	unset($con['phpErrorHandler']);
 }
+$con['response'] = function($c) {
+	$r = new \OpenTHC\Bong\Response();
+	return $r;
+};
+
 
 // Authentication
 $app->group('/auth', 'OpenTHC\Bong\Module\Auth')

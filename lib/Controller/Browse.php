@@ -1,6 +1,8 @@
 <?php
 /**
- * App Base Controller
+ * Browse Things Controller
+ *
+ * SPDX-License-Identifier: MIT
  */
 
 namespace OpenTHC\Bong\Controller;

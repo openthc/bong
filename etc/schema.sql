@@ -13,6 +13,8 @@ create table base_option (
 
 create table company (
 	id varchar(64) PRIMARY KEY,
+	flag int not null default 0,
+	stat int not null default 100,
 	created_at timestamp with time zone NOT NULL DEFAULT now(),
 	updated_at timestamp with time zone NOT NULL DEFAULT now(),
 	hash varchar(64),
@@ -21,6 +23,8 @@ create table company (
 
 create table contact (
 	id varchar(64) PRIMARY KEY,
+	flag int not null default 0,
+	stat int not null default 100,
 	created_at timestamp with time zone NOT NULL DEFAULT now(),
 	updated_at timestamp with time zone NOT NULL DEFAULT now(),
 	hash varchar(64),
@@ -29,6 +33,8 @@ create table contact (
 
 create table license (
 	id varchar(64) PRIMARY KEY,
+	flag int not null default 0,
+	stat int not null default 100,
 	created_at timestamp with time zone NOT NULL DEFAULT now(),
 	updated_at timestamp with time zone NOT NULL DEFAULT now(),
 	hash varchar(64),
@@ -37,6 +43,9 @@ create table license (
 
 create table vehicle (
 	id varchar(64) PRIMARY KEY,
+	license_id varchar(64) not null,
+	flag int not null default 0,
+	stat int not null default 100,
 	created_at timestamp with time zone NOT NULL DEFAULT now(),
 	updated_at timestamp with time zone NOT NULL DEFAULT now(),
 	hash varchar(64),
@@ -45,6 +54,9 @@ create table vehicle (
 
 create table section (
 	id varchar(64) PRIMARY KEY,
+	license_id varchar(64) not null,
+	flag int not null default 0,
+	stat int not null default 100,
 	created_at timestamp with time zone NOT NULL DEFAULT now(),
 	updated_at timestamp with time zone NOT NULL DEFAULT now(),
 	hash varchar(64),
@@ -53,6 +65,9 @@ create table section (
 
 create table product (
 	id varchar(64) PRIMARY KEY,
+	license_id varchar(64) not null,
+	flag int not null default 0,
+	stat int not null default 100,
 	created_at timestamp with time zone NOT NULL DEFAULT now(),
 	updated_at timestamp with time zone NOT NULL DEFAULT now(),
 	hash varchar(64),
@@ -61,22 +76,21 @@ create table product (
 
 create table variety (
 	id varchar(64) PRIMARY KEY,
+	license_id varchar(64) not null,
+	flag int not null default 0,
+	stat int not null default 100,
 	created_at timestamp with time zone NOT NULL DEFAULT now(),
 	updated_at timestamp with time zone NOT NULL DEFAULT now(),
 	hash varchar(64),
 	data jsonb
 );
 
-create table batch (
-	id varchar(64) PRIMARY KEY,
-	created_at timestamp with time zone NOT NULL DEFAULT now(),
-	updated_at timestamp with time zone NOT NULL DEFAULT now(),
-	hash varchar(64),
-	data jsonb
-);
 
 create table crop (
 	id varchar(64) PRIMARY KEY,
+	license_id varchar(64) not null,
+	flag int not null default 0,
+	stat int not null default 100,
 	created_at timestamp with time zone NOT NULL DEFAULT now(),
 	updated_at timestamp with time zone NOT NULL DEFAULT now(),
 	hash varchar(64),
@@ -85,6 +99,9 @@ create table crop (
 
 create table lot (
 	id varchar(64) PRIMARY KEY,
+	license_id varchar(64) not null,
+	flag int not null default 0,
+	stat int not null default 100,
 	created_at timestamp with time zone NOT NULL DEFAULT now(),
 	updated_at timestamp with time zone NOT NULL DEFAULT now(),
 	hash varchar(64),
@@ -94,6 +111,9 @@ create table lot (
 create table lot_delta (
 	id varchar(64) PRIMARY KEY,
 	lot_id varchar(64) NOT NULL,
+	license_id varchar(64) not null,
+	flag int not null default 0,
+	stat int not null default 100,
 	created_at timestamp with time zone NOT NULL DEFAULT now(),
 	updated_at timestamp with time zone NOT NULL DEFAULT now(),
 	hash varchar(64),
@@ -111,6 +131,9 @@ create table lab_result (
 
 create table b2b_sale (
 	id varchar(64) PRIMARY KEY,
+	license_id varchar(64) not null,
+	flag int not null default 0,
+	stat int not null default 100,
 	created_at timestamp with time zone NOT NULL DEFAULT now(),
 	updated_at timestamp with time zone NOT NULL DEFAULT now(),
 	hash varchar(64),
@@ -128,6 +151,9 @@ create table b2b_sale_item (
 
 create table b2c_sale (
 	id varchar(64) PRIMARY KEY,
+	license_id varchar(64) not null,
+	flag int not null default 0,
+	stat int not null default 100,
 	created_at timestamp with time zone NOT NULL DEFAULT now(),
 	updated_at timestamp with time zone NOT NULL DEFAULT now(),
 	hash varchar(64),

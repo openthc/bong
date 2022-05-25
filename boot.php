@@ -23,7 +23,7 @@ if ( ! \OpenTHC\Config::init(APP_ROOT) ) {
 function _from_cre_file($f0, $RES, $ARG)
 {
 	$f0 = trim($f0, '/');
-	$f1 = sprintf('%s/CRE/%s/%s', APP_ROOT, $_SESSION['cre']['engine'], $f0);
+	$f1 = sprintf('%s/lib/CRE/%s/%s', APP_ROOT, $_SESSION['cre']['engine'], $f0);
 	if (!is_file($f1)) {
 
 		return $RES->withJSON([
@@ -32,15 +32,8 @@ function _from_cre_file($f0, $RES, $ARG)
 				'cre' => $_SESSION['cre']['engine'],
 				'detail' => 'Interface not implemented [APP#046]',
 			]
-		], 501, JSON_PRETTY_PRINT);
+		], 501);
 
-		// return $RES->withJSON(array(
-		// 	'status' => 'failure',
-		// 	'detail' => 'Not Found',
-		// 	'_f' => $f,
-		// 	'_s' => $_SESSION,
-		// 	'_R' => $_SERVER,
-		// ), 404);
 	}
 
 	$out = require_once($f1);

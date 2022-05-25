@@ -1,6 +1,8 @@
 <?php
 /**
  * B2C Retail Sales
+ *
+ * SPDX-License-Identifier: MIT
  */
 
 namespace OpenTHC\Bong\Module;

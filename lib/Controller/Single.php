@@ -1,6 +1,8 @@
 <?php
 /**
  * Common Controller for Single Object
+ *
+ * SPDX-License-Identifier: MIT
  */
 
 namespace OpenTHC\Bong\Controller;
@@ -22,11 +24,12 @@ class Single extends \OpenTHC\Controller\Base
 		return $RES->withJSON([
 			'data' => json_decode($rec['data'], true),
 			'meta' => [
+				'stat' => $rec['stat'],
 				'hash' => $rec['hash'],
 				'created_at' => $rec['created_at'],
 				'updated_at' => $rec['updated_at'],
 			]
-		], 200, JSON_PRETTY_PRINT);
+		]);
 
 	}
 

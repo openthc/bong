@@ -1,6 +1,8 @@
 <?php
 /**
  *
+ *
+ * SPDX-License-Identifier: MIT
  */
 
 namespace OpenTHC\Bong\Module;

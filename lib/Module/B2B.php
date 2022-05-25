@@ -1,6 +1,8 @@
 <?php
 /**
  * B2B Wholesale Sales
+ *
+ * SPDX-License-Identifier: MIT
  */
 
 namespace OpenTHC\Bong\Module;

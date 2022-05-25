@@ -39,13 +39,13 @@ _set_option($dbc, 'sync-time-alpha', json_encode(date(\DateTime::RFC3339)));
 switch ($_SESSION['cre']['engine']) {
 	case 'biotrack':
 		require_once(__DIR__ . '/sync-biotrack.php');
-	break;
+		break;
 	case 'leafdata':
 		require_once(__DIR__ . '/sync-leafdata.php');
-	break;
+		break;
 	case 'metrc':
 		require_once(__DIR__ . '/sync-metrc.php');
-	break;
+		break;
 }
 
 _set_option($dbc, 'sync-time-omega', json_encode(date(\DateTime::RFC3339)));
