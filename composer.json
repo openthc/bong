@@ -13,7 +13,7 @@
 		}
 	},
 	"require": {
-		"chrome-php/chrome": "1.4.0",
+		"chrome-php/chrome": "1.6.1",
 		"edoceo/lowline_php": "dev-master",
 		"edoceo/radix": "dev-master",
 		"openthc/common": "dev-master",
@@ -21,8 +21,8 @@
 	},
 	"require-dev": {
 		"behat/behat": "3.10.0",
-		"phpstan/phpstan": "1.3.3",
-		"phpunit/phpunit": "9.5.11",
+		"phpstan/phpstan": "1.7.8",
+		"phpunit/phpunit": "9.5.20",
 		"sebastian/phpcpd": "6.0.3"
 	}
 }
