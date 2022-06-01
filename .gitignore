@@ -1,13 +1,27 @@
-# dirs
+#
+# OpenTHC .gitignore
+#
+
+**/.idea/workspace.xml
+**/.idea/tasks.xml
+.build/
+.config/
+.env
+.gradle/
+.idea/
+.local/
+.netlify/
 .vscode/
+bower_components/
+build/
+composer.lock
 Custom/
 etc/
 lib/RBE/
+node_modules/
+public/
+release/
+test/report.xsl
 var/
 vendor/
 webroot/test-output/
-
-# files
-composer.lock
-
-test/report.xsl
