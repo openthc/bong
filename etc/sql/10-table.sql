@@ -85,7 +85,6 @@ create table variety (
 	data jsonb
 );
 
-
 create table crop (
 	id varchar(64) PRIMARY KEY,
 	license_id varchar(64) not null,
@@ -120,18 +119,33 @@ create table lot_delta (
 	data jsonb
 );
 
-
 create table lab_result (
-	id varchar(64) PRIMARY KEY,
-	created_at timestamp with time zone NOT NULL DEFAULT now(),
-	updated_at timestamp with time zone NOT NULL DEFAULT now(),
+	id varchar(64) PRIMARY KEY NOT NULL,
+	license_id varchar(64),
+	flag int NOT NULL DEFAULT 0,
+	stat int NOT NULL DEFAULT 100,
+	created_at timestamp with time zone not null default now(),
+	updated_at timestamp with time zone not null default now(),
+	hash varchar(64),
+	data jsonb
+);
+
+create table lab_result_metric (
+	id varchar(64) PRIMARY KEY NOT NULL,
+	license_id varchar(64),
+	lab_result varchar(64),
+	flag int NOT NULL DEFAULT 0,
+	stat int NOT NULL DEFAULT 100,
+	created_at timestamp with time zone not null default now(),
+	updated_at timestamp with time zone not null default now(),
 	hash varchar(64),
 	data jsonb
 );
 
 create table b2b_sale (
 	id varchar(64) PRIMARY KEY,
-	license_id varchar(64) not null,
+	license_id_source varchar(64) not null,
+	license_id_target varchar(64) not null,
 	flag int not null default 0,
 	stat int not null default 100,
 	created_at timestamp with time zone NOT NULL DEFAULT now(),
@@ -169,7 +183,6 @@ create table b2c_sale_item (
 	data jsonb
 );
 
-
 create table disposal (
 	id varchar(64) PRIMARY KEY,
 	created_at timestamp with time zone NOT NULL DEFAULT now(),
@@ -177,7 +190,6 @@ create table disposal (
 	hash varchar(64),
 	data jsonb
 );
-
 
 create table log_delta (
 	id bigserial primary key,
