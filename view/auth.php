@@ -5,7 +5,7 @@
 
 ?>
 
-<form autocomplete="x" method="post">
+<form autocomplete="off" method="post">
 <div class="auth-wrap">
 <div class="card">
 
@@ -31,42 +31,42 @@
 
 <div class="form-group" data-ccrs="true" data-metrc="true">
 	<label>Service API Key:</label>
-	<input autocomplete="x"
+	<input autocomplete="off"
 		class="form-control" name="service-key"
 		placeholder="CCRS, METRC" value="<?= h($data['cre_service_key']) ?>">
 </div>
 
 <div class="form-group" data-ccrs="true" data-biotrack="true" data-leafdata="true">
 	<label>Company:</label>
-	<input autocomplete="x"
+	<input autocomplete="off"
 		class="form-control company-autocomplete" name="company"
 		placeholder="Company ID, like a UBI or something - BioTrack, CCRS, LeafData" value="<?= h($data['cre_company']) ?>">
 </div>
 
 <div class="form-group" data-ccrs="true" data-leafdata="true" data-metrc="true">
 	<label>License:</label>
-	<input autocomplete="x"
+	<input autocomplete="off"
 		class="form-control license-autocomplete" name="license"
 		placeholder="CCRS, LeafData, METRC*" value="<?= h($data['cre_license']) ?>">
 </div>
 
 <div class="form-group" data-leafdata="true" data-metrc="true">
 	<label>License API Key:</label>
-	<input autocomplete="x"
+	<input autocomplete="off"
 		class="form-control" name="license-key"
 		placeholder="LeafData, METRC" value="<?= h($data['cre_license_key']) ?>">
 </div>
 
 <div class="form-group" data-biotrack="true">
 	<label>Username:</label>
-	<input autocomplete="x"
+	<input autocomplete="off"
 		class="form-control" name="username"
 		placeholder="BioTrack" value="<?= h($data['cre_username']) ?>">
 </div>
 
 <div class="form-group" data-biotrack="true">
 	<label>Password:</label>
-	<input autocomplete="x"
+	<input autocomplete="off"
 		class="form-control" name="password"
 		placeholder="BioTrack" value="<?= h($data['cre_password']) ?>">
 </div>
@@ -94,7 +94,7 @@ if (!empty($data['google_recaptcha_v2'])) {
 	</div>
 
 	<div class="card-footer">
-		<button class="btn btn-lg btn-outline-primary" name="a" type="submit" value="auth-web">Connect</button>
+		<button class="btn btn-primary" name="a" type="submit" value="auth-web">Connect</button>
 	</div>
 </div>
 </div>
