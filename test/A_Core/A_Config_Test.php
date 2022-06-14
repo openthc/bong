@@ -2,13 +2,13 @@
 /**
  */
 
-namespace Test\A_Core;
+namespace OpenTHC\Bong\Test\A_Core;
 
 class A_Config_Test extends \Test\Base_Case
 {
 	function test_env()
 	{
-		$x = getenv('OPENTHC_TEST_HOST');
+		$x = getenv('OPENTHC_TEST_BASE');
 		$this->assertNotEmpty($x);
 	}
 

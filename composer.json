@@ -8,7 +8,7 @@
 		],
 		"psr-4": {
 			"OpenTHC\\Bong\\": "./lib",
-			"Test\\": "./test",
+			"OpenTHC\\Bong\\Test\\": "./test",
 			"Custom\\": "./custom"
 		}
 	},

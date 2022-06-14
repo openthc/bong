@@ -2,7 +2,7 @@
 /**
  */
 
-namespace Test\B_Auth;
+namespace OpenTHC\Bong\Test\B_Auth;
 
 class A_Open_Test extends \Test\Base_Case
 {
