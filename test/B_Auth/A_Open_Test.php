@@ -1,10 +1,11 @@
 <?php
 /**
+ * SPDX-License-Identifier: MIT
  */
 
 namespace OpenTHC\Bong\Test\B_Auth;
 
-class A_Open_Test extends \Test\Base_Case
+class A_Open_Test extends \OpenTHC\Bong\Test\Base_Case
 {
 	function test_biotrack()
 	{

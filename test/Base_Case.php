@@ -1,6 +1,6 @@
 <?php
 /**
- *
+ * SPDX-License-Identifier: MIT
  */
 
 namespace OpenTHC\Bong\Test;
@@ -8,7 +8,7 @@ namespace OpenTHC\Bong\Test;
 class Base_Case extends \PHPUnit\Framework\TestCase
 {
 	protected $_pid;
-	protected $_tmp_file = '/tmp/pipe-test-case.dat';
+	protected $_tmp_file = '/tmp/bong-test-case.tmp';
 
 	public function __construct($name = null, array $data = [], $dataName = '')
 	{
@@ -26,7 +26,7 @@ class Base_Case extends \PHPUnit\Framework\TestCase
 			'allow_redirects' => false,
 			'debug' => $_ENV['debug-http'],
 			'request.options' => array(
-					'exceptions' => false,
+				'exceptions' => false,
 			),
 			'http_errors' => false,
 			'cookies' => true,

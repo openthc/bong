@@ -7,16 +7,19 @@
  * Licenses can belong to a company in a 1:M way
  * Companies can have different permissions to act on a license's object
  *
+ * SPDX-License-Identifier: MIT
  */
 
 namespace OpenTHC\Bong\Test\A_Core;
 
-class B_CRE_Ping_Test extends \Test\Base_Case
+class B_CRE_Ping_Test extends \OpenTHC\Bong\Test\Base_Case
 {
-	public function test_load_cre()
+	/**
+	 * @test
+	 */
+	public function load_cre()
 	{
 		$cre_list = \OpenTHC\CRE::getEngineList();
-		$this->assertCount(29, $cre_list);
 
 		foreach ($cre_list as $cre_conf) {
 			// print_r($cre_conf);
@@ -29,7 +32,10 @@ class B_CRE_Ping_Test extends \Test\Base_Case
 		}
 	}
 
-	public function test_ping_cre()
+	/**
+	 * @test
+	 */
+	public function ping_cre()
 	{
 		$cre_list = \OpenTHC\CRE::getEngineList();
 		foreach ($cre_list as $cre_conf) {
@@ -37,20 +43,15 @@ class B_CRE_Ping_Test extends \Test\Base_Case
 			$cre_conf['service-key'] = getenv('OPENTHC_TEST_SERVICE_KEY');
 			$cre_conf['license'] = getenv('OPENTHC_TEST_LICENSE');
 			$cre_conf['license-key'] = getenv('OPENTHC_TEST_LICENSE_SECRET');
-			// var_dump($cre_conf);
+
 			$cre = \OpenTHC\CRE::factory($cre_conf);
 			$res = $cre->ping();
-			var_dump($res);
 
 			$this->assertIsArray($res);
 			$this->assertCount(3, $res);
 			$this->assertArrayHasKey('code', $res);
-			// $this->assertEquals(200, $res['code'], json_encode($cre_conf));
-
-			// $this->assertArrayHasKey('data', $res);
-			// $this->assertArrayHasKey('meta', $res);
-
-			// print_r($res);
+			$this->assertArrayHasKey('data', $res, sprintf('Engine: %s', $cre_conf['id']));
+			$this->assertArrayHasKey('meta', $res, sprintf('Engine: %s', $cre_conf['id']));
 
 		}
 	}

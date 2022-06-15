@@ -5,7 +5,7 @@
 
 namespace OpenTHC\Bong\Test\C_CRE_CCRS;
 
-class G_Lab_Test extends \Test\Base_Case
+class G_Lab_Test extends \OpenTHC\Bong\Test\Base_Case
 {
 	function test_env()
 	{

@@ -5,7 +5,7 @@
 
 namespace OpenTHC\Bong\Test\C_CRE_CCRS;
 
-class H_B2B_Test extends \Test\Base_Case
+class H_B2B_Test extends \OpenTHC\Bong\Test\Base_Case
 {
 	function test_env()
 	{

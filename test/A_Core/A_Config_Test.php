@@ -1,10 +1,12 @@
 <?php
 /**
+ *
+ * SPDX-License-Identifier: MIT
  */
 
 namespace OpenTHC\Bong\Test\A_Core;
 
-class A_Config_Test extends \Test\Base_Case
+class A_Config_Test extends \OpenTHC\Bong\Test\Base_Case
 {
 	function test_env()
 	{
