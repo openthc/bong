@@ -22,7 +22,7 @@ class Base_Case extends \PHPUnit\Framework\TestCase
 	function _api(): object
 	{
 		$c = new \GuzzleHttp\Client(array(
-			'base_uri' => sprintf('https://%s/', getenv('OPENTHC_TEST_HOST')),
+			'base_uri' => getenv('OPENTHC_TEST_BASE'),
 			'allow_redirects' => false,
 			'debug' => $_ENV['debug-http'],
 			'request.options' => array(

@@ -9,7 +9,7 @@ class I_B2C_Test extends \OpenTHC\Bong\Test\Base_Case
 {
 	function test_env()
 	{
-		$x = getenv('OPENTHC_TEST_HOST');
+		$x = getenv('OPENTHC_TEST_BASE');
 		$this->assertNotEmpty($x);
 	}
 
