@@ -11,6 +11,8 @@ use OpenTHC\Bong\CRE;
 
 require_once(__DIR__ . '/../boot.php');
 
+$dbc = _dbc();
+
 $file_list = _read_file_list($argv);
 
 $cookie_file0 = sprintf('%s/var/ccrs-cookies.json', APP_ROOT);
@@ -47,18 +49,22 @@ if (empty($rvt_code)) {
 	exit(1);
 }
 
+$req_file_list = [];
 
 $part_mark = '----WebKitFormBoundaryAAAA8cKhBUv35ObB';
 $post = [];
 
 foreach ($file_list as $f) {
+
+	$src_data = file_get_contents($f);
+
 	$post[] = sprintf('--%s', $part_mark);
 	$post[] = sprintf('content-disposition: form-data; name="files"; filename="%s"', basename($f));
 	// $post[] = 'content-transfer-encoding: binary';
 	$post[] = 'content-type: text/csv';
 	$post[] = '';
-	$post[] = file_get_contents($f);
-	// $post[] = '';
+	$post[] = $src_data;
+
 }
 
 // Username
@@ -76,7 +82,9 @@ $post[] = $rvt_code; // Where to get this text?
 // Closer and Combine
 $post[] = sprintf('--%s--', $part_mark);
 $post = implode("\r\n", $post);
-
+echo "Request Length: ";
+echo strlen($post);
+echo "\n";
 
 $req = __curl_init('https://cannabisreporting.lcb.wa.gov/Home/Upload');
 // curl_setopt($req, CURLOPT_VERBOSE, true);
@@ -113,13 +121,37 @@ echo "\n";
 // echo "$res";
 
 // Parse Upload Timestamp
+$res_time = null;
 if (preg_match('/(Your submission was received at .+ Pacific Time)/', $res, $m)) {
 
+	$res_time = $m[1];
 	echo "Uploaded At: {$m[1]}\n";
 
 	// Remove Files
-	foreach ($file_list as $file) {
-		unlink($file);
+	foreach ($file_list as $old_file) {
+
+		$new_file = sprintf('%s/var/ccrs-complete/%s', APP_ROOT, basename($old_file));
+		rename($old_file, $new_file);
+
+		$src_data = file_get_contents($new_file);
+		$req_code = null;
+		$req_ulid = null;
+		if (preg_match('/(\w+ UPLOAD (01\w+)).+-canary-/', $src_data, $m)) {
+
+			$req_code = $m[1];
+			$req_ulid = $m[2];
+
+			$rec = [];
+			$rec['id'] = $req_ulid;
+			$rec['name'] = $req_code;
+			$rec['source_data'] = $src_data;
+			$dbc->insert('log_upload', $rec);
+
+		} else {
+			echo "NO MATCH, Eval Canary LIne, RE_SUMBIT?\n";
+			echo "file: $new_file\n";
+		}
+
 	}
 
 } else {
