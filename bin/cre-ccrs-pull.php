@@ -124,11 +124,14 @@ function _process_csv_file($csv_file)
 	$idx_line++;
 
 	// It's our canary line
+	$req_ulid = '';
 	$csv_line_text = implode(',', $csv_line);
-	if (preg_match('/(\w+ UPLOAD.+01\w{24}).+\-canary\-/', $csv_line_text, $m)) {
+	if (preg_match('/(\w+ UPLOAD.+(01\w{24})).+\-canary\-/', $csv_line_text, $m)) {
 		echo "Canary1: '{$m[1]}'\n";
-	} elseif (preg_match('/(\w+ UPLOAD.+01\w{24})/', $csv_line_text, $m)) {
+		$req_ulid = $m[2];
+	} elseif (preg_match('/(\w+ UPLOAD.+(01\w{24}))/', $csv_line_text, $m)) {
 		echo "Canary2: '{$m[1]}'\n";
+		$req_ulid = $m[2];
 	} elseif (preg_match('/(PING (INSERT|UPDATE).+01\w{24})/', $csv_line_text, $m)) {
 		echo "Canary3: '{$m[1]}'\n";
 	} else {
@@ -154,8 +157,9 @@ function _process_csv_file($csv_file)
 		}
 
 		$csv_line = array_combine($csv_head, $csv_line);
-		$rec_guid = $csv_line[$csv_pkid];
-		// echo "Record: $rec_guid\n";
+		$csv_line['@id'] = $csv_line[$csv_pkid];
+		// $csv_line['@license'] = '';
+
 
 		if (empty($csv_line['LicenseNumber'])) {
 			continue;
@@ -167,21 +171,17 @@ function _process_csv_file($csv_file)
 			$lic_code = $csv_line['LicenseNumber'];
 			$lic_data = $dbc->fetchRow('SELECT * FROM license WHERE code = :l0', [ ':l0' => $lic_code ]);
 
-			// $sql_file = sprintf('%s/var/%s.sqlite', APP_ROOT, $lic_data['hash']);
-			// if ( ! is_file($sql_file)) {
-			// 	echo "Missing License Database for $lic_code\n";
-			// 	exit(1);
-			// }
-			// $dbc_user = new SQL(sprintf('sqlite:%s', $sql_file));
-
 		} elseif ($lic_code != $csv_line['LicenseNumber']) {
 
 			$lic_code = $csv_line['LicenseNumber'];
+			$lic_data = $dbc->fetchRow('SELECT * FROM license WHERE code = :l0', [ ':l0' => $lic_code ]);
 
-			// echo "License Switched in a File, I don't like that\n";
-			// echo "  '$lic_code' != '{$csv_line['LicenseNumber']}'\n";
-			// var_dump($csv_line);
-			// exit(1);
+		}
+
+		if (empty($lic_data)) {
+			var_dump($csv_line);
+			echo "No LIcense\n";
+			exit(1);
 		}
 
 		$cre_stat = 200;
@@ -216,38 +216,38 @@ function _process_csv_file($csv_file)
 
 		// Inflate the Old Data
 		$rec_data = $dbc->fetchOne("SELECT data FROM {$tab_name} WHERE id = :pk", [
-			':pk' => $rec_guid
+			':pk' => $csv_line['@id']
 		]);
 		if (empty($rec_data)) {
 			// Fake It
 			$rec_data = [
-				'source' => $csv_line,
+				'@source' => $csv_line,
 			];
 		} else {
 			$rec_data = json_decode($rec_data, true);
 		}
 
 		// Upscale Legacy Data
-		if (empty($rec_data['source']) && empty($rec_data['result'])) {
+		if (empty($rec_data['@source']) && empty($rec_data['@result'])) {
 			$tmp = [
-				'source' => $rec_data
+				'@source' => $rec_data
 			];
 			$rec_data = $tmp;
 		}
 
-		$rec_data['result'] = $err;
+		$rec_data['@result'] = $err;
 
 		// if ( ! empty($rec_data['ExternalId']))
 		$sql = "UPDATE {$tab_name} SET flag = :f1::int, stat = :s1, data = :d1 WHERE id = :pk";
 		$arg = [
-			':pk' => $rec_guid,
+			':pk' => $csv_line['@id'],
 			':f1' => 0, // $cre_flag,
 			':s1' => $cre_stat,
 			':d1' => json_encode($rec_data)
 			// ':cs' => $cre_stat,
 		];
 		$chk = $dbc->query($sql, $arg);
-		// echo "UPDATE: $rec_guid == $chk\n";
+		// echo "UPDATE: {$csv_line['@id']} == $chk\n";
 
 	}
 
@@ -388,10 +388,6 @@ function _process_err_list($csv_line)
 						$err_text
 					],
 				];
-				// break 2;
-			// case 'Duplicate Strain/StrainType':
-			// 	// Ignore
-			// 	break;
 			default:
 				var_dump($csv_line);
 				echo "Unexpected Error: '$err_text'\nLINE: '{$csv_line['ErrorMessage']}'\n";
