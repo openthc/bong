@@ -1,6 +1,7 @@
 <?php
 /**
  *
+ * SPDX-License-Identifier: MIT
  */
 
 namespace OpenTHC\Bong\Module;
@@ -15,7 +16,7 @@ class Lot extends \OpenTHC\Module\Base
 			$dbc = $REQ->getAttribute('dbc');
 			$res = $dbc->fetchAll('SELECT id, hash, updated_at FROM lot ORDER BY updated_at DESC');
 
-			return $RES->withJSON($res);
+			return $RES->withJSON($res, 200, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 
 		});
 

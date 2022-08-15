@@ -1,6 +1,7 @@
 <?php
 /**
  *
+ * SPDX-License-Identifier: MIT
  */
 
 namespace OpenTHC\Bong\Module;
@@ -13,7 +14,7 @@ class Variety extends \OpenTHC\Module\Base
 		$a->get('', function($REQ, $RES, $ARG) {
 
 			$dbc = $REQ->getAttribute('dbc');
-			$res = $dbc->fetchAll('SELECT id, hash, updated_at FROM variety ORDER BY updated_at DESC');
+			$res = $dbc->fetchAll('SELECT id, stat, hash, updated_at FROM variety ORDER BY updated_at DESC');
 
 			return $RES->withJSON($res);
 
