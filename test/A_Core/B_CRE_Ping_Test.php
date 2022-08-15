@@ -48,7 +48,7 @@ class B_CRE_Ping_Test extends \OpenTHC\Bong\Test\Base_Case
 			$res = $cre->ping();
 
 			$this->assertIsArray($res);
-			$this->assertCount(3, $res);
+			$this->assertCount(3, $res, sprintf('CRE: "%s"', $cre_conf['id']));
 			$this->assertArrayHasKey('code', $res);
 			$this->assertArrayHasKey('data', $res, sprintf('Engine: %s', $cre_conf['id']));
 			$this->assertArrayHasKey('meta', $res, sprintf('Engine: %s', $cre_conf['id']));

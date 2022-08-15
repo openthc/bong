@@ -46,9 +46,10 @@ class Open extends \OpenTHC\Controller\Base
 		$cre = $this->validateCRE();
 
 		if (empty($cre)) {
+			$cre = __h(strtolower(trim($_POST['cre'])));
 			return $RES->withJson([
 				'data' => null,
-				'meta' => [ 'detail' => sprintf('Invalid CRE: "%s" [CAC#017]', strtolower(trim($_POST['cre']))) ],
+				'meta' => [ 'detail' => sprintf('Invalid CRE: "%s" [CAC-017]', $cre) ],
 			], 400);
 		}
 
@@ -152,8 +153,8 @@ class Open extends \OpenTHC\Controller\Base
 		case 0:
 
 			return $RES->withJson(array(
-				'meta' => [ 'detail' => 'Invalid Username or Password [CAO#184]' ],
 				'data' => $chk,
+				'meta' => [ 'detail' => 'Invalid Username or Password [CAO-184]' ],
 			), 400);
 
 			break;

@@ -1,6 +1,8 @@
 <?php
 /**
  * App System Controller
+ *
+ * SPDX-License-Identifier: MIT
  */
 
 namespace OpenTHC\Bong\Controller;
