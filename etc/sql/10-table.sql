@@ -37,7 +37,9 @@ create table license (
 	stat int not null default 100,
 	created_at timestamp with time zone NOT NULL DEFAULT now(),
 	updated_at timestamp with time zone NOT NULL DEFAULT now(),
+	code text,
 	hash varchar(64),
+	name text,
 	data jsonb
 );
 
@@ -157,6 +159,8 @@ create table b2b_sale (
 create table b2b_sale_item (
 	id varchar(64) PRIMARY KEY,
 	b2b_sale_id varchar(64) NOT NULL,
+	flag int not null default 0,
+	stat int not null default 100,
 	created_at timestamp with time zone NOT NULL DEFAULT now(),
 	updated_at timestamp with time zone NOT NULL DEFAULT now(),
 	hash varchar(64),
@@ -176,6 +180,8 @@ create table b2c_sale (
 
 create table b2c_sale_item (
 	id varchar(64) PRIMARY KEY,
+	flag int not null default 0,
+	stat int not null default 100,
 	b2c_sale_id varchar(64) NOT NULL,
 	created_at timestamp with time zone NOT NULL DEFAULT now(),
 	updated_at timestamp with time zone NOT NULL DEFAULT now(),
@@ -191,6 +197,16 @@ create table disposal (
 	data jsonb
 );
 
+-- create table lot_destroy (
+-- 	id varchar(64) PRIMARY KEY,
+-- 	flag int not null default 0,
+-- 	stat int not null default 100,
+-- 	created_at timestamp with time zone NOT NULL DEFAULT now(),
+-- 	updated_at timestamp with time zone NOT NULL DEFAULT now(),
+-- 	hash varchar(64),
+-- 	data jsonb
+-- );
+
 create table log_delta (
 	id bigserial primary key,
 	created_at timestamp with time zone NOT NULL DEFAULT now(),
@@ -199,4 +215,14 @@ create table log_delta (
 	subject_id varchar(64) not null,
 	v0 jsonb,
 	v1 jsonb
+);
+
+create table log_upload (
+	id varchar(64) not null primary key,
+	company_id varchar(64) not null,
+	license_id varchar(64) not null,
+	created_at timestamp with time zone NOT NULL DEFAULT now(),
+	name text,
+	source_data text,
+	result_data text
 );
