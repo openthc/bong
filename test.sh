@@ -55,9 +55,9 @@ vendor/openthc/common/test/phpunit.sh "$@"
 #
 # Final Output
 test_date=$(date)
-test_note=$(tail -n1 "$output_base/phpunit.txt")
+test_note=$(tail -n1 "${OUTPUT_BASE}/phpunit.txt")
 
-cat <<HTML > "$output_main"
+cat <<HTML > "${OUTPUT_MAIN}"
 <html>
 <head>
 <meta charset="utf-8">
