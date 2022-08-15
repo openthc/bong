@@ -94,6 +94,9 @@ function _process_csv_file($csv_file)
 	// Assemble Header Line to determine Type
 	$tab_name = implode(',', $csv_head);
 	switch ($tab_name) {
+		case 'FromLicenseNumber,ToLicenseNumber,FromInventoryExternalIdentifier,ToInventoryExternalIdentifier,Quantity,TransferDate,ExternalIdentifier,CreatedBy,CreatedDate,UpdatedBy,UpdatedDate,Operation,ErrorMessage':
+			$tab_name = 'b2b_sale_item';
+			break;
 		case 'LicenseNumber,Name,IsQuarantine,ExternalIdentifier,CreatedBy,CreatedDate,UpdatedBy,UpdatedDate,Operation,ErrorMessage':
 			// Section is also used for the PING test
 			$tab_name = 'section';
@@ -132,8 +135,6 @@ function _process_csv_file($csv_file)
 	} elseif (preg_match('/(\w+ UPLOAD.+(01\w{24}))/', $csv_line_text, $m)) {
 		echo "Canary2: '{$m[1]}'\n";
 		$req_ulid = $m[2];
-	} elseif (preg_match('/(PING (INSERT|UPDATE).+01\w{24})/', $csv_line_text, $m)) {
-		echo "Canary3: '{$m[1]}'\n";
 	} else {
 		echo "Canary??:  $csv_line_text\n";
 	}
