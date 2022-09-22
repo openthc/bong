@@ -17,6 +17,28 @@ if ( ! \OpenTHC\Config::init(APP_ROOT) ) {
 	_exit_html_fail('<h1>Invalid Application Configuration [ALB-035]</h1>', 500);
 }
 
+
+/**
+ * Database Connection
+ */
+function _dbc()
+{
+	static $ret;
+
+	if (empty($ret)) {
+
+		$cfg = \OpenTHC\Config::get('database');
+		$cfg['database'] = 'openthc_bong_ccrs';
+		$dsn = sprintf('pgsql:host=%s;dbname=%s', $cfg['hostname'], $cfg['database']);
+		$ret = new SQL($dsn, $cfg['username'], $cfg['password']);
+
+	}
+
+	return $ret;
+
+}
+
+
 /**
  * Hands work Directly to View Script
  */
