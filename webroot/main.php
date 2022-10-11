@@ -19,9 +19,7 @@ if (!empty($cfg['debug'])) {
 	unset($con['phpErrorHandler']);
 }
 $con['response'] = function($c) {
-	$RES = new \OpenTHC\Bong\Response(200);
-	$RES = $RES->withHeader('content-type', 'text/html; charset=utf-8');
-	return $RES;
+	return new \OpenTHC\HTTP\Response();
 };
 
 
