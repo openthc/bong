@@ -30,7 +30,7 @@ function _dbc()
 		$cfg = \OpenTHC\Config::get('database');
 		$cfg['database'] = 'openthc_bong_ccrs';
 		$dsn = sprintf('pgsql:host=%s;dbname=%s', $cfg['hostname'], $cfg['database']);
-		$ret = new SQL($dsn, $cfg['username'], $cfg['password']);
+		$ret = new \Edoceo\Radix\DB\SQL($dsn, $cfg['username'], $cfg['password']);
 
 	}
 
