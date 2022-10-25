@@ -21,37 +21,37 @@ class B2B extends \OpenTHC\Module\Base
 		});
 
 		$a->get('/outgoing', function($REQ, $RES, $ARG) {
-			return _from_cre_file('b2b/outgoing/search.php', $RES, $ARG);
+			return _from_cre_file('b2b/outgoing/search.php', $REQ, $RES, $ARG);
 		});
 
 		$a->get('/outgoing/{guid:[\w\.]+}', function($REQ, $RES, $ARG) {
-			return _from_cre_file('b2b/outgoing/single.php', $RES, $ARG);
+			return _from_cre_file('b2b/outgoing/single.php', $REQ, $RES, $ARG);
 		});
 
 		$a->post('/outgoing/{guid:[\w\.]+}/commit', function($REQ, $RES, $ARG) {
-			return _from_cre_file('b2b/outgoing/commit.php', $RES, $ARG);
+			return _from_cre_file('b2b/outgoing/commit.php', $REQ, $RES, $ARG);
 		});
 
 		/*
 			Incoming Transfers
 		*/
 		$a->get('/incoming', function($REQ, $RES, $ARG) {
-			return _from_cre_file('b2b/incoming/search.php', $RES, $ARG);
+			return _from_cre_file('b2b/incoming/search.php', $REQ, $RES, $ARG);
 		});
 
 		$a->get('/incoming/{guid:[\w\.]+}', function($REQ, $RES, $ARG) {
-			return _from_cre_file('b2b/outgoing/single.php', $RES, $ARG);
+			return _from_cre_file('b2b/outgoing/single.php', $REQ, $RES, $ARG);
 		});
 
 		$a->post('/incoming/{guid:[\w\.]+}/accept', function($REQ, $RES, $ARG) {
-			return _from_cre_file('b2b/incoming/accept.php', $RES, $ARG);
+			return _from_cre_file('b2b/incoming/accept.php', $REQ, $RES, $ARG);
 		});
 
 		/*
 			Rejected Transfers
 		*/
 		$a->get('/rejected', function($REQ, $RES, $ARG) {
-			return _from_cre_file('b2b/rejected/search.php', $RES, $ARG);
+			return _from_cre_file('b2b/rejected/search.php', $REQ, $RES, $ARG);
 		});
 
 	}

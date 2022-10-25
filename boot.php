@@ -42,7 +42,7 @@ function _dbc()
 /**
  * Hands work Directly to View Script
  */
-function _from_cre_file($f0, $RES, $ARG)
+function _from_cre_file($f0, $REQ, $RES, $ARG)
 {
 	$f0 = trim($f0, '/');
 	$f1 = sprintf('%s/lib/CRE/%s/%s', APP_ROOT, $_SESSION['cre']['engine'], $f0);

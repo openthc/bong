@@ -20,11 +20,11 @@ class Lab extends \OpenTHC\Module\Base
 		});
 
 		// $a->get('', function($REQ, $RES, $ARG) {
-		// 	return _from_cre_file('lab/search.php', $RES, $ARG);
+		// 	return _from_cre_file('lab/search.php', $REQ, $RES, $ARG);
 		// });
 
 		$a->get('/{id}', function($REQ, $RES, $ARG) {
-			return _from_cre_file('lab/single.php', $RES, $ARG);
+			return _from_cre_file('lab/single.php', $REQ, $RES, $ARG);
 		});
 
 	}

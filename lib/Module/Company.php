@@ -20,5 +20,10 @@ class Company extends \OpenTHC\Module\Base
 
 		});
 
+		// Single
+		// $c = new \OpenTHC\Bong\Controller\Single($this->_container);
+		// $c->tab = 'company';
+		$a->get('/{id}', 'OpenTHC\Bong\Controller\Single');
+
 	}
 }

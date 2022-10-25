@@ -21,11 +21,11 @@ class Lot extends \OpenTHC\Module\Base
 		});
 
 		// $a->get('', function($REQ, $RES, $ARG) {
-		// 	return _from_cre_file('lot/search.php', $RES, $ARG);
+		// 	return _from_cre_file('lot/search.php', $REQ, $RES, $ARG);
 		// });
 
 		// $a->get('/history', function($REQ, $RES, $ARG) {
-		// 	return _from_cre_file('lot/history/search.php', $RES, $ARG);
+		// 	return _from_cre_file('lot/history/search.php', $REQ, $RES, $ARG);
 		// });
 
 		// Single
@@ -35,7 +35,7 @@ class Lot extends \OpenTHC\Module\Base
 
 		// View Item
 		// $a->get('/{guid}', function($REQ, $RES, $ARG) {
-		// 	return _from_cre_file('lot/single.php', $RES, $ARG);
+		// 	return _from_cre_file('lot/single.php', $REQ, $RES, $ARG);
 		// });
 
 		//	// Update Item
@@ -45,7 +45,7 @@ class Lot extends \OpenTHC\Module\Base
 
 		// Delete Item
 		$a->delete('/{id}', function($REQ, $RES, $ARG) {
-			return _from_cre_file('lot/delete.php', $RES, $ARG);
+			return _from_cre_file('lot/delete.php', $REQ, $RES, $ARG);
 		});
 
 

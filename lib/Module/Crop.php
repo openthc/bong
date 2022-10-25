@@ -28,7 +28,7 @@ class Crop extends \OpenTHC\Module\Base
 
 		// Search
 		// $a->get('', function($REQ, $RES, $ARG) {
-		// 	return _from_cre_file('crop/search.php', $RES, $ARG);
+		// 	return _from_cre_file('crop/search.php', $REQ, $RES, $ARG);
 		// });
 
 		// Create
@@ -41,26 +41,26 @@ class Crop extends \OpenTHC\Module\Base
 
 		// Single
 		// $a->get('/{id}', function($REQ, $RES, $ARG) {
-		// 	return _from_cre_file('plant/single.php', $RES, $ARG);
+		// 	return _from_cre_file('plant/single.php', $REQ, $RES, $ARG);
 		// });
 
 		// Update
 		$a->post('/{id}', function($REQ, $RES, $ARG) {
-			return _from_cre_file('crop/update.php', $RES, $ARG);
+			return _from_cre_file('crop/update.php', $REQ, $RES, $ARG);
 		});
 
 		// Delete
 		$a->delete('/{id}', function($REQ, $RES, $ARG) {
-			return _from_cre_file('crop/delete.php', $RES, $ARG);
+			return _from_cre_file('crop/delete.php', $REQ, $RES, $ARG);
 		});
 
 		// Convenience Functions
 		$a->post('/{id}/move', function($REQ, $RES, $ARG) {
-			return _from_cre_file('crop/update.php', $RES, $ARG);
+			return _from_cre_file('crop/update.php', $REQ, $RES, $ARG);
 		});
 
 		//$a->post('/{id}/collect', function($REQ, $RES, $ARG) {
-		//	return _from_cre_file('crop/collect.php', $RES, $ARG);
+		//	return _from_cre_file('crop/collect.php', $REQ, $RES, $ARG);
 		//});
 
 	}
