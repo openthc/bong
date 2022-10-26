@@ -1,6 +1,6 @@
 <?php
 /**
- *
+ * Create a Section
  *
  * SPDX-License-Identifier: MIT
  */

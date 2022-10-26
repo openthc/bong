@@ -1,12 +1,13 @@
 <?php
 /**
- * Update a Section
+ * Delete a Section
  *
  * SPDX-License-Identifier: MIT
  */
 
 $dbc = $REQ->getAttribute('dbc');
 
+// Object Exists?
 $sql = 'SELECT id, license_id FROM section WHERE id = :s0';
 $arg = [ ':s0' => $ARG['id'] ];
 $chk = $dbc->fetchRow($sql, $arg);
@@ -19,6 +20,7 @@ if (empty($chk['id'])) {
 	], 404);
 }
 
+// Access?
 if (empty($chk['license_id']) != $RES->getAttribute('license_id')) {
 	return $RES->withJSON([
 		'data' => null,
@@ -28,12 +30,11 @@ if (empty($chk['license_id']) != $RES->getAttribute('license_id')) {
 	], 403);
 }
 
-// Delete It
-$sql = 'UPDATE section SET name :n0, updated_at = now() WHERE license_id = :l0 AND id = :s0';
+// Delete
+$sql = 'UPDATE section SET stat = 410, updated_at = now() WHERE license_id = :l0 AND id = :s0';
 $arg = [
 	':l0' => $_SERVER['HTTP_OPENTHC_LICENSE'],
 	':s0' => $ARG['id'],
-	':n0' => $_POST['name'],
 ];
 
 $ret = $dbc->query($sql, $arg);
