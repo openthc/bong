@@ -13,6 +13,8 @@ class Variety extends \OpenTHC\Module\Base
 		// Search
 		$a->get('', function($REQ, $RES, $ARG) {
 
+			// return _from_cre_file('variety/search.php', $REQ, $RES, $ARG);
+
 			$dbc = $REQ->getAttribute('dbc');
 			$res = $dbc->fetchAll('SELECT id, stat, hash, updated_at FROM variety ORDER BY updated_at DESC');
 
@@ -20,10 +22,25 @@ class Variety extends \OpenTHC\Module\Base
 
 		});
 
+		// Create
+		$a->post('', function($REQ, $RES, $ARG) {
+			return _from_cre_file('variety/create.php', $REQ, $RES, $ARG);
+		});
+
 		// Single
 		$c = new \OpenTHC\Bong\Controller\Single($this->_container);
 		$c->tab = 'variety';
 		$a->get('/{id}', $c);
+
+		// Update
+		$a->post('/{id}', function($REQ, $RES, $ARG) {
+			return _from_cre_file('variety/update.php', $REQ, $RES, $ARG);
+		});
+
+		// Delete
+		$a->delete('/{id}', function($REQ, $RES, $ARG) {
+			return _from_cre_file('variety/delete.php', $REQ, $RES, $ARG);
+		});
 
 	}
 }
