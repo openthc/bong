@@ -16,9 +16,24 @@ class Auth
 	 */
 	function __invoke($REQ, $RES, $NMW)
 	{
-		if ( ! empty($_SERVER['HTTP_OPENTHC_JWT'])) {
+		$jwt = null;
 
-			$chk = JWT::decode($_SERVER['HTTP_OPENTHC_JWT']);
+		if ( ! empty($_GET['jwt'])) {
+			$jwt = $_GET['jwt'];
+		}
+		if ( ! empty($_SERVER['HTTP_OPENTHC_JWT'])) {
+			$jwt = $_SERVER['HTTP_OPENTHC_JWT'];
+		}
+		if ( ! empty($_SERVER['HTTP_AUTHORIZATION'])) {
+			if (preg_match('/^Bearer jwt:(.+)$/', $_SERVER['HTTP_AUTHORIZATION'], $m)) {
+				$jwt = $m[1];
+			}
+		}
+
+		// Check JWT
+		if ( ! empty($jwt)) {
+
+			$chk = JWT::decode($jwt);
 
 			// Temp Shit Hack
 			$_SESSION['cre'] = [
