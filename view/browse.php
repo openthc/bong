@@ -48,7 +48,7 @@
 	<div><a href="/auth/open?r=%2Fbrowse">/auth/open</a> - Authenticate</div>
 	<div>
 		<span class="badge bg-primary">BioTrack</span>
-		<span class="badge bg-primary">LeafData</span>
+		<span class="badge bg-primary">CCRS</span>
 		<span class="badge bg-primary">METRC</span>
 	</div>
 </li>
@@ -115,7 +115,7 @@ printf($fmt, 'sync-time-omega', $t1);
 	<div>
 		<span class="badge bg-dark">system</span>
 		<span class="badge bg-primary">BioTrack</span>
-		<span class="badge bg-secondary">LeafData</span>
+		<span class="badge bg-secondary">CCRS</span>
 		<span class="badge bg-secondary">METRC</span>
 	</div>
 </li>
@@ -124,7 +124,7 @@ printf($fmt, 'sync-time-omega', $t1);
 	<div>
 		<span class="badge bg-dark">system</span>
 		<span class="badge bg-warning">BioTrack</span>
-		<span class="badge bg-primary">LeafData</span>
+		<span class="badge bg-primary">CCRS</span>
 		<span class="badge bg-secondary">METRC</span>
 	</div>
 </li>
@@ -133,7 +133,7 @@ printf($fmt, 'sync-time-omega', $t1);
 	<div>
 		<span class="badge bg-dark">system</span>
 		<span class="badge bg-primary">BioTrack</span>
-		<span class="badge bg-primary">LeafData</span>
+		<span class="badge bg-primary">CCRS</span>
 		<span class="badge bg-primary">METRC</span>
 	</div>
 </li>
@@ -142,7 +142,7 @@ printf($fmt, 'sync-time-omega', $t1);
 	<div>
 		<span class="badge bg-dark">system</span>
 		<span class="badge bg-primary">BioTrack</span>
-		<span class="badge bg-primary">LeafData</span>
+		<span class="badge bg-primary">CCRS</span>
 		<span class="badge bg-warning">METRC</span>
 	</div>
 </li>
@@ -151,7 +151,7 @@ printf($fmt, 'sync-time-omega', $t1);
 	<div>
 		<span class="badge bg-dark">system</span>
 		<span class="badge bg-primary">BioTrack</span>
-		<span class="badge bg-primary">LeafData</span>
+		<span class="badge bg-primary">CCRS</span>
 		<span class="badge bg-primary">METRC</span>
 	</div>
 </li>
@@ -159,7 +159,7 @@ printf($fmt, 'sync-time-omega', $t1);
 	<div><a href="/product">/product</a> - Product Details</div>
 	<div>
 		<span class="badge bg-warning">BioTrack</span>
-		<span class="badge bg-primary">LeafData</span>
+		<span class="badge bg-primary">CCRS</span>
 		<span class="badge bg-primary">METRC</span>
 	</div>
 </li>
@@ -167,7 +167,7 @@ printf($fmt, 'sync-time-omega', $t1);
 	<div><a href="/variety">/variety</a> - Variety (aka: Cultivar, Strains)</div>
 	<div>
 		<span class="badge bg-warning">BioTrack</span>
-		<span class="badge bg-primary">LeafData</span>
+		<span class="badge bg-primary">CCRS</span>
 		<span class="badge bg-primary">METRC</span>
 	</div>
 </li>
@@ -175,7 +175,7 @@ printf($fmt, 'sync-time-omega', $t1);
 	<div><a href="/vehicle">/vehicle</a> - Vehicles</div>
 	<div>
 		<span class="badge bg-primary">BioTrack</span>
-		<span class="badge bg-warning">LeafData</span>
+		<span class="badge bg-warning">CCRS</span>
 		<span class="badge bg-secondary">METRC</span>
 	</div>
 </li>
@@ -183,7 +183,7 @@ printf($fmt, 'sync-time-omega', $t1);
 	<div><a href="/section">/section</a> - an Area or Room or Zone</div>
 	<div>
 		<span class="badge bg-primary">BioTrack</span>
-		<span class="badge bg-primary">LeafData</span>
+		<span class="badge bg-primary">CCRS</span>
 		<span class="badge bg-primary">METRC</span>
 	</div>
 </li>
@@ -193,16 +193,14 @@ printf($fmt, 'sync-time-omega', $t1);
 
 <div class="mb-4">
 <h2>Batches</h2>
-<p>In most systems Batches are logical containers for Plants and Lots.
-Notably in LeafData the Batch also contains plant collection details.
-</p>
+<p>In most systems Batches are logical containers for Plants and Lots.</p>
 
 <ul class="list-group">
 <li class="list-group-item d-flex justify-content-between align-items-center">
 	<div> <a href="/batch">/batch</a> - Batch Details</div>
 	<div>
 		<span class="badge bg-secondary">BioTrack</span>
-		<span class="badge bg-primary">LeafData</span>
+		<span class="badge bg-secondary">CCRS</span>
 		<span class="badge bg-warning">METRC</span>
 	</div>
 </li>
@@ -219,7 +217,7 @@ Notably in LeafData the Batch also contains plant collection details.
 	<div> <a href="/crop">/crop</a> - Crop Details</div>
 	<div>
 		<span class="badge bg-primary">BioTrack</span>
-		<span class="badge bg-primary">LeafData</span>
+		<span class="badge bg-primary">CCRS</span>
 		<span class="badge bg-primary">METRC</span>
 	</div>
 </li>
@@ -227,7 +225,7 @@ Notably in LeafData the Batch also contains plant collection details.
 	<div> <a href="/crop/collect">/crop/collect</a> - Plant Collection Details</div>
 	<div>
 		<span class="badge bg-primary">BioTrack</span>
-		<span class="badge bg-primary">LeafData</span>
+		<span class="badge bg-primary">CCRS</span>
 		<span class="badge bg-primary">METRC</span>
 	</div>
 </li>
@@ -244,7 +242,7 @@ Notably in LeafData the Batch also contains plant collection details.
 	<div><a href="/lot">/lot</a> - Inventory Lot Details</div>
 	<div>
 		<span class="badge bg-primary">BioTrack</span>
-		<span class="badge bg-primary">LeafData</span>
+		<span class="badge bg-primary">CCRS</span>
 		<span class="badge bg-primary">METRC</span>
 	</div>
 </li>
@@ -252,7 +250,7 @@ Notably in LeafData the Batch also contains plant collection details.
 	<div><a href="/lot/history">/lot/history</a> - Inventory Lot History (Adjustment) Details</div>
 	<div>
 		<span class="badge bg-primary">BioTrack</span>
-		<span class="badge bg-primary">LeafData</span>
+		<span class="badge bg-primary">CCRS</span>
 		<span class="badge bg-primary">METRC</span>
 	</div>
 </li>
@@ -260,7 +258,7 @@ Notably in LeafData the Batch also contains plant collection details.
 	<div><a href="/disposal">/disposal</a> - Inventory Waste and Disposal Details</div>
 	<div>
 		<span class="badge bg-primary">BioTrack</span>
-		<span class="badge bg-primary">LeafData</span>
+		<span class="badge bg-primary">CCRS</span>
 		<span class="badge bg-secondary">METRC</span>
 	</div>
 </li>
@@ -277,7 +275,7 @@ Notably in LeafData the Batch also contains plant collection details.
 	<div><a href="/lab">/lab</a> - Inventory Lab Samples and Results</div>
 	<div>
 		<span class="badge bg-primary">BioTrack</span>
-		<span class="badge bg-primary">LeafData</span>
+		<span class="badge bg-primary">CCRS</span>
 		<span class="badge bg-warning">METRC</span>
 	</div>
 </li>
@@ -293,7 +291,7 @@ Notably in LeafData the Batch also contains plant collection details.
 	<div><a href="/b2b/outgoing">/b2b/outgoing</a> - B2B Sales</div>
 	<div>
 		<span class="badge bg-primary">BioTrack</span>
-		<span class="badge bg-primary">LeafData</span>
+		<span class="badge bg-primary">CCRS</span>
 		<span class="badge bg-warning">METRC</span>
 	</div>
 </li>
@@ -301,7 +299,7 @@ Notably in LeafData the Batch also contains plant collection details.
 	<div><a href="/b2b/incoming">/b2b/incoming</a> - B2B Sales to Accept</div>
 	<div>
 		<span class="badge bg-primary">BioTrack</span>
-		<span class="badge bg-primary">LeafData</span>
+		<span class="badge bg-primary">CCRS</span>
 		<span class="badge bg-warning">METRC</span>
 	</div>
 </li>
@@ -309,7 +307,7 @@ Notably in LeafData the Batch also contains plant collection details.
 	<div><a href="/b2b/rejected">/b2b/rejected</a> - Rejects/Returns</div>
 	<div>
 		<span class="badge bg-primary">BioTrack</span>
-		<span class="badge bg-primary">LeafData</span>
+		<span class="badge bg-primary">CCRS</span>
 		<span class="badge bg-warning">METRC</span>
 	</div>
 </li>
@@ -326,7 +324,7 @@ Notably in LeafData the Batch also contains plant collection details.
 	<div><a href="/b2c">/b2c</a> - B2C Sales</div>
 	<div>
 		<span class="badge bg-primary">BioTrack</span>
-		<span class="badge bg-primary">LeafData</span>
+		<span class="badge bg-primary">CCRS</span>
 		<span class="badge bg-primary">METRC</span>
 	</div>
 </li>
