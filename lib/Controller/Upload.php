@@ -20,16 +20,35 @@ class Upload extends \OpenTHC\Controller\Base
 			case 'POST':
 
 				$type = $_SERVER['CONTENT_TYPE']; // text/csv
-				$size = $_SERVER['CONTENT_LENGTH'];
+				switch ($type) {
+					case 'text/csv':
 
-				$source_name = $_SERVER['HTTP_CONTENT_NAME'];
+						$size = $_SERVER['CONTENT_LENGTH'];
 
-				$output_data = file_get_contents('php://input');
-				$output_file = sprintf('%s/var/ccrs-incoming/%s', APP_ROOT, $source_name);
+						$source_name = $_SERVER['HTTP_CONTENT_NAME'];
 
-				$output_size = file_put_contents($output_file, $output_data);
+						$output_data = file_get_contents('php://input');
+						$output_file = sprintf('%s/var/ccrs-incoming/%s', APP_ROOT, $source_name);
 
-				__exit_text("Uploaded $output_file is $output_size bytes\n");
+						$output_size = file_put_contents($output_file, $output_data);
+
+						__exit_text("Uploaded $output_file is $output_size bytes\n");
+
+						break;
+
+					case 'text/email':
+
+						$size = $_SERVER['CONTENT_LENGTH'];
+
+						$output_data = file_get_contents('php://input');
+						$output_name = sha1($output_data);
+						$output_file = sprintf('%s/var/ccrs-incoming-mail/%s', APP_ROOT, $output_name);
+
+						$output_size = file_put_contents($output_file, $output_data);
+
+						__exit_text("Uploaded $output_file is $output_size bytes\n");
+
+				}
 
 		}
 
@@ -62,9 +81,29 @@ class Upload extends \OpenTHC\Controller\Base
 			'name' => $_SERVER['HTTP_OPENTHC_LICENSE_NAME'],
 		];
 
+		if (empty($License['id'])) {
+			return $RES->withJSON([
+				'data' => [],
+				'meta' => [ 'detail' => 'Invalid Request [LCU-068]' ]
+			], 400);
+		}
+
+		if (empty($License['code'])) {
+			return $RES->withJSON([
+				'data' => [],
+				'meta' => [ 'detail' => 'Invalid Request [LCU-075]' ]
+			], 400);
+		}
+
+		if (empty($License['name'])) {
+			$License['name'] = $License['id'];
+		}
+
+
 		// Update License Map
 		$sql = <<<SQL
-		INSERT INTO license (id, company_id, code, name) VALUES (:l0, :c0, :lc, :ln)
+		INSERT INTO license (id, company_id, code, name)
+		VALUES (:l0, :c0, :lc, :ln)
 		ON CONFLICT (id) DO
 		UPDATE SET company_id = :c0, code = :lc, name = :ln
 		SQL;
@@ -85,6 +124,24 @@ class Upload extends \OpenTHC\Controller\Base
 		if ( ! empty($output_data)) {
 
 			file_put_contents($output_file, $output_data);
+
+			if (preg_match('/(\w+ UPLOAD (01\w+)).+-canary-/', $output_data, $m)) {
+
+				$req_code = $m[1];
+				$req_ulid = $m[2];
+
+				$rec = [];
+				$rec['id'] = $req_ulid;
+				$rec['license_id'] = $License['id'];
+				$rec['name'] = $req_code;
+				$rec['source_data'] = json_encode([
+					'name' => $source_name,
+					'data' => $output_data
+				]);
+
+				$dbc_bong->insert('log_upload', $rec);
+
+			}
 
 			// Symlink to License Code?
 			$csv_pkid = 'ExternalIdentifier';
@@ -113,7 +170,7 @@ class Upload extends \OpenTHC\Controller\Base
 				default:
 					return $RES->withJSON([
 						'data' => $source_type,
-						'meta' => [ 'detail' => 'Invalid File Type' ]
+						'meta' => [ 'detail' => 'Invalid File Type [LCU-155]' ]
 					], 400);
 			}
 
@@ -142,6 +199,7 @@ class Upload extends \OpenTHC\Controller\Base
 
 				$txt = implode(',', $rec);
 				if (preg_match('/\-canary\-/', $txt)) {
+					// Jam this Record into the log_upload table?
 					$skip = true;
 				}
 
@@ -212,7 +270,7 @@ class Upload extends \OpenTHC\Controller\Base
 		INSERT INTO {table} (id, license_id, name, data, hash)
 		VALUES (:pk, :l0, :n0, :d0, :h0)
 		ON CONFLICT (id) DO
-		UPDATE SET updated_at = now(), stat = 100, hash = :h0, data = data || :d0
+		UPDATE SET updated_at = now(), stat = 100, hash = :h0, data = {table}.data || :d0
 		WHERE {table}.id = :pk AND {table}.license_id = :l0 AND {table}.hash != :h0
 		SQL;
 
@@ -238,13 +296,9 @@ class Upload extends \OpenTHC\Controller\Base
 	function upsert_b2b_sale($RES, $dbc_bong, $License, $csv_type, $row)
 	{
 		// Insert the Sale Record?
-
 		if ( ! empty($row['LicenseNumber'])) {
 			if ($row['ToLicenseNumber'] != $License['code']) {
 				// This is a Problem
-				// $License = $dbc_bong->fetchRow('SELECT * FROM license WHERE code = :l0', [
-				// 	':l0' => $row['LicenseNumber']
-				// ]);
 				return $RES->withJSON([
 					'data' => "{$row['ToLicenseNumber']} != {$License['code']}",
 					'meta' => [ 'detail' => 'License Conflict [LCU-229]' ]
@@ -258,9 +312,10 @@ class Upload extends \OpenTHC\Controller\Base
 		$sql = <<<SQL
 		INSERT INTO b2b_sale (id, name, license_id_source, license_id_target, flag, stat)
 		VALUES (:b2b0, :n0, :ls0, :lt0, :f0, :s0)
-		ON CONFICT (id) DO
-		UPDATE SET updated_at :now()
+		ON CONFLICT (id) DO NOTHING
 		SQL;
+		// UPDATE SET updated_at = now()
+		// UPDATE SET updated_at :now(), data = :rd
 
 		$arg = [
 			':b2b0' => $b2b_id,
