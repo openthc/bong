@@ -26,6 +26,11 @@ class License extends \OpenTHC\Module\Base
 		// Single
 		$a->get('/{id}', function($REQ, $RES, $ARG) {
 
+			if ('current' == $ARG['id']) {
+				$ARG['id'] = $_SESSION['License']['id'];
+			}
+			// return _from_cre_file('license/single.php', $REQ, $RES, $ARG);
+
 			$ret = [];
 			$ret['data'] = null;
 			$ret['meta'] = [];
