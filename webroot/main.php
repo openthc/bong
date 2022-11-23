@@ -9,12 +9,12 @@ require_once(dirname(dirname(__FILE__)) . '/boot.php');
 
 // Slim Application
 $cfg = [];
-$cfg['debug'] = true;
+$cfg['debug'] = false;
 $app = new \OpenTHC\App($cfg);
 
 // Container Stuff
 $con = $app->getContainer();
-if (!empty($cfg['debug'])) {
+if ( ! empty($cfg['debug'])) {
 	unset($con['errorHandler']);
 	unset($con['phpErrorHandler']);
 }
@@ -25,6 +25,7 @@ $con['response'] = function($c) {
 
 // Authentication
 $app->group('/auth', 'OpenTHC\Bong\Module\Auth')
+	->add('OpenTHC\Bong\Middleware\Auth')
 	->add('OpenTHC\Middleware\Session');
 
 
@@ -32,13 +33,16 @@ $app->group('/auth', 'OpenTHC\Bong\Module\Auth')
 $app->map([ 'GET', 'POST' ], '/browse', 'OpenTHC\Bong\Controller\Browse')
 	->add('OpenTHC\Bong\Middleware\Database')
 	->add('OpenTHC\Bong\Middleware\CRE')
+	->add('OpenTHC\Bong\Middleware\Auth')
 	->add('OpenTHC\Middleware\Session');
 
-// Types
+
+// License Type (move to /license/type-list?)
 $app->get('/license-type', 'OpenTHC\Bong\Controller\System:license_type')
 	->add('OpenTHC\Bong\Middleware\CRE')
 	->add('OpenTHC\Middleware\Session');
 
+// Product Type (move to /product/type-list?)
 $app->get('/product-type', 'OpenTHC\Bong\Controller\System:product_type')
 	->add('OpenTHC\Bong\Middleware\CRE')
 	->add('OpenTHC\Middleware\Session');
@@ -47,37 +51,44 @@ $app->get('/product-type', 'OpenTHC\Bong\Controller\System:product_type')
 $app->group('/company', 'OpenTHC\Bong\Module\Company')
 	->add('OpenTHC\Bong\Middleware\Database')
 	->add('OpenTHC\Bong\Middleware\CRE')
+	->add('OpenTHC\Bong\Middleware\Auth')
 	->add('OpenTHC\Middleware\Session');
 
 $app->group('/contact', 'OpenTHC\Bong\Module\Contact')
 	->add('OpenTHC\Bong\Middleware\Database')
 	->add('OpenTHC\Bong\Middleware\CRE')
+	->add('OpenTHC\Bong\Middleware\Auth')
 	->add('OpenTHC\Middleware\Session');
 
 $app->group('/license', 'OpenTHC\Bong\Module\License')
 	->add('OpenTHC\Bong\Middleware\Database')
 	->add('OpenTHC\Bong\Middleware\CRE')
+	->add('OpenTHC\Bong\Middleware\Auth')
 	->add('OpenTHC\Middleware\Session');
 
 // Core Company Specific Objects
 $app->group('/product', 'OpenTHC\Bong\Module\Product')
 	->add('OpenTHC\Bong\Middleware\Database')
 	->add('OpenTHC\Bong\Middleware\CRE')
+	->add('OpenTHC\Bong\Middleware\Auth')
 	->add('OpenTHC\Middleware\Session');
 
 $app->group('/section', 'OpenTHC\Bong\Module\Section')
 	->add('OpenTHC\Bong\Middleware\Database')
 	->add('OpenTHC\Bong\Middleware\CRE')
+	->add('OpenTHC\Bong\Middleware\Auth')
 	->add('OpenTHC\Middleware\Session');
 
 $app->group('/variety', 'OpenTHC\Bong\Module\Variety')
 	->add('OpenTHC\Bong\Middleware\Database')
 	->add('OpenTHC\Bong\Middleware\CRE')
+	->add('OpenTHC\Bong\Middleware\Auth')
 	->add('OpenTHC\Middleware\Session');
 
 $app->group('/vehicle', 'OpenTHC\Bong\Module\Vehicle')
 	->add('OpenTHC\Bong\Middleware\Database')
 	->add('OpenTHC\Bong\Middleware\CRE')
+	->add('OpenTHC\Bong\Middleware\Auth')
 	->add('OpenTHC\Middleware\Session');
 
 // $app->group('/data', 'OpenTHC\Bong\Module\Data')
@@ -96,6 +107,7 @@ $app->group('/vehicle', 'OpenTHC\Bong\Module\Vehicle')
 $app->group('/crop', 'OpenTHC\Bong\Module\Crop')
 	->add('OpenTHC\Bong\Middleware\Database')
 	->add('OpenTHC\Bong\Middleware\CRE')
+	->add('OpenTHC\Bong\Middleware\Auth')
 	->add('OpenTHC\Middleware\Session');
 
 
@@ -103,6 +115,7 @@ $app->group('/crop', 'OpenTHC\Bong\Module\Crop')
 $app->group('/lot', 'OpenTHC\Bong\Module\Lot')
 	->add('OpenTHC\Bong\Middleware\Database')
 	->add('OpenTHC\Bong\Middleware\CRE')
+	->add('OpenTHC\Bong\Middleware\Auth')
 	->add('OpenTHC\Middleware\Session');
 
 
@@ -110,6 +123,7 @@ $app->group('/lot', 'OpenTHC\Bong\Module\Lot')
 $app->group('/lab', 'OpenTHC\Bong\Module\Lab')
 	->add('OpenTHC\Bong\Middleware\Database')
 	->add('OpenTHC\Bong\Middleware\CRE')
+	->add('OpenTHC\Bong\Middleware\Auth')
 	->add('OpenTHC\Middleware\Session');
 
 
@@ -117,6 +131,7 @@ $app->group('/lab', 'OpenTHC\Bong\Module\Lab')
 $app->group('/b2b', 'OpenTHC\Bong\Module\B2B')
 	->add('OpenTHC\Bong\Middleware\Database')
 	->add('OpenTHC\Bong\Middleware\CRE')
+	->add('OpenTHC\Bong\Middleware\Auth')
 	->add('OpenTHC\Middleware\Session');
 
 
@@ -124,6 +139,7 @@ $app->group('/b2b', 'OpenTHC\Bong\Module\B2B')
 $app->group('/b2c', 'OpenTHC\Bong\Module\B2C')
 	->add('OpenTHC\Bong\Middleware\Database')
 	->add('OpenTHC\Bong\Middleware\CRE')
+	->add('OpenTHC\Bong\Middleware\Auth')
 	->add('OpenTHC\Middleware\Session');
 
 
@@ -146,6 +162,7 @@ $app->group('/b2c', 'OpenTHC\Bong\Module\B2C')
 // Log Access
 $app->map([ 'GET', 'POST' ], '/log', 'OpenTHC\Bong\Controller\Log')
 	->add('OpenTHC\Bong\Middleware\Database')
+	->add('OpenTHC\Bong\Middleware\Auth')
 	->add('OpenTHC\Middleware\Session');
 
 // Display System Info
@@ -165,7 +182,11 @@ $app->get('/system', 'OpenTHC\Bong\Controller\System');
 $app->get('/system/ping', 'OpenTHC\Bong\Controller\System:ping');
 
 
-$app->post('/upload', 'OpenTHC\Bong\Controller\Upload');
+// Data Uploads - CSV, Email, etc
+$app->post('/upload', 'OpenTHC\Bong\Controller\Upload:outgoing');
+$app->post('/upload/incoming', 'OpenTHC\Bong\Controller\Upload:incoming');
+$app->post('/upload/outgoing', 'OpenTHC\Bong\Controller\Upload:outgoing');
+$app->get('/upload/log', 'OpenTHC\Bong\Controller\Upload:log');
 
 
 // Custom Middleware?
