@@ -14,6 +14,7 @@ class License extends \OpenTHC\Module\Base
 	 */
 	function __invoke($a)
 	{
+		// Search
 		$a->get('', function($REQ, $RES, $ARG) {
 
 			$dbc = $REQ->getAttribute('dbc');
@@ -22,6 +23,12 @@ class License extends \OpenTHC\Module\Base
 			return $RES->withJSON($res, 200, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 
 		});
+
+		// Create
+		$a->post('', function($REQ, $RES, $ARG) {
+			return _from_cre_file('license/create.php', $REQ, $RES, $ARG);
+		});
+
 
 		// Single
 		$a->get('/{id}', function($REQ, $RES, $ARG) {
