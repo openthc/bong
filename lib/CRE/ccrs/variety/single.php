@@ -21,6 +21,8 @@ if (empty($res['id'])) {
 	], 404);
 }
 
+$res['data'] = json_decode($res['data'], true);
+
 return $RES->withJSON([
 	'data' => $res,
 	'meta' => [],

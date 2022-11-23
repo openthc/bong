@@ -13,7 +13,7 @@ $arg = [
 	':s0' => $ARG['id'],
 ];
 
-$res = $dbc->fetchOne($sql, $arg);
+$res = $dbc->fetchRow($sql, $arg);
 if (empty($res['id'])) {
 	return $RES->withJSON([
 		'data' => null,

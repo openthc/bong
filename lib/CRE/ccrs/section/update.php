@@ -28,8 +28,8 @@ if (empty($chk['license_id']) != $RES->getAttribute('license_id')) {
 	], 403);
 }
 
-// Delete It
-$sql = 'UPDATE section SET name :n0, updated_at = now() WHERE license_id = :l0 AND id = :s0';
+// Update It
+$sql = 'UPDATE section SET name = :n0, updated_at = now() WHERE license_id = :l0 AND id = :s0';
 $arg = [
 	':l0' => $_SERVER['HTTP_OPENTHC_LICENSE'],
 	':s0' => $ARG['id'],
@@ -40,7 +40,8 @@ $ret = $dbc->query($sql, $arg);
 if (1 == $ret) {
 	return $RES->withJSON([
 		'data' => [
-			'stat' => 410,
+			'id' => $ARG['id'],
+			'name' => $_POST['name']
 		],
 		'meta' => [],
 	]);
