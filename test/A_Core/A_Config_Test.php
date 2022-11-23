@@ -15,19 +15,23 @@ class A_Config_Test extends \OpenTHC\Bong\Test\Base_Case
 	}
 
 	/**
+	 * @test
 	 */
-	function test_psk()
+	function all_config()
 	{
-		$x = \OpenTHC\Config::get('psk');
-		$this->assertNotEmpty($x);
-	}
+		$key_list = [
+			'cre/usa/wa/ccrs/username',
+			'cre/usa/wa/ccrs/password',
+			'cre/usa/wa/ccrs/service-key',
+			'database',
+			'tz',
+		];
 
-	/**
-	 */
-	function test_tz()
-	{
-		$x = \OpenTHC\Config::get('tz');
-		$this->assertNotEmpty($x);
+		foreach ($key_list as $k) {
+			$x = \OpenTHC\Config::get($k);
+			$this->assertNotEmpty($x, sprintf('%s is empty', $k));
+		}
+
 	}
 
 }
