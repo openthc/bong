@@ -2,7 +2,7 @@
 /**
  * Authenticate
  *
- * SPDX-License-Identifier: GPL-3.0-only
+ * SPDX-License-Identifier: MIT
  */
 
 ?>
@@ -14,7 +14,7 @@
 	<h1 class="card-header"><?= h($data['Page']['title']) ?></h1>
 	<div class="card-body">
 
-<div class="form-group">
+<div class="mb-2">
 	<label>CRE:</label>
 	<select class="form-control" id="cre" name="cre">
 	<option value="">- Select CRE -</option>
@@ -31,42 +31,42 @@
 	</select>
 </div>
 
-<div class="form-group" data-ccrs="true" data-metrc="true">
+<div class="mb-2" data-ccrs="true" data-metrc="true">
 	<label>Service API Key:</label>
 	<input autocomplete="off"
 		class="form-control" name="service-key"
 		placeholder="CCRS, METRC" value="<?= h($data['cre_service_key']) ?>">
 </div>
 
-<div class="form-group" data-ccrs="true" data-biotrack="true" data-leafdata="true">
+<div class="mb-2" data-ccrs="true" data-biotrack="true" data-leafdata="true">
 	<label>Company:</label>
 	<input autocomplete="off"
 		class="form-control company-autocomplete" name="company"
 		placeholder="Company ID, like a UBI or something - BioTrack, CCRS, LeafData" value="<?= h($data['cre_company']) ?>">
 </div>
 
-<div class="form-group" data-ccrs="true" data-leafdata="true" data-metrc="true">
+<div class="mb-2" data-ccrs="true" data-leafdata="true" data-metrc="true">
 	<label>License:</label>
 	<input autocomplete="off"
 		class="form-control license-autocomplete" name="license"
 		placeholder="CCRS, LeafData, METRC*" value="<?= h($data['cre_license']) ?>">
 </div>
 
-<div class="form-group" data-leafdata="true" data-metrc="true">
+<div class="mb-2" data-leafdata="true" data-metrc="true">
 	<label>License API Key:</label>
 	<input autocomplete="off"
 		class="form-control" name="license-key"
 		placeholder="LeafData, METRC" value="<?= h($data['cre_license_key']) ?>">
 </div>
 
-<div class="form-group" data-biotrack="true">
+<div class="mb-2" data-biotrack="true">
 	<label>Username:</label>
 	<input autocomplete="off"
 		class="form-control" name="username"
 		placeholder="BioTrack" value="<?= h($data['cre_username']) ?>">
 </div>
 
-<div class="form-group" data-biotrack="true">
+<div class="mb-2" data-biotrack="true">
 	<label>Password:</label>
 	<input autocomplete="off"
 		class="form-control" name="password"
@@ -75,7 +75,7 @@
 <?php
 if (!empty($data['google_recaptcha_v2'])) {
 ?>
-	<div class="form-group">
+	<div class="mb-2">
 		<div class="g-recaptcha" data-sitekey="<?= $data['google_recaptcha_v2']['public'] ?>"></div>
 	</div>
 	<script src="https://www.google.com/recaptcha/api.js"></script>

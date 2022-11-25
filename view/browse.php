@@ -15,7 +15,7 @@
 <section class="mb-4">
 <h2>Selected License</h2>
 <form action="/auth/open" method="post">
-<div class="form-group">
+<div>
 <div class="input-group">
 	<?php
 	if (!empty($_SESSION['license-list'])) {
@@ -31,9 +31,7 @@
 		echo sprintf('<input class="form-control" name="license" value="%s">', h($data['cre_meta_license']));
 	}
 	?>
-	<div class="input-group-append">
-		<button class="btn btn-outline-secondary" name="a" value="set-license"><i class="fas fa-save"></i></button>
-	</div>
+	<button class="btn btn-outline-secondary" name="a" value="set-license"><i class="fas fa-save"></i></button>
 </div>
 <span class="form-text">These systems require a license for many, if not all API calls, see /license for possible values.</span>
 </div>
@@ -111,7 +109,7 @@ printf($fmt, 'sync-time-omega', $t1);
 
 <ul class="list-group">
 <li class="list-group-item d-flex justify-content-between align-items-center">
-	<div><a href="/company">/company</a> - Your Company Information</div>
+	<div><a href="/company/current">/company</a> - Your Company Information</div>
 	<div>
 		<span class="badge bg-dark">system</span>
 		<span class="badge bg-primary">BioTrack</span>
@@ -120,12 +118,21 @@ printf($fmt, 'sync-time-omega', $t1);
 	</div>
 </li>
 <li class="list-group-item d-flex justify-content-between align-items-center">
-	<div><a href="/contact">/contact</a> - Contacts, Drivers, Employees</div>
+	<div><a href="/contact/current">/contact</a> - Contacts, Drivers, Employees</div>
 	<div>
 		<span class="badge bg-dark">system</span>
 		<span class="badge bg-warning">BioTrack</span>
 		<span class="badge bg-primary">CCRS</span>
 		<span class="badge bg-secondary">METRC</span>
+	</div>
+</li>
+<li class="list-group-item d-flex justify-content-between align-items-center">
+	<div><a href="/license/current">/license</a> - Your License Information</div>
+	<div>
+		<span class="badge bg-dark">system</span>
+		<span class="badge bg-primary">BioTrack</span>
+		<span class="badge bg-primary">CCRS</span>
+		<span class="badge bg-warning">METRC</span>
 	</div>
 </li>
 <li class="list-group-item d-flex justify-content-between align-items-center">
@@ -135,15 +142,6 @@ printf($fmt, 'sync-time-omega', $t1);
 		<span class="badge bg-primary">BioTrack</span>
 		<span class="badge bg-primary">CCRS</span>
 		<span class="badge bg-primary">METRC</span>
-	</div>
-</li>
-<li class="list-group-item d-flex justify-content-between align-items-center">
-	<div><a href="/license">/license</a> - Your License Information</div>
-	<div>
-		<span class="badge bg-dark">system</span>
-		<span class="badge bg-primary">BioTrack</span>
-		<span class="badge bg-primary">CCRS</span>
-		<span class="badge bg-warning">METRC</span>
 	</div>
 </li>
 <li class="list-group-item d-flex justify-content-between align-items-center">
