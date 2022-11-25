@@ -16,9 +16,8 @@ if (is_file($cookie_file)) {
 	$age = time() - filemtime($cookie_file);
 	if ($age < 600) {
 		echo "AUTH: $age s old\n";
+		exit(0);
 	}
-
-	exit(0);
 
 }
 

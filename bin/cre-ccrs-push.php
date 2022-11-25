@@ -214,9 +214,14 @@ function _post_home_upload($cookie_list1, $mark, $post) : string
 	$res = curl_exec($req);
 	$inf = curl_getinfo($req);
 
-	echo "Response Length: ";
-	echo strlen($res);
-	echo "\n";
+	if (200 != $inf['http_code']) {
+		echo "FAILED TO UPLOAD\n";
+		exit(1);
+	}
+
+	// echo "Response Length: ";
+	// echo strlen($res);
+	// echo "\n";
 	// echo "$res";
 
 	return $res;
