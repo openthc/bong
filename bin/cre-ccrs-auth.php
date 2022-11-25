@@ -9,19 +9,40 @@
 
 require_once(__DIR__ . '/../boot.php');
 
+// Check
+$cookie_file = sprintf('%s/var/ccrs-cookies.json', APP_ROOT);
+if (is_file($cookie_file)) {
+
+	$age = time() - filemtime($cookie_file);
+	if ($age < 600) {
+		echo "AUTH: $age s old\n";
+	}
+
+	exit(0);
+
+}
+
+// Get
 $u = \OpenTHC\Config::get('cre/usa/wa/ccrs/username');
 $p = \OpenTHC\Config::get('cre/usa/wa/ccrs/password');
 
-$cre = new \OpenTHC\CRE\CCRS([]);
+$cookie_data = [];
 
-$cookie_data = $cre->auth($u, $p);
+try {
+	$cre = new \OpenTHC\CRE\CCRS([]);
+	$cookie_data = $cre->auth($u, $p);
+} catch (\Exception $e) {
+	echo "FAIL: ";
+	echo $e->getMessage();
+	echo "\n";
+	exit(1);
+}
 
 // Save
-$f = sprintf('%s/var/ccrs-cookies.json', APP_ROOT);
 $d = json_encode($cookie_data, JSON_PRETTY_PRINT);
-$x = file_put_contents($f, $d);
+$x = file_put_contents($cookie_file, $d);
 if (false === $x) {
-	echo "Error writing to: $f\n";
+	echo "Error writing to: $cookie_file\n";
 	exit(1);
 }
 
