@@ -1,7 +1,7 @@
 # Basic Object Normalization Gateway
 
-Interfaces with multiple Cannabis APIs.
-Normalizes to the OpenTHC API models.
+Interfaces with multiple Cannabis APIs (BioTrack, CCRS, Leafdata, Metrc).
+Normalizes to the OpenTHC API interfaces and data-models.
 
 ## Install
 
@@ -15,7 +15,7 @@ Normalizes to the OpenTHC API models.
 
 You can use BONG through it's normal web-interface to view objects in real time or view logs.
 
-BONG also provides and API -- so that other services can consume the data from the different back-ends easier.
+BONG also provides an API -- so that other services can consume the data from the different back-ends easier.
 
 
 ```php
