@@ -30,6 +30,7 @@
 --ignore-dir=webroot/dox
 --ignore-dir=webroot/lib
 --ignore-dir=webroot/sdk
+--ignore-dir=webroot/test-output
 
 --ignore-file=is:composer.lock
 --ignore-file=is:composer.phar

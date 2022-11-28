@@ -20,6 +20,7 @@ class A_Config_Test extends \OpenTHC\Bong\Test\Base_Case
 	function all_config()
 	{
 		$key_list = [
+			'cre/usa/wa/ccrs/tz',
 			'cre/usa/wa/ccrs/username',
 			'cre/usa/wa/ccrs/password',
 			'cre/usa/wa/ccrs/service-key',
