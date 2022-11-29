@@ -12,19 +12,66 @@ require_once(__DIR__ . '/../boot.php');
 
 $dbc = _dbc();
 
-// Match Filename
-// $name = preg_match('/^(01\w{24})$/', $_GET['f'], $m) ? $m[1] : null;
-// $file = sprintf('%s/var/ccrs-incoming/%s.csv', $name);
-// if ( ! is_file($file)) {
-	// __exit_text('Invalid File', 400);
-// }
+// Process incoming message queue
+$message_file_list = glob(sprintf('%s/var/ccrs-incoming-mail/*.txt', APP_ROOT));
+foreach ($message_file_list as $message_file)
+{
 
+	// Match Filename
+	$message_mime = mailparse_msg_parse_file($message_file); // resource
+	$message_part_list = mailparse_msg_get_structure($message_mime); // Array
+	// echo "message-part-list: " . implode(' / ', $message_part_list) . "\n";
+
+	// Inflate the parts
+	$message_part_data = [];
+	foreach ($message_part_list as $p) {
+		$mime_part = mailparse_msg_get_part($message_mime, $p); // resource
+		$mime_part_data = mailparse_msg_get_part_data($mime_part);
+		$message_part_data[$p] = $mime_part_data;
+		// mailparse_msg_free($mime_part); // nope, doesn't work
+	}
+
+	$output_data = null;
+	$output_file = null;
+
+	foreach ($message_part_data as $part_key => $part) {
+		// echo "$part_key == {$part['content-type']} : {$part['content-name']}\n";
+		if ('application/octet-stream' == $part['content-type']) {
+			if (
+				preg_match('/^\w+_\w{6,10}_\d+T\d+\.csv$/', $part['content-name'])
+				|| preg_match('/^Strain_\d+T\d+\.csv$/', $part['content-name'])
+				) {
+
+				// echo "message: {$message['id']}; part: $part_key is file: {$part['content-name']}\n";
+
+				$part_res = mailparse_msg_get_part($message_mime, $part_key);
+				$output_data = mailparse_msg_extract_part_file($part_res, $message_file, null);
+				$output_file = sprintf('%s/var/ccrs-incoming/%s', APP_ROOT, $part['content-name']);
+				$output_size = file_put_contents($output_file, $output_data);
+
+			}
+		}
+	}
+
+	mailparse_msg_free($message_mime);
+
+	_csv_file_patch($output_file);
+	_csv_file_incoming($message_file, $output_file);
+
+	$message_file_done = sprintf('%s/var/ccrs-incoming-mail-done/%s', APP_ROOT, basename($message_file));
+	if ( ! rename($message_file, $message_file_done)) {
+		throw new \Exception("Cannot archive incoming email");
+	}
+
+}
+
+// Cleanup Legacy Data Files
 $file_list = glob('/opt/openthc/bong/var/ccrs-incoming/*.csv');
 foreach ($file_list as $file) {
 
 	// Patch Text Errors? (see ccrs-incoming in OPS)
 	_csv_file_patch($file);
-	_process_csv_file($file);
+	_csv_file_incoming(null, $file);
 
 }
 
@@ -58,11 +105,9 @@ function _csv_file_patch($csv_file)
 /**
  *
  */
-function _process_csv_file($csv_file)
+function _csv_file_incoming($source_mail, $csv_file)
 {
 	global $dbc;
-
-	echo "CSV File: $csv_file\n";
 
 	// Need to actually keep file name to understand the ?
 	$csv_pipe = fopen($csv_file, 'r');
@@ -72,24 +117,6 @@ function _process_csv_file($csv_file)
 	$row_size = count($csv_head);
 
 	$csv_pkid = 'ExternalIdentifier';
-	// $tab_name = preg_match('/^([a-z]+)_/', $csv_name, $m) ? $m[1] : null;
-	// switch ($tab_name) {
-	// 	case 'inventory':
-	// 		$tab_name = 'lot';
-	// 		break;
-	// 	case 'plant':
-	// 		$tab_name = 'crop';
-	// 		break;
-	// 	case 'product':
-	// 		// OK
-	// 		break;
-	// 	default:
-	// 		return $RES->withJSON([
-	// 			'data' => null,
-	// 			'meta' => [ 'detail' => 'Invalid File Type' ]
-	// 		], 400);
-	// }
-
 
 	// Assemble Header Line to determine Type
 	$tab_name = implode(',', $csv_head);
@@ -120,8 +147,6 @@ function _process_csv_file($csv_file)
 			break;
 	}
 
-	// echo "CSV Type: $tab_name\n";
-
 	// Canary Line
 	$csv_line = fgetcsv($csv_pipe);
 	$idx_line++;
@@ -130,15 +155,43 @@ function _process_csv_file($csv_file)
 	$req_ulid = '';
 	$csv_line_text = implode(',', $csv_line);
 	if (preg_match('/(\w+ UPLOAD.+(01\w{24})).+\-canary\-/', $csv_line_text, $m)) {
-		echo "Canary1: '{$m[1]}'\n";
 		$req_ulid = $m[2];
 	} elseif (preg_match('/(\w+ UPLOAD.+(01\w{24}))/', $csv_line_text, $m)) {
-		echo "Canary2: '{$m[1]}'\n";
 		$req_ulid = $m[2];
 	} else {
 		echo "Canary??:  $csv_line_text\n";
+		echo "Need to Parse This One\n";
+		exit(1);
 	}
 
+	// Stash Result Data
+	$chk = $dbc->fetchRow('SELECT id, result_data FROM log_upload WHERE id = :u0', [ ':u0' => $req_ulid ]);
+	if (empty($chk)) {
+		echo "!! NO LOG\n";
+		// INSERT RESPONSE THO?
+	} else {
+
+		$result_data = json_decode($chk['result_data'], true);
+		if (empty($result_data)) {
+			$result_data = [];
+		}
+
+		$result_data['@result-file'] = [
+			'file' => basename($csv_file),
+			'data' => file_get_contents($csv_file)
+		];
+		if ( ! empty($source_mail)) {
+			$result_data['@result-mail'] = file_get_contents($message_file);
+		}
+		$update = [
+			'result_data' => json_encode($result_data),
+			'updated_at' => $csv_time->format(\DateTimeInterface::RFC3339),
+		];
+		$dbc->update('log_upload', $update, [ 'id' => $req_ulid ]);
+	}
+
+
+	$cre_stat = 200;
 	$lic_code = null;
 	$lic_dead = false;
 
@@ -180,12 +233,8 @@ function _process_csv_file($csv_file)
 		}
 
 		if (empty($lic_data)) {
-			var_dump($csv_line);
-			echo "No LIcense\n";
-			exit(1);
+			_exit_fail_file_move($csv_file, $csv_line, '!! License Not Found');
 		}
-
-		$cre_stat = 200;
 
 		$err = _process_err_list($csv_line);
 		$err_list = $err['data'];
@@ -203,6 +252,11 @@ function _process_csv_file($csv_file)
 				$cre_stat = 403;
 				$lic_dead = true;
 				break;
+			default:
+				var_dump($csv_line);
+				var_dump($err);
+				var_dump($err_list);
+				throw new \Exception('WTF');
 		}
 
 		// Result
@@ -243,44 +297,45 @@ function _process_csv_file($csv_file)
 		$arg = [
 			':pk' => $csv_line['@id'],
 			':f1' => 0, // $cre_flag,
-			':s1' => $cre_stat,
+			':s1' => $err['code'],
 			':d1' => json_encode($rec_data)
-			// ':cs' => $cre_stat,
 		];
+		// echo $dbc->_sql_debug($sql, $arg);
+		// echo "\n";
 		$chk = $dbc->query($sql, $arg);
 		// echo "UPDATE: {$csv_line['@id']} == $chk\n";
 
 	}
 
 	if ($lic_dead) {
-		echo "License: $lic_code is DEAD\n";
+
+		echo "License: $lic_code {$lic_data['name']} is DEAD\n";
+
 		// $license_stat_list1[ $lic_code ]['flag1'] = ($license_stat_list1[ $lic_code ]['flag'] & ~LICENSE_FLAG_CRE_HAVE);
 		// $license_stat_list1[ $lic_code ]['stat1'] = 403;
+		$sql = 'UPDATE license SET stat = 403 WHERE id = :l0 AND stat != 403';
+		$arg = [
+			':l0' => $lic_data['id']
+		];
+		$dbc->query($sql, $arg);
+
+	} else {
+
+		$sql = 'UPDATE license SET stat = 200 WHERE id = :l0 AND stat != 200';
+		$arg = [
+			':l0' => $lic_data['id']
+		];
+		$dbc->query($sql, $arg);
+
 	}
 
+	$dbc->update('log_upload', [
+		'stat' => $cre_stat,
+	], [ 'id' => $req_ulid ]);
 
-	unlink($csv_file);
-
-	// Necessary or only on ping?
-	// if ('Section' == $tab_name) {
-	// 	foreach ($license_stat_list1 as $lic_code => $lic_stat) {
-
-	// 		$flag0 = $lic_stat['flag'];
-	// 		$stat0 = $lic_stat['stat'];
-
-	// 		$flag1 = $lic_stat['flag1'];
-	// 		$stat1 = $lic_stat['stat1'];
-
-	// 		if (($stat0 != $stat1) || ($flag0 != $flag1)) {
-	// 			echo "Update License: $lic_code $stat0/$flag0 => $stat1/$flag1\n";
-	// 			$update = [];
-	// 			$update['stat'] = $stat1;
-	// 			$update['flag'] = $flag1;
-	// 			$dbc_auth->update('license', $update, [ 'id' => $lic_stat['id'] ]);
-	// 		}
-
-	// 	}
-	// }
+	// Archive
+	$csv_name = basename($csv_file);
+	rename($csv_file, sprintf('%s/var/ccrs-incoming-done/%s', APP_ROOT, $csv_name));
 
 }
 
