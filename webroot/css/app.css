@@ -1,0 +1,109 @@
+/**
+ * Simple Stylesheet for Pipe
+ */
+
+* {
+	box-sizing: border-box;
+}
+h1, h2, h3, h4, h5, h6 {
+	margin: 0;
+	padding: 0;
+}
+pre {
+	background: #303030;
+	color: #f0f0f0;
+	margin: 0;
+	padding: 0.25rem;
+	white-space: pre-wrap;
+	word-wrap: break-word;
+}
+table {
+	border: 1px solid #000;
+	border-collapse: collapse;
+	font-size: 1.2em;
+	margin: 0;
+	padding: 0;
+	width: 100%;
+}
+thead {
+	background: #333;
+	color: #fdfdfd;
+}
+thead th {
+	padding: 0.25rem;
+}
+td {
+	border-left: 1px solid #333;
+	border-right: 1px solid #333;
+	margin: 0;
+	padding: 0.50rem;
+	vertical-align: top;
+}
+td.c {
+	text-align: center;
+}
+td.r {
+	text-align: right;
+}
+tr.tr1 {
+	border-top: 1px solid #333;
+}
+tr.tr1:hover {
+	background: #ff0;
+}
+tr.tr2 {
+	display: none;
+}
+
+table.diff {
+	border: none;
+	font-family: monospace;
+	font-size: 90%;
+}
+table.diff td {
+	border: 1px solid #000;
+	padding: 0.125rem;
+}
+table.diff td.new {
+	background: #00cc0055;
+	color: #000;
+}
+table.diff td.old {
+	background: #cc000055;
+	color: #000;
+	text-align: right;
+}
+table.diff th {
+	padding: 0.125rem;
+}
+table.diff th.key {
+	text-align: center;
+}
+table.diff th.new {
+	color: #00cc00;
+}
+table.diff th.old {
+	color: #cc0000;
+	text-align: right;
+}
+
+/**
+ * Search Filter
+ */
+.search-filter {
+	align-items: center;
+	display:flex;
+	flex-direction: row;
+	margin: 0 0 0.50rem 0;
+	/* justify-content: center; */
+}
+.search-filter > div:not(:last-child) {
+	margin: 0 0.25rem 0 0;
+}
+
+.sql-debug {
+	background: #101010;
+	color: #00cc00;
+	margin: 0;
+	padding: 0.50rem;
+}
