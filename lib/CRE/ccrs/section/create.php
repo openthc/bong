@@ -11,9 +11,9 @@ $rec = [
 	'id' => $_POST['id'],
 	'license_id' => $_SESSION['License']['id'],
 	'name' => $_POST['name'],
-	'data' => [
+	'data' => json_encode([
 		'@source' => $_POST
-	]
+	])
 ];
 
 $ret = $dbc->insert('section', $rec);
