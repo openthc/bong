@@ -66,7 +66,7 @@ foreach ($message_file_list as $message_file)
 }
 
 // Cleanup Legacy Data Files
-$file_list = glob('/opt/openthc/bong/var/ccrs-incoming/*.csv');
+$file_list = glob(sprintf('%s/var/ccrs-incoming/*.csv', APP_ROOT));
 foreach ($file_list as $file) {
 
 	// Patch Text Errors? (see ccrs-incoming in OPS)
@@ -77,6 +77,7 @@ foreach ($file_list as $file) {
 
 exit(0);
 
+
 /**
  * Patch bullshit we find in these files
  */
@@ -85,13 +86,13 @@ function _csv_file_patch($csv_file)
 	// Patch the WHOLE BLOB
 	$csv_data = file_get_contents($csv_file);
 
-	// // Fix some bullshit they put in the CSVs (Bug #38)
+	// Fix some bullshit they put in the CSVs (Bug #38)
 	$csv_data = str_replace('Insert, Update or Delete', 'INSERT UPDATE or DELETE', $csv_data);
-	// // $part_body = str_replace('Operation is invalid must be Insert,  Update or Delete'
-	// // 	, 'Operation is invalid must be INSERT UPDATE or DELETE'
-	// // 	, $part_body);
+	// $part_body = str_replace('Operation is invalid must be Insert,  Update or Delete'
+	// 	, 'Operation is invalid must be INSERT UPDATE or DELETE'
+	// 	, $part_body);
 
-	// // This one always goes "comma space space CheckSum"
+	// This one always goes "comma space space CheckSum"
 	// $part_body = str_replace(',  CheckSum and', ': CheckSum and', $part_body);
 	// $part_body = preg_replace('/found, CheckSum/i', 'found: CheckSum', $part_body);
 
@@ -101,6 +102,7 @@ function _csv_file_patch($csv_file)
 	file_put_contents($csv_file, $csv_data);
 
 }
+
 
 /**
  *
@@ -139,7 +141,7 @@ function _csv_file_incoming($source_mail, $csv_file)
 			break;
 		case 'Strain,StrainType,CreatedBy,CreatedDate,ErrorMessage':
 			// @todo this one needs special processing ?
-			return _process_csv_file_variety($csv_file, $csv_pipe, $csv_head);
+			return _csv_file_incoming_variety($csv_file, $csv_pipe, $csv_head);
 			break;
 		default:
 			echo "CSV Header Not Handled\n$tab_name";
@@ -241,7 +243,7 @@ function _csv_file_incoming($source_mail, $csv_file)
 
 		switch ($err['code']) {
 			case 200:
-				// Aweomse
+				// Awesome
 				break;
 			case 400:
 				// Somekind of Errors
@@ -251,6 +253,9 @@ function _csv_file_incoming($source_mail, $csv_file)
 				// Not Authorized on this License
 				$cre_stat = 403;
 				$lic_dead = true;
+				break;
+			case 404:
+				// UPDATE fails, needs INSERT
 				break;
 			default:
 				var_dump($csv_line);
@@ -293,7 +298,7 @@ function _csv_file_incoming($source_mail, $csv_file)
 		$rec_data['@result'] = $err;
 
 		// if ( ! empty($rec_data['ExternalId']))
-		$sql = "UPDATE {$tab_name} SET flag = :f1::int, stat = :s1, data = :d1 WHERE id = :pk";
+		$sql = "UPDATE {$tab_name} SET flag = :f1::int, stat = :s1, data = :d1, updated_at = now() WHERE id = :pk";
 		$arg = [
 			':pk' => $csv_line['@id'],
 			':f1' => 0, // $cre_flag,
@@ -339,10 +344,11 @@ function _csv_file_incoming($source_mail, $csv_file)
 
 }
 
+
 /**
  * Special Case for Variety
  */
-function _process_csv_file_variety($csv_file, $csv_pipe, $csv_head)
+function _csv_file_incoming_variety($csv_file, $csv_pipe, $csv_head)
 {
 	$csv_pkid = 'Strain';
 	$tab_name = 'variety';
@@ -380,6 +386,55 @@ function _process_csv_file_variety($csv_file, $csv_pipe, $csv_head)
 	return(0);
 
 }
+
+
+/**
+ * Move File and Bail
+ */
+function _exit_fail_file_move($csv_file, $csv_line, $msg)
+{
+	echo $msg;
+	echo "\n";
+	var_dump($csv_line);
+
+	$csv_name = basename($csv_file);
+	$new_name = sprintf('%s/var/ccrs-incoming-fail/%s', APP_ROOT, $csv_name);
+	rename($csv_file, $new_name);
+
+	echo "File Moved: $new_name\n";
+
+	exit(1);
+
+}
+
+
+/**
+ *
+ */
+function _license_load_check($dbc, $lic0, $lic1) : array
+{
+
+	static $lic_data;
+
+	if (empty($lic0)) {
+
+			$lic_code = $lic1;
+			$lic_data = $dbc->fetchRow('SELECT * FROM license WHERE code = :l0', [ ':l0' => $lic_code ]);
+
+	} elseif ($lic0 != $lic1) {
+
+			// $lic_code = $csv_line['ToLicenseNumber'];
+			// $lic_data = $dbc->fetchRow('SELECT * FROM license WHERE code = :l0', [ ':l0' => $lic_code ]);
+			$lic_data = [];
+
+			// throw new \Exception('SWITCHING LICENSE [BCC-369]');
+
+	}
+
+	return $lic_data;
+
+}
+
 
 /**
  *
