@@ -1,5 +1,7 @@
 <?php
 /**
+ * Test Lab Result Interface
+ *
  * SPDX-License-Identifier: MIT
  */
 
