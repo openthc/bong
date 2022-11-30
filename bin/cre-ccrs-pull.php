@@ -96,9 +96,9 @@ function _csv_file_patch($csv_file)
 	// $part_body = str_replace(',  CheckSum and', ': CheckSum and', $part_body);
 	// $part_body = preg_replace('/found, CheckSum/i', 'found: CheckSum', $part_body);
 
-	// This one always goes "comma space space CheckSum"
-	$csv_data = preg_replace('/(date|licensee), CheckSum and/', '$1: CheckSum and', $csv_data);
-	// $data = preg_replace('/found, CheckSum/i', 'found: CheckSum', $data);
+	// words, comma spaces? "Checksum and"
+	$csv_data = preg_replace('/(\w+),\s+CheckSum and/', '$1: CheckSum and', $csv_data);
+
 	file_put_contents($csv_file, $csv_data);
 
 }
@@ -110,6 +110,18 @@ function _csv_file_patch($csv_file)
 function _csv_file_incoming($source_mail, $csv_file)
 {
 	global $dbc;
+
+	/**
+	 * error-response-file from the LCB sometimes are missing the
+	 * milliseconds portion of the time in the file name
+	 * So we have to patch it so it parses the same as their "normal"
+	 */
+	$csv_time = preg_match('/(\w+_)?\w+_(\d+T\d+)\.csv/i', $csv_file, $m) ? $m[2] : null;
+	if (strlen($csv_time) == 15) {
+		$csv_time = $csv_time . '000';
+	}
+
+	$csv_time = DateTime::createFromFormat('Ymd\TGisv', $csv_time, new DateTimeZone('America/Los_Angeles'));
 
 	// Need to actually keep file name to understand the ?
 	$csv_pipe = fopen($csv_file, 'r');
@@ -124,6 +136,7 @@ function _csv_file_incoming($source_mail, $csv_file)
 	$tab_name = implode(',', $csv_head);
 	switch ($tab_name) {
 		case 'FromLicenseNumber,ToLicenseNumber,FromInventoryExternalIdentifier,ToInventoryExternalIdentifier,Quantity,TransferDate,ExternalIdentifier,CreatedBy,CreatedDate,UpdatedBy,UpdatedDate,Operation,ErrorMessage':
+			$tab_name = 'b2b_incoming';
 			$tab_name = 'b2b_sale_item';
 			break;
 		case 'LicenseNumber,Name,IsQuarantine,ExternalIdentifier,CreatedBy,CreatedDate,UpdatedBy,UpdatedDate,Operation,ErrorMessage':
@@ -142,6 +155,9 @@ function _csv_file_incoming($source_mail, $csv_file)
 		case 'Strain,StrainType,CreatedBy,CreatedDate,ErrorMessage':
 			// @todo this one needs special processing ?
 			return _csv_file_incoming_variety($csv_file, $csv_pipe, $csv_head);
+			break;
+		case 'LicenseNumber,SoldToLicenseNumber,InventoryExternalIdentifier,PlantExternalIdentifier,SaleType,SaleDate,Quantity,UnitPrice,Discount,SalesTax,OtherTax,SaleExternalIdentifier,SaleDetailExternalIdentifier,CreatedBy,CreatedDate,UpdatedBy,UpdatedDate,Operation,ErrorMessage':
+			$tab_name = 'b2b_outgoing';
 			break;
 		default:
 			echo "CSV Header Not Handled\n$tab_name";
@@ -203,7 +219,6 @@ function _csv_file_incoming($source_mail, $csv_file)
 	while ($csv_line = fgetcsv($csv_pipe)) {
 
 		$idx_line++;
-		//echo sprintf("%04d:%s\n", $idx_line, implode(', ', $csv_line));
 
 		if (count($csv_head) != count($csv_line)) {
 			var_dump($csv_head);
@@ -214,8 +229,6 @@ function _csv_file_incoming($source_mail, $csv_file)
 
 		$csv_line = array_combine($csv_head, $csv_line);
 		$csv_line['@id'] = $csv_line[$csv_pkid];
-		// $csv_line['@license'] = '';
-
 
 		if (empty($csv_line['LicenseNumber'])) {
 			continue;
@@ -229,8 +242,10 @@ function _csv_file_incoming($source_mail, $csv_file)
 
 		} elseif ($lic_code != $csv_line['LicenseNumber']) {
 
-			$lic_code = $csv_line['LicenseNumber'];
-			$lic_data = $dbc->fetchRow('SELECT * FROM license WHERE code = :l0', [ ':l0' => $lic_code ]);
+			// $lic_code = $csv_line['LicenseNumber'];
+			// $lic_data = $dbc->fetchRow('SELECT * FROM license WHERE code = :l0', [ ':l0' => $lic_code ]);
+
+			throw new \Exception('SWITCHING LICENSE [BCC-218]');
 
 		}
 
@@ -287,17 +302,8 @@ function _csv_file_incoming($source_mail, $csv_file)
 			$rec_data = json_decode($rec_data, true);
 		}
 
-		// Upscale Legacy Data
-		if (empty($rec_data['@source']) && empty($rec_data['@result'])) {
-			$tmp = [
-				'@source' => $rec_data
-			];
-			$rec_data = $tmp;
-		}
-
 		$rec_data['@result'] = $err;
 
-		// if ( ! empty($rec_data['ExternalId']))
 		$sql = "UPDATE {$tab_name} SET flag = :f1::int, stat = :s1, data = :d1, updated_at = now() WHERE id = :pk";
 		$arg = [
 			':pk' => $csv_line['@id'],
@@ -346,22 +352,108 @@ function _csv_file_incoming($source_mail, $csv_file)
 
 
 /**
+ *
+ */
+function _process_csv_file_b2b_incoming($csv_file, $csv_pipe, $csv_head)
+{
+	global $dbc;
+
+	$lic_data = [];
+
+	while ($csv_line = fgetcsv($csv_pipe)) {
+
+		$idx_line++;
+
+		if (count($csv_head) != count($csv_line)) {
+			var_dump($csv_head);
+			var_dump($csv_line);
+			echo "Two Lines Don't Match\n";
+			exit(1);
+		}
+
+		$csv_line = array_combine($csv_head, $csv_line);
+
+		$lic_data = _license_load_check($dbc, $lic_data['code'], $csv_line['ToLicenseNumber']);
+		if (empty($lic_data)) {
+			_exit_fail_file_move($csv_file, $csv_line, '!! License Not Found');
+		}
+
+		// Build ID from Hash
+		$b2b_id = md5(sprintf('%s.%s.%s', $csv_line['FromLicenseNumber'], $csv_line['ToLicenseNumber'], $csv_line['TransferDate']));
+		$chk = $dbc->fetchRow('SELECT * FROM b2b_sale WHERE id = :pk', [ ':pk' => $b2b_id ]);
+		if (empty($chk)) {
+			$dbc->insert('b2b_sale', [
+				'id' => $b2b_id,
+				'license_id_source' => $csv_line['FromLicenseNumber'], //  $lic_source['id'],
+				'license_id_target' => $lic_data['id'],
+				'stat' => 100,
+				'name' => sprintf('Sold By: %s, Ship To: %s', $csv_line['FromLicenseNumber'], $csv_line['ToLicenseNumber'])
+			]);
+		}
+
+		$err = _process_err_list($csv_line);
+		$err_list = $err['data'];
+
+		switch ($err['code']) {
+			case 200:
+				// Aweomse
+				break;
+			case 400:
+				// Somekind of Errors
+				$cre_stat = 400;
+				break;
+			case 403:
+				// Not Authorized on this License
+				$cre_stat = 403;
+				$lic_dead = true;
+				break;
+		}
+
+		// Result
+		if (count($err_list)) {
+
+			$err_line = implode('; ', $err_list);
+			$out_line = implode(',', $csv_line);
+
+			// echo sprintf("%04d:%s\n    !!%s\n", $idx_line, $out_line, $err_line);
+
+		}
+
+		// INSERT or UPDATE
+		$sql = "UPDATE b2b_sale_item SET flag = :f1::int, stat = :s1, data = :d1 WHERE id = :pk";
+		$arg = [
+			':pk' => $csv_line['ExternalId'],
+			':f1' => 0, // $cre_flag,
+			':s1' => $cre_stat,
+			':d1' => json_encode($rec_data)
+			// ':cs' => $cre_stat,
+		];
+		$chk = $dbc->query($sql, $arg);
+
+
+	}
+
+	$dbc->update('log_upload', [
+		'stat' => $cre_stat,
+	], [ 'id' => $req_ulid ]);
+
+	// Archive
+	$csv_name = basename($csv_file);
+	rename($csv_file, sprintf('%s/var/ccrs-incoming-done/%s', APP_ROOT, $csv_name));
+
+}
+
+/**
  * Special Case for Variety
  */
 function _csv_file_incoming_variety($csv_file, $csv_pipe, $csv_head)
 {
+	global $dbc;
+
 	$csv_pkid = 'Strain';
 	$tab_name = 'variety';
 
-	// Canary Line
-	$csv_line = fgetcsv($csv_pipe);
-	$idx_line++;
-
-	// It's our canary line
-	$csv_line_text = implode(',', $csv_line);
-	if (preg_match('/VARIETY UPLOAD (01\w{24})/', $csv_line_text, $m)) {
-		echo "Canary1: '{$m[1]}'\n";
-	}
+	$idx_line = 2;
 
 	while ($csv_line = fgetcsv($csv_pipe)) {
 
@@ -369,18 +461,25 @@ function _csv_file_incoming_variety($csv_file, $csv_pipe, $csv_head)
 
 		switch ($csv_line[4]) {
 			case 'CheckSum and number of records don\'t match':
-				// Error Source File -- How to Find?
+				throw new \Exception('Bad File');
 				break;
+			// case 'Name is required':
+				// break;
 			case 'Duplicate Strain/StrainType':
 				// Ignore
 				break;
 			default:
 				echo sprintf("Error Line: %04d:%s\n", $idx_line, implode(', ', $csv_line));
-				exit(1);
+				// exit(1);
 		}
 
 	}
 
+	$dbc->update('log_upload', [
+		'stat' => 200, // $cre_stat,
+	], [ 'id' => $req_ulid ]);
+
+	// Unlink, not Archive
 	unlink($csv_file);
 
 	return(0);
@@ -441,36 +540,73 @@ function _license_load_check($dbc, $lic0, $lic1) : array
  */
 function _process_err_list($csv_line)
 {
+	$err_return_code = 200;
 	$err_return_list = [];
 
-	$err_text_list = explode(':', $csv_line['ErrorMessage']);
-
-	// we have to foreach err_text
-	foreach ($err_text_list as $err_text) {
+	$err_source_list = explode(':', $csv_line['ErrorMessage']);
+	foreach ($err_source_list as $err_text) {
 		$err_text = trim($err_text);
 		switch ($err_text) {
+			case 'Invalid Area':
+				// Try to Patch Realtime?
+				// echo '^^ SECTION:';
+				// echo implode(',', [
+				// 	$License['code']
+				// 	, 'Main Section'
+				// 	, 'FALSE'
+				// 	, sprintf('%s-%s', $License['code'], '018NY6XC00SECT10N000000000')
+				// 	, '-system-'
+				// 	, date('m/d/Y')
+				// 	, '-system-'
+				// 	, date('m/d/Y')
+				// 	, 'UPDATE'
+				// ]);
+				// echo "\n";
+				// exit(1);
+				// break;
+			case 'Invalid Strain':
+				// var_dump($csv_line);
+				// echo '^^ VARIETY:';
+				// echo implode(',', [
+				// 	$s
+				// 	, 'Hybrid'
+				// 	, '-system-'
+				// 	, date('m/d/Y')
+				// ]);
+				// echo "\n";
+				// exit(1);
+				// break;
 			case 'Area name is over 75 characters':
 			case 'CreatedDate must be a date':
-			case 'ExternalIdentifier not found':
 			case 'ExternalIdentifier is required':
+			case 'FromInventoryExternalIdentifier is required':
 			case 'InitialQuantity is required':
 			case 'InitialQuantity must be numeric':
 			case 'Invalid Area':
+			case 'Invalid FromInventoryExternalIdentifier':
 			case 'Invalid InventoryCategory/InventoryType combination':
+			case 'Invalid InventoryExternalIdentifier':
 			case 'Invalid LicenseeID':
 			case 'Invalid Product':
 			case 'Invalid Strain':
 			case 'Invalid Strain Type':
+			case 'Invalid To InventoryExternalIdentifier':
+			case 'Invalid ToInventoryExternalIdentifier':
+			case 'InventoryCategory is required':
+			case 'InventoryType is required':
 			case 'IsMedical must be True or False':
 			case 'LicenseNumber is required':
 			case 'LicenseNumber must be numeric':
-			case 'Name is over 50 characters':
+			case 'Name is over 50 characters': // Variety
 			case 'Name is over 75 characters':
 			case 'Name is required':
 			case 'Operation is invalid must be INSERT UPDATE or DELETE':
+			case 'Quantity is required':
+			case 'Quantity must be numeric':
 			case 'QuantityOnHand must be numeric':
 			case 'TotalCost must be numeric':
 			case 'UpdatedDate is required for Update or Delete Operations':
+			case 'Strain is required':
 				// Need to Tag this Object as NOT_SYNC
 				$err_return_list[] = $err_text;
 				break;
@@ -489,16 +625,21 @@ function _process_err_list($csv_line)
 			case 'Integrator is not authoritzed to update licensee':
 			case 'Integrator is not authorized to update licensee':
 			case 'License Number is not assigned to Integrator':
-				// Del Flag
-				// $license_stat_list1[ $lic_code ]['flag1'] = $license_stat_list1[ $lic_code ]['flag'] & ~LICENSE_FLAG_CRE_HAVE;
-				// $license_stat_list1[ $lic_code ]['stat1'] = 403;
-				$lic_dead = true;
 				return [
 					'code' => 403,
 					'data' => [
 						$err_text
 					],
 				];
+				break;
+			case 'ExternalIdentifier not found':
+				return [
+					'code' => 404,
+					'data' => [
+						$err_text
+					],
+				];
+				break;
 			default:
 				var_dump($csv_line);
 				echo "Unexpected Error: '$err_text'\nLINE: '{$csv_line['ErrorMessage']}'\n";
