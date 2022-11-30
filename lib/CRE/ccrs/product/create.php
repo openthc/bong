@@ -11,7 +11,7 @@ $rec = [
 	'id' => $_POST['id'],
 	'license_id' => $_SERVER['HTTP_OPENTHC_LICENSE'],
 	'name' => $_POST['name'],
-	'meta' => json_encode([
+	'data' => json_encode([
 		'@source' => $_POST,
 	])
 ];
