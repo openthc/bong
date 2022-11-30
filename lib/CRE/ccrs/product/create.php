@@ -8,12 +8,12 @@
 $dbc = $REQ->getAttribute('dbc');
 
 $rec = [
+	'id' => $_POST['id'],
 	'license_id' => $_SERVER['HTTP_OPENTHC_LICENSE'],
 	'name' => $_POST['name'],
-	'guid' => $_POST['guid'],
-	'meta' => [
+	'meta' => json_encode([
 		'@source' => $_POST,
-	]
+	])
 ];
 
 $ret = $dbc->insert('product', $rec);
