@@ -29,11 +29,11 @@ $req_ulid = _ulid();
 $csv_name = sprintf('inventory_%s_%s.csv', $cre_service_key, $req_ulid);
 $csv_temp = fopen('php://temp', 'w');
 
-$csv_head = explode(',', 'LicenseNumber,InventoryCategory,InventoryType,Name,Description,UnitWeightGrams,ExternalIdentifier,CreatedBy,CreatedDate,UpdatedBy,UpdatedDate,Operation');
+$csv_head = explode(',', 'LicenseNumber,Strain,Area,Product,InitialQuantity,QuantityOnHand,TotalCost,IsMedical,ExternalIdentifier,CreatedBy,CreatedDate,UpdatedBy,UpdatedDate,Operation');
 $col_size = count($csv_head);
 
 $csv_data = [];
-$csv_data[] = [ '-canary-', '-canary-', '-canary-', "PRODUCT UPLOAD $req_ulid", '', '0', '-canary-', '-canary-', date('m/d/Y'), '-canary-', date('m/d/Y'), 'UPDATE' ];
+$csv_data[] = [ '-canary-', '-canary-', '-canary-', '-canary-', '0', '0', '0', 'FALSE', "INVENTORY UPLOAD $req_ulid", '-canary-', date('m/d/Y'), '-canary-', date('m/d/Y'), 'UPDATE' ];
 
 $res_inventory = $dbc->fetchAll('SELECT * FROM product WHERE license_id = :l0 AND stat = 100', [ ':l0' => $License['id'] ]);
 foreach ($res_inventory as $inv) {
