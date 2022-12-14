@@ -1,12 +1,9 @@
 #!/usr/bin/php
 <?php
 /**
- * Use Curl to upload to the CCRS site
+ * Create Upload for Inventory Data
  *
  * SPDX-License-Identifier: MIT
- *
- * Get the cookies from var/
- * Upload the files one at a time, was some transactional lock like issues with bulk
  */
 
 use OpenTHC\Bong\CRE;
@@ -15,101 +12,75 @@ require_once(__DIR__ . '/../boot.php');
 
 $dbc = _dbc();
 
+$tz0 = new DateTimezone(\OpenTHC\Config::get('cre/usa/wa/ccrs/tz'));
 $cre_service_key = \OpenTHC\Config::get('cre/usa/wa/ccrs/service-key');
 
-$License = $dbc->fetchRow('SELECT * FROM license WHERE id = :l0', [ ':l0' => $argv[1] ]);
-// var_dump($License);
+$license_id = array_shift($argv);
+$License = $dbc->fetchRow('SELECT * FROM license WHERE id = :l0', [ ':l0' => $license_id ]);
+if (empty($License['id'])) {
+	echo "Invalid License\n";
+	exit(1);
+}
 
-// "1) Area, Strain and Product"
-// Variety
-// Section
-$res_section = $dbc->fetchAll('SELECT * FROM section WHERE license_id = :l0', [ ':l0' => $License['id'] ]);
-
+$res_inventory = $dbc->fetchAll('SELECT * FROM lot WHERE license_id = :l0', [ ':l0' => $License['id'] ]);
 
 // Product
 $req_ulid = _ulid();
-// $csv_file = sprintf('%s/product_%s_%s.csv', $csv_path, $cre_service_key, $req_ulid);
-$csv_file = sprintf('product_%s_%s.csv', $cre_service_key, $req_ulid);
-// $output_csv = fopen($csv_file, 'w');
-$output_csv = fopen('php://temp', 'w');
+$csv_name = sprintf('inventory_%s_%s.csv', $cre_service_key, $req_ulid);
+$csv_temp = fopen('php://temp', 'w');
 
 $csv_head = explode(',', 'LicenseNumber,InventoryCategory,InventoryType,Name,Description,UnitWeightGrams,ExternalIdentifier,CreatedBy,CreatedDate,UpdatedBy,UpdatedDate,Operation');
-$output_col = count($csv_head);
+$col_size = count($csv_head);
 
 $csv_data = [];
-$csv_data[] = [ $cre_canary_code, '-canary-', '-canary-', "PRODUCT UPLOAD $req_ulid", '', '0', '-canary-', '-canary-', date('m/d/Y'), '-canary-', date('m/d/Y'), 'UPDATE' ];
+$csv_data[] = [ '-canary-', '-canary-', '-canary-', "PRODUCT UPLOAD $req_ulid", '', '0', '-canary-', '-canary-', date('m/d/Y'), '-canary-', date('m/d/Y'), 'UPDATE' ];
 
-$res_product = $dbc->fetchAll('SELECT * FROM product WHERE license_id = :l0 AND stat = 100', [ ':l0' => $License['id'] ]);
-foreach ($res_product as $product) {
+$res_inventory = $dbc->fetchAll('SELECT * FROM product WHERE license_id = :l0 AND stat = 100', [ ':l0' => $License['id'] ]);
+foreach ($res_inventory as $inv) {
 
-	$product_data = json_decode($product['data'], true);
-	$product_source = $product_data['@source'];
+	// $inv_data = json_decode($inv['data'], true);
+	// $inv_source = $inv_data['@source'];
 
-	$dtC = new DateTime($product['created_at']);
+	$dtC = new DateTime($inv['created_at']);
 
-	// var_dump($product);
-	// var_dump($product_data);
-	var_dump($product_source);
+	// var_dump($inv);
+	// var_dump($inv_data);
+	// var_dump($inv_source);
 
-	// exit;
+	$dtC = new DateTime($inv['created_at'], $tz0);
 
-	$csv_data[] = [
+	// Insert
+	$rec = [
 		$License['code']
-		, $product_source['InventoryCategory'] // \OpenTHC\CRE\CCRS::map_product_type0($product['product_type_id']) // Category
-		, $product_source['InventoryType'] // \OpenTHC\CRE\CCRS::map_product_type1($product['product_type_id']) // InventoryType
-		, substr($product_source['Name'], 0, 75)
-		, $product_source['Description']
-		, $product_source['UnitWeightGrams'] // sprintf('%0.2f', ('each' == $product['package_type'] ? $product['package_pack_qom'] : 0)) // if BULK use ZERO? // UnitWeightGrams
-		, $product['id']
+		, substr($inv['variety_name'], 0, 50)
+		, $inv['section_name']
+		, substr($inv['product_name'], 0, 75)
+		, sprintf('%0.2f', $inv['qty_initial'])
+		, sprintf('%0.2f', $inv['qty'])
+		, 0
+		, 'FALSE'
+		, $inv['id']
 		, '-system-'
 		, $dtC->format('m/d/Y')
 		, '-system-'
 		, date('m/d/Y')
-		, 'INSERT'
+		, 'UPDATE'
 	];
+
+	$csv_data[] = $rec;
 
 }
 $output_row_count = count($csv_data);
-\OpenTHC\CRE\CCRS::fputcsv_stupidly($output_csv, array_values(array_pad([ 'SubmittedBy',   'OpenTHC' ], $output_col, '')));
-\OpenTHC\CRE\CCRS::fputcsv_stupidly($output_csv, array_values(array_pad([ 'SubmittedDate', date('m/d/Y') ], $output_col, '')));
-\OpenTHC\CRE\CCRS::fputcsv_stupidly($output_csv, array_values(array_pad([ 'NumberRecords', $output_row_count ], $output_col, '')));
-\OpenTHC\CRE\CCRS::fputcsv_stupidly($output_csv, array_values($csv_head));
+\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'SubmittedBy',   'OpenTHC' ], $col_size, '')));
+\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'SubmittedDate', date('m/d/Y') ], $col_size, '')));
+\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'NumberRecords', $output_row_count ], $col_size, '')));
+\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values($csv_head));
 foreach ($csv_data as $row) {
-	\OpenTHC\CRE\CCRS::fputcsv_stupidly($output_csv, $row);
+	\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, $row);
 }
-// fclose($output_csv);
-fseek($output_csv, 0);
+// fclose($csv_temp);
+fseek($csv_temp, 0);
 
-$cfg = array(
-	'base_uri' => 'https://bong.openthc.com/',
-	'allow_redirects' => false,
-	'cookies' => false,
-	'headers' => array(
-		'user-agent' => sprintf('OpenTHC/%s', APP_BUILD),
-	),
-	'http_errors' => false,
-	'verify' => false,
-);
-$api_bong = new \GuzzleHttp\Client($cfg);
+_upload_to_queue_only($License, $csv_name, $csv_temp);
 
-$arg = [
-	'headers' => [
-		'content-name' => basename($csv_file),
-		'content-type' => 'text/csv',
-		'openthc-company' => $License['company_id'],
-		'openthc-license' => $License['id'],
-		'openthc-license-code' => $License['code'],
-		'openthc-license-name' => $License['name'],
-	],
-	'body' => $output_csv // this resource is closed by Guzzle
-];
-// var_dump($arg);
-$res = $api_bong->post('/upload/outgoing', $arg);
-
-$hrc = $res->getStatusCode();
-$buf = $res->getBody()->getContents();
-$buf = trim($buf);
-
-echo "## BONG $csv_file = $hrc\n";
-
-unset($output_csv);
+unset($csv_temp);

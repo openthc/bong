@@ -27,7 +27,8 @@ $License['code'] = '-system-';
 
 $req_ulid = _ulid();
 $csv_data = [];
-$csv_data[] = [ "VARIETY UPLOAD $req_ulid", '-canary-', '-canary-', '-canary-' ];
+$csv_data[] = [ "VARIETY UPLOAD $req_ulid", '-canary-', '-canary-', '-canary-' ]; // v2021-340
+// $csv_data[] = [ '-canary-', "VARIETY UPLOAD $req_ulid", '-canary-', '-canary-', '-canary-' ]; // v2022-343
 $csv_name = sprintf('strain_%s_%s.csv', $cre_service_key, $req_ulid);
 $csv_head = explode(',', 'Strain,StrainType,CreatedBy,CreatedDate'); // v0
 // $csv_head = explode(',', 'LicenseNumber,Strain,StrainType,CreatedBy,CreatedDate'); // v1

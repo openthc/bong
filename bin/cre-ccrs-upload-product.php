@@ -33,7 +33,7 @@ $csv_head = explode(',', 'LicenseNumber,InventoryCategory,InventoryType,Name,Des
 $col_size = count($csv_head);
 
 $csv_data = [];
-$csv_data[] = [ $cre_canary_code, '-canary-', '-canary-', "PRODUCT UPLOAD $req_ulid", '', '0', '-canary-', '-canary-', date('m/d/Y'), '-canary-', date('m/d/Y'), 'UPDATE' ];
+$csv_data[] = [ '-canary-', '-canary-', '-canary-', "PRODUCT UPLOAD $req_ulid", '', '0', '-canary-', '-canary-', date('m/d/Y'), '-canary-', date('m/d/Y'), 'UPDATE' ];
 
 $res_product = $dbc->fetchAll('SELECT * FROM product WHERE license_id = :l0 AND stat = 100', [ ':l0' => $License['id'] ]);
 foreach ($res_product as $product) {
