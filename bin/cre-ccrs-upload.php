@@ -26,6 +26,9 @@ if ('create' == $action) {
 
 	$dbc = _dbc();
 
+	// CCRS v2021-340
+	echo "./bin/cre-ccrs-upload.php variety\n";
+
 	$sql = 'SELECT * FROM license WHERE stat IN (100, 200)';
 	$arg = [];
 	$res_license = $dbc->fetchAll($sql, $arg);
@@ -33,7 +36,8 @@ if ('create' == $action) {
 
 		echo "# License: {$l0['id']} / {$l0['name']}\n";
 
-		echo "./bin/cre-ccrs-upload.php variety {$l0['id']}\n";
+		// CCRS v2022-343
+		// echo "./bin/cre-ccrs-upload.php variety {$l0['id']}\n";
 		echo "./bin/cre-ccrs-upload.php section {$l0['id']}\n";
 		echo "./bin/cre-ccrs-upload.php product {$l0['id']}\n";
 		echo "./bin/cre-ccrs-upload.php crop {$l0['id']}\n";

@@ -40,14 +40,12 @@ foreach ($res_product as $product) {
 
 	$product_data = json_decode($product['data'], true);
 	$product_source = $product_data['@source'];
+	// var_dump($product);
+	// var_dump($product_data);
+	// exit;
 
 	$dtC = new DateTime($product['created_at']);
 
-	// var_dump($product);
-	// var_dump($product_data);
-	var_dump($product_source);
-
-	// exit;
 
 	$csv_data[] = [
 		$License['code']

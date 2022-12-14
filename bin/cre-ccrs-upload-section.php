@@ -50,7 +50,7 @@ function _section_upload($License)
 		, date('m/d/Y')
 		, 'DELETE'
 	];
-	$csv_name = sprintf('product_%s_%s.csv', $cre_service_key, $req_ulid);
+	$csv_name = sprintf('area_%s_%s.csv', $cre_service_key, $req_ulid);
 	$csv_head = explode(',', 'LicenseNumber,Area,IsQuarantine,ExternalIdentifier,CreatedBy,CreatedDate,UpdatedBy,UpdatedDate,Operation');
 	$col_size = count($csv_head);
 	$csv_temp = fopen('php://temp', 'w');
