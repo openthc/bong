@@ -3,6 +3,8 @@
  * Update a Product
  *
  * SPDX-License-Identifier: MIT
+ *
+ * For CCRS we just do an UPSERT every time
  */
 
 $dbc = $REQ->getAttribute('dbc');
@@ -10,31 +12,39 @@ $dbc = $REQ->getAttribute('dbc');
 $sql = 'SELECT id, license_id FROM product WHERE id = :o1';
 $arg = [ ':o1' => $ARG['id'] ];
 $chk = $dbc->fetchRow($sql, $arg);
-if (empty($chk['id'])) {
-	return $RES->withJSON([
-		'data' => null,
-		'meta' => [
-			'detail' => 'Not Found'
-		],
-	], 404);
+if ( ! empty($chk['id'])) {
+
+	// License Conflict?
+	if ($chk['license_id'] != $RES->getAttribute('license_id')) {
+		return $RES->withJSON([
+			'data' => null,
+			'meta' => [
+				'detail' => 'Access Denied'
+			],
+		], 409);
+	}
+
 }
 
-if (empty($chk['license_id']) != $RES->getAttribute('license_id')) {
-	return $RES->withJSON([
-		'data' => null,
-		'meta' => [
-			'detail' => 'Access Denied'
-		],
-	], 403);
-}
 
-// Update It
-$sql = 'UPDATE product SET name = :n0, updated_at = now() WHERE license_id = :l0 AND id = :o1';
+// UPSERT IT
+$sql = <<<SQL
+INSERT INTO product (id, license_id, name, hash, data) VALUES (:o1, :l0, :n0, :h0, :d0)
+ON CONFLICT (id) DO
+UPDATE SET updated_at = now(), stat = 100, name = :n0, hash = :h0, data = product.data || :d0
+WHERE product.id = :o1 AND product.license_id = :l0
+SQL;
+
 $arg = [
-	':l0' => $_SERVER['HTTP_OPENTHC_LICENSE'],
 	':o1' => $ARG['id'],
+	':l0' => $_SERVER['HTTP_OPENTHC_LICENSE'],
 	':n0' => $_POST['name'],
+	':d0' => json_encode([
+		'@version' => 'openthc/2015',
+		'@source' => $_POST
+	]),
 ];
+$arg[':h0'] = sha1($arg[':d0']);
 
 $ret = $dbc->query($sql, $arg);
 if (1 == $ret) {
@@ -43,13 +53,13 @@ if (1 == $ret) {
 			'id' => $ARG['id'],
 			'name' => $_POST['name']
 		],
-		'meta' => [],
+		'meta' => $_POST,
 	]);
 }
 
 return $RES->withJSON([
 	'data' => null,
 	'meta' => [
-		'detail' => 'Invalid Object'
+		'detail' => 'Invalid Object',
 	],
 ], 500);
