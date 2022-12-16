@@ -12,6 +12,7 @@ $rec = [
 	'company_id' => $_POST['company_id'],
 	'code' => $_POST['code'],
 	'name' => $_POST['name'],
+	'stat' => 100,
 ];
 
 $res = $dbc->insert('license', $rec);
