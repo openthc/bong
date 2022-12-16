@@ -17,6 +17,8 @@ $message_file_list = glob(sprintf('%s/var/ccrs-incoming-mail/*.txt', APP_ROOT));
 foreach ($message_file_list as $message_file)
 {
 
+	echo "message:$message_file\n";
+
 	// Match Filename
 	$message_mime = mailparse_msg_parse_file($message_file); // resource
 	$message_part_list = mailparse_msg_get_structure($message_mime); // Array
@@ -117,6 +119,12 @@ function _csv_file_incoming($source_mail, $csv_file)
 {
 	global $dbc;
 
+	echo "_process_csv_file($csv_file)\n";
+
+	$cre_stat = 200;
+	$lic_code = null;
+	$lic_dead = false;
+
 	/**
 	 * error-response-file from the LCB sometimes are missing the
 	 * milliseconds portion of the time in the file name
@@ -160,7 +168,15 @@ function _csv_file_incoming($source_mail, $csv_file)
 			break;
 		case 'Strain,StrainType,CreatedBy,CreatedDate,ErrorMessage':
 			// @todo this one needs special processing ?
-			return _csv_file_incoming_variety($csv_file, $csv_pipe, $csv_head);
+			// return _csv_file_incoming_variety($csv_file, $csv_pipe, $csv_head);
+			$csv_pkid = 'Strain';
+			$tab_name = 'variety';
+			$lic_code = '018NY6XC00L1CENSE000000000';
+			$lic_data = [
+				'id' => '018NY6XC00L1CENSE000000000',
+				'name' => '-system-',
+				'code' => '-system-',
+			];
 			break;
 		case 'LicenseNumber,SoldToLicenseNumber,InventoryExternalIdentifier,PlantExternalIdentifier,SaleType,SaleDate,Quantity,UnitPrice,Discount,SalesTax,OtherTax,SaleExternalIdentifier,SaleDetailExternalIdentifier,CreatedBy,CreatedDate,UpdatedBy,UpdatedDate,Operation,ErrorMessage':
 			$tab_name = 'b2b_outgoing';
@@ -214,11 +230,6 @@ function _csv_file_incoming($source_mail, $csv_file)
 		$dbc->update('log_upload', $update, [ 'id' => $req_ulid ]);
 	}
 
-
-	$cre_stat = 200;
-	$lic_code = null;
-	$lic_dead = false;
-
 	// Should spin the whole file once to verify all the good lines
 	// Then spin a second time
 
@@ -235,6 +246,9 @@ function _csv_file_incoming($source_mail, $csv_file)
 
 		$csv_line = array_combine($csv_head, $csv_line);
 		$csv_line['@id'] = $csv_line[$csv_pkid];
+		if ('variety' == $tab_name) {
+			$csv_line['LicenseNumber'] = '018NY6XC00L1CENSE000000000';
+		}
 
 		if (empty($csv_line['LicenseNumber'])) {
 			continue;
