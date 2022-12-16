@@ -1,7 +1,6 @@
-#!/usr/bin/php
 <?php
 /**
- * Create Upload for Section Data
+ * Create Upload for Product Data
  *
  * SPDX-License-Identifier: MIT
  */

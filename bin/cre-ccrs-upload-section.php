@@ -1,4 +1,3 @@
-#!/usr/bin/php
 <?php
 /**
  * Create Upload for Section Data
