@@ -596,6 +596,7 @@ function _process_err_list($csv_line)
 				// echo "\n";
 				// exit(1);
 				// break;
+			case 'Area is required':
 			case 'Area name is over 75 characters':
 			case 'CreatedDate must be a date':
 			case 'ExternalIdentifier is required':
@@ -621,6 +622,7 @@ function _process_err_list($csv_line)
 			case 'Name is over 75 characters':
 			case 'Name is required':
 			case 'Operation is invalid must be INSERT UPDATE or DELETE':
+			case 'Product is required':
 			case 'Quantity is required':
 			case 'Quantity must be numeric':
 			case 'QuantityOnHand must be numeric':
