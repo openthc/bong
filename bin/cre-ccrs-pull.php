@@ -55,6 +55,12 @@ foreach ($message_file_list as $message_file)
 
 	mailparse_msg_free($message_mime);
 
+	if (empty($output_file)) {
+		$message_file_fail = sprintf('%s/var/ccrs-incoming-fail/%s', APP_ROOT, basename($message_file));
+		rename($message_file, $message_file_fail);
+		continue;
+	}
+
 	_csv_file_patch($output_file);
 	_csv_file_incoming($message_file, $output_file);
 
