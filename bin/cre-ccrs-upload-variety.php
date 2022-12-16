@@ -7,12 +7,11 @@
 
 use OpenTHC\Bong\CRE;
 
-require_once(__DIR__ . '/../boot.php');
+$dbc = _dbc();
 
 $tz0 = new DateTimezone(\OpenTHC\Config::get('cre/usa/wa/ccrs/tz'));
 $cre_service_key = \OpenTHC\Config::get('cre/usa/wa/ccrs/service-key');
 
-$dbc = _dbc();
 
 // CCRS v2022-343
 // $License = $dbc->fetchRow('SELECT * FROM license WHERE id = :l0', [ ':l0' => $argv[1] ]);

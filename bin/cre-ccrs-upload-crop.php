@@ -1,6 +1,6 @@
 <?php
 /**
- * Create Upload for Inventory Data
+ * Create Upload for Crop Data
  *
  * SPDX-License-Identifier: MIT
  */
@@ -20,52 +20,47 @@ if (empty($License['id'])) {
 	exit(1);
 }
 
-$res_inventory = $dbc->fetchAll('SELECT * FROM lot WHERE license_id = :l0', [ ':l0' => $License['id'] ]);
+$res_crop = $dbc->fetchAll("SELECT * FROM crop WHERE license_id = :l0 AND stat = 200", [
+	':l0' => $License['id']
+]);
+
 
 // Build CSV
 $req_ulid = _ulid();
-$csv_name = sprintf('inventory_%s_%s.csv', $cre_service_key, $req_ulid);
+$csv_name = sprintf('plant_%s_%s.csv', $cre_service_key, $req_ulid);
 $csv_temp = fopen('php://temp', 'w');
+// $csv_temp = fopen('php://stdout', 'w');
 
-$csv_head = explode(',', 'LicenseNumber,Strain,Area,Product,InitialQuantity,QuantityOnHand,TotalCost,IsMedical,ExternalIdentifier,CreatedBy,CreatedDate,UpdatedBy,UpdatedDate,Operation');
+$csv_head = explode(',', 'LicenseNumber,PlantIdentifier,Area,Strain,PlantSource,PlantState,GrowthStage,HarvestCycle,MotherPlantExternalIdentifier,HarvestDate,IsMotherPlant,ExternalIdentifier,CreatedBy,CreatedDate,UpdatedBy,UpdatedDate,Operation');
 $col_size = count($csv_head);
 
 $csv_data = [];
-$csv_data[] = [ '-canary-', '-canary-', '-canary-', '-canary-', '0', '0', '0', 'FALSE', "INVENTORY UPLOAD $req_ulid", '-canary-', date('m/d/Y'), '-canary-', date('m/d/Y'), 'UPDATE' ];
+$csv_data[] = [ '-canary-', "CROP UPLOAD $req_ulid", '-canary-', '-canary-', '-canary-', '-canary-', '-canary-', '-canary-', '-canary-', date('m/d/Y'), 'FALSE', '-canary-', 'OpenTHC', date('m/d/Y'), '' ,'', 'UPDATE' ];
 
-foreach ($res_inventory as $inv) {
+foreach ($res_crop as $x) {
 
-	// $inv_data = json_decode($inv['data'], true);
-	// $inv_source = $inv_data['@source'];
+	$dtC = new DateTime($x['created_at'], $tz0);
+	$dtU = new DateTime($x['updated_at'], $tz0);
 
-	$dtC = new DateTime($inv['created_at']);
-
-	// var_dump($inv);
-	// var_dump($inv_data);
-	// var_dump($inv_source);
-
-	$dtC = new DateTime($inv['created_at'], $tz0);
-
-	// Insert
-	$rec = [
+	$csv_data[] = [
 		$License['code']
-		, substr($inv['variety_name'], 0, 50)
-		, $inv['section_name']
-		, substr($inv['product_name'], 0, 75)
-		, sprintf('%0.2f', $inv['qty_initial'])
-		, sprintf('%0.2f', $inv['qty'])
-		, 0
-		, 'FALSE'
-		, $inv['id']
+		, $x['guid']
+		, 'Main Section' // $x['section_name']
+		, substr($x['variety_name'], 0, 50)
+		, 'Clone' // $x['source'] // What?
+		, 'Growing' // $x['plant_state'] // What?
+		, 'Vegetative' // $x['growth_stage']
+		, '3' // $x['harvest_cycle']
+		, $x['source_plant_id'] // MotherPlantExternalIdentifier
+		, $x['raw_collect_date'] // HarvestDate
+		, 'TRUE' // IsMotherPlant
+		, $x['guid']
 		, '-system-'
-		, $dtC->format('m/d/Y')
+		, date('m/d/Y')
 		, '-system-'
 		, date('m/d/Y')
 		, 'UPDATE'
 	];
-
-	$csv_data[] = $rec;
-
 }
 $output_row_count = count($csv_data);
 \OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'SubmittedBy',   'OpenTHC' ], $col_size, '')));
@@ -75,7 +70,8 @@ $output_row_count = count($csv_data);
 foreach ($csv_data as $row) {
 	\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, $row);
 }
-// fclose($csv_temp);
+
+// Upload
 fseek($csv_temp, 0);
 
 _upload_to_queue_only($License, $csv_name, $csv_temp);
