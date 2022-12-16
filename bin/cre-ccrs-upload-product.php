@@ -12,13 +12,8 @@ $dbc = _dbc();
 $tz0 = new DateTimezone(\OpenTHC\Config::get('cre/usa/wa/ccrs/tz'));
 $cre_service_key = \OpenTHC\Config::get('cre/usa/wa/ccrs/service-key');
 
-
 $license_id = array_shift($argv);
-$License = $dbc->fetchRow('SELECT * FROM license WHERE id = :l0', [ ':l0' => $license_id ]);
-if (empty($License['id'])) {
-	echo "Invalid License\n";
-	exit(1);
-}
+$License = _load_license($dbc, $license_id);
 
 $res_product = $dbc->fetchAll('SELECT * FROM product WHERE license_id = :l0', [ ':l0' => $License['id'] ]);
 

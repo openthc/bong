@@ -14,7 +14,8 @@ $cre_service_key = \OpenTHC\Config::get('cre/usa/wa/ccrs/service-key');
 
 
 // CCRS v2022-343
-// $License = $dbc->fetchRow('SELECT * FROM license WHERE id = :l0', [ ':l0' => $argv[1] ]);
+// $license_id = array_shift($argv);
+// $License = _load_license($dbc, $license_id);
 
 // CCRS v2021-340
 $License = [];

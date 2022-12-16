@@ -61,6 +61,26 @@ exit(0);
 /**
  * Utility Functions
  */
+function _load_license($dbc, $license_id)
+{
+	$License = $dbc->fetchRow('SELECT * FROM license WHERE id = :l0', [ ':l0' => $license_id ]);
+	if (empty($License['id'])) {
+		echo "Invalid License\n";
+		exit(1);
+	}
+	switch ($License['stat']) {
+		case 100:
+		case 200:
+			// OK
+			break;
+		default:
+			echo "Invalid License Status\n";
+			exit(1);
+	}
+
+	return $License;
+
+}
 
 function _upload_to_queue_only(array $License, string $csv_name, $csv_data)
 {
