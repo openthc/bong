@@ -1,6 +1,6 @@
 <?php
 /**
- * Update a Crop
+ * UPSERT a Crop Record
  *
  * SPDX-License-Identifier: MIT
  */
@@ -10,42 +10,48 @@ $dbc = $REQ->getAttribute('dbc');
 $sql = 'SELECT id, license_id, data FROM crop WHERE id = :s0';
 $arg = [ ':s0' => $ARG['id'] ];
 $chk = $dbc->fetchRow($sql, $arg);
-if (empty($chk['id'])) {
-	return $RES->withJSON([
-		'data' => null,
-		'meta' => [
-			'detail' => 'Not Found'
-		],
-	], 404);
+if ( ! empty($chk['id'])) {
+
+	// License Conflict
+	if ($chk['license_id'] != $RES->getAttribute('license_id')) {
+		return $RES->withJSON([
+			'data' => null,
+			'meta' => [
+				'detail' => 'Access Denied'
+			],
+		], 409);
+	}
+
 }
 
-if (empty($chk['license_id']) != $RES->getAttribute('license_id')) {
-	return $RES->withJSON([
-		'data' => null,
-		'meta' => [
-			'detail' => 'Access Denied'
-		],
-	], 403);
-}
 
-// Update It
-$crop = json_decode($crop['data'], true);
-// @todo Something other than accepting the entire request?
-$crop = array_merge($crop, $_POST);
-$sql = 'UPDATE crop SET name = :n0, data = :d0, updated_at = now() WHERE license_id = :l0 AND id = :s0';
+// UPSERT
+$sql = <<<SQL
+INSERT INTO crop (id, license_id, name, hash, data) VALUES (:o1, :l0, :n0, :h0, :d0)
+ON CONFLICT (id) DO
+UPDATE SET updated_at = now(), stat = 100, name = :n0, hash = :h0, data = crop.data || :d0
+WHERE crop.id = :o1 AND crop.license_id = :l0
+SQL;
+
 $arg = [
+	':o1' => $ARG['id'],
 	':l0' => $_SERVER['HTTP_OPENTHC_LICENSE'],
-	':s0' => $ARG['id'],
-	':n0' => $_POST['name'],
-	':d0' => json_encode($crop),
+	':n0' => $_POST['name'] ?: $ARG['id'],
+	':d0' => json_encode([
+		'@version' => 'openthc/2015',
+		'@source' => $_POST
+	]),
 ];
+$arg[':h0'] = sha1($arg[':d0']);
+
 
 $ret = $dbc->query($sql, $arg);
 if (1 == $ret) {
 	return $RES->withJSON([
 		'data' => [
-			'id' => $ARG['id'],
-			'name' => $_POST['name']
+			'id' => $arg[':o1'],
+			'name' => $arg[':n0'],
+			'hash' => $arg[':h0'],
 		],
 		'meta' => [],
 	]);
