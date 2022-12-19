@@ -1,5 +1,6 @@
 <?php
 /**
+ * Inventory Routes
  *
  * SPDX-License-Identifier: MIT
  */
@@ -8,21 +9,22 @@ namespace OpenTHC\Bong\Module;
 
 class Lot extends \OpenTHC\Module\Base
 {
+	/**
+	 *
+	 */
 	function __invoke($a)
 	{
 		// Search
 		$a->get('', function($REQ, $RES, $ARG) {
-
-			$dbc = $REQ->getAttribute('dbc');
-			$res = $dbc->fetchAll('SELECT id, hash, updated_at FROM lot ORDER BY updated_at DESC');
-
-			return $RES->withJSON($res, 200, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-
+			// $dbc = $REQ->getAttribute('dbc');
+			// $res = $dbc->fetchAll('SELECT id, hash, updated_at FROM lot ORDER BY updated_at DESC');
+			// return $RES->withJSON($res, 200, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+			return _from_cre_file('lot/search.php', $REQ, $RES, $ARG);
 		});
 
-		// $a->get('', function($REQ, $RES, $ARG) {
-		// 	return _from_cre_file('lot/search.php', $REQ, $RES, $ARG);
-		// });
+		$a->post('', function($REQ, $RES, $ARG) {
+			return _from_cre_file('lot/create.php', $REQ, $RES, $ARG);
+		});
 
 		// $a->get('/history', function($REQ, $RES, $ARG) {
 		// 	return _from_cre_file('lot/history/search.php', $REQ, $RES, $ARG);
@@ -32,6 +34,10 @@ class Lot extends \OpenTHC\Module\Base
 		$c = new \OpenTHC\Bong\Controller\Single($this->_container);
 		$c->tab = 'lot';
 		$a->get('/{id}', $c);
+
+		$a->post('/{id}', function($REQ, $RES, $ARG) {
+			return _from_cre_file('lot/update.php', $REQ, $RES, $ARG);
+		});
 
 		// View Item
 		// $a->get('/{guid}', function($REQ, $RES, $ARG) {
@@ -47,7 +53,6 @@ class Lot extends \OpenTHC\Module\Base
 		$a->delete('/{id}', function($REQ, $RES, $ARG) {
 			return _from_cre_file('lot/delete.php', $REQ, $RES, $ARG);
 		});
-
 
 		//	$a->post('/', function($REQ, $RES, $ARG) {
 		//		die('Create Inventory');
