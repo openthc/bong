@@ -1,6 +1,6 @@
 <?php
 /**
- *
+ * Section Routes
  *
  * SPDX-License-Identifier: MIT
  */
@@ -14,6 +14,7 @@ class Section extends \OpenTHC\Module\Base
 	 */
 	function __invoke($a)
 	{
+		// Search
 		$a->get('', function($REQ, $RES, $ARG) {
 
 			// return _from_cre_file('section/search.php', $RES, $ARG);
@@ -46,6 +47,7 @@ class Section extends \OpenTHC\Module\Base
 
 		});
 
+		// Create
 		$a->post('', function($REQ, $RES, $ARG) {
 			return _from_cre_file('section/create.php', $REQ, $RES, $ARG);
 		});
@@ -59,10 +61,12 @@ class Section extends \OpenTHC\Module\Base
 		// 	return _from_cre_file('section/single.php', $RES, $ARG);
 		// });
 
+		// Update
 		$a->post('/{id}', function($REQ, $RES, $ARG) {
 			return _from_cre_file('section/update.php', $REQ, $RES, $ARG);
 		});
 
+		// Delete
 		$a->delete('/{id}', function($REQ, $RES, $ARG) {
 			return _from_cre_file('section/delete.php', $REQ, $RES, $ARG);
 		});
