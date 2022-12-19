@@ -13,7 +13,7 @@ $chk = $dbc->fetchRow($sql, $arg);
 if ( ! empty($chk['id'])) {
 
 	// License Conflict
-	if ($chk['license_id'] != $RES->getAttribute('license_id')) {
+	if ($chk['license_id'] != $_SESSION['License']['id']) {
 		return $RES->withJSON([
 			'data' => null,
 			'meta' => [
@@ -29,13 +29,13 @@ if ( ! empty($chk['id'])) {
 $sql = <<<SQL
 INSERT INTO crop (id, license_id, name, hash, data) VALUES (:o1, :l0, :n0, :h0, :d0)
 ON CONFLICT (id) DO
-UPDATE SET updated_at = now(), stat = 100, name = :n0, hash = :h0, data = crop.data || :d0
+UPDATE SET updated_at = now(), stat = 100, name = :n0, hash = :h0, data = coalesce(crop.data, '{}'::jsonb) || :d0
 WHERE crop.id = :o1 AND crop.license_id = :l0
 SQL;
 
 $arg = [
 	':o1' => $ARG['id'],
-	':l0' => $_SERVER['HTTP_OPENTHC_LICENSE'],
+	':l0' => $_SESSION['License']['id'],
 	':n0' => $_POST['name'] ?: $ARG['id'],
 	':d0' => json_encode([
 		'@version' => 'openthc/2015',
