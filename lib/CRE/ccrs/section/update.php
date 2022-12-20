@@ -19,7 +19,7 @@ if (empty($chk['id'])) {
 	], 404);
 }
 
-if (empty($chk['license_id']) != $RES->getAttribute('license_id')) {
+if (empty($chk['license_id']) != $_SESSION['License']['id']) {
 	return $RES->withJSON([
 		'data' => null,
 		'meta' => [
@@ -31,7 +31,7 @@ if (empty($chk['license_id']) != $RES->getAttribute('license_id')) {
 // Update It
 $sql = 'UPDATE section SET name = :n0, updated_at = now() WHERE license_id = :l0 AND id = :s0';
 $arg = [
-	':l0' => $_SERVER['HTTP_OPENTHC_LICENSE'],
+	':l0' => $_SESSION['License']['id'],
 	':s0' => $ARG['id'],
 	':n0' => $_POST['name'],
 ];

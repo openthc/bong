@@ -23,7 +23,7 @@ if ( ! empty($_GET['e'])) {
 
 $sql = 'SELECT id, name, guid FROM section WHERE license_id = :l0 ORDER BY updated_at DESC';
 $arg = [
-	':l0' => $_SERVER['HTTP_OPENTHC_LICENSE'],
+	':l0' => $_SESSION['License']['id'],
 ];
 
 $res = $dbc->fetchAll($sql, $arg);

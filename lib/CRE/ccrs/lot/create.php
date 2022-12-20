@@ -26,7 +26,7 @@ if (empty($_POST['section']) && !empty($_POST['section_id'])) {
 
 $rec = [
 	'id' => _ulid(),
-	'license_id' => $_SERVER['HTTP_OPENTHC_LICENSE'],
+	'license_id' => $_SESSION['License']['id'],
 	'data' => json_encode($_POST),
 	// 'qty' => $_POST['qty'],
 	// 'variety_id' => $_POST['variety_id'],

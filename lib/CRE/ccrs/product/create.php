@@ -9,7 +9,7 @@ $dbc = $REQ->getAttribute('dbc');
 
 $rec = [
 	'id' => $_POST['id'],
-	'license_id' => $_SERVER['HTTP_OPENTHC_LICENSE'],
+	'license_id' => $_SESSION['License']['id'],
 	'name' => $_POST['name'],
 	'data' => json_encode([
 		'@source' => $_POST,

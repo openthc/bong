@@ -15,7 +15,7 @@ $chk = $dbc->fetchRow($sql, $arg);
 if ( ! empty($chk['id'])) {
 
 	// License Conflict?
-	if ($chk['license_id'] != $RES->getAttribute('license_id')) {
+	if ($chk['license_id'] != $_SESSION['License']['id']) {
 		return $RES->withJSON([
 			'data' => null,
 			'meta' => [
@@ -37,7 +37,7 @@ SQL;
 
 $arg = [
 	':o1' => $ARG['id'],
-	':l0' => $_SERVER['HTTP_OPENTHC_LICENSE'],
+	':l0' => $_SESSION['License']['id'],
 	':n0' => $_POST['name'],
 	':d0' => json_encode([
 		'@version' => 'openthc/2015',

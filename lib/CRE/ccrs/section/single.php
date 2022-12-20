@@ -9,7 +9,7 @@ $dbc = $REQ->getAttribute('dbc');
 
 $sql = 'SELECT * FROM section WHERE license_id = :l0 AND id = :s0';
 $arg = [
-	':l0' => $_SERVER['HTTP_OPENTHC_LICENSE'],
+	':l0' => $_SESSION['License']['id'],
 	':s0' => $ARG['id'],
 ];
 
