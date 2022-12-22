@@ -310,7 +310,7 @@ class Upload extends \OpenTHC\Controller\Base
 
 		// Find a B2B_Sale record FIRST
 		$sql = <<<SQL
-		INSERT INTO b2b_sale (id, name, license_id_source, license_id_target, flag, stat)
+		INSERT INTO b2b_incoming (id, name, source_license_id, target_license_id, flag, stat)
 		VALUES (:b2b0, :n0, :ls0, :lt0, :f0, :s0)
 		ON CONFLICT (id) DO NOTHING
 		SQL;
@@ -330,7 +330,7 @@ class Upload extends \OpenTHC\Controller\Base
 		// Then INSERT EACH ITEM
 
 		$sql = <<<SQL
-		INSERT INTO b2b_sale_item (id, b2b_sale_id, name, data)
+		INSERT INTO b2b_incoming_item (id, b2b_incoming_id, name, data)
 		VALUES (:pk, :b2b0, :n0, :d0)
 		ON CONFLICT (id) DO
 		UPDATE SET updated_at = now(), data = :d0

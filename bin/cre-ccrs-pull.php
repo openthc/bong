@@ -400,12 +400,12 @@ function _process_csv_file_b2b_incoming($csv_file, $csv_pipe, $csv_head)
 
 		// Build ID from Hash
 		$b2b_id = md5(sprintf('%s.%s.%s', $csv_line['FromLicenseNumber'], $csv_line['ToLicenseNumber'], $csv_line['TransferDate']));
-		$chk = $dbc->fetchRow('SELECT * FROM b2b_sale WHERE id = :pk', [ ':pk' => $b2b_id ]);
+		$chk = $dbc->fetchRow('SELECT * FROM b2b_incoming WHERE id = :pk', [ ':pk' => $b2b_id ]);
 		if (empty($chk)) {
-			$dbc->insert('b2b_sale', [
+			$dbc->insert('b2b_incoming', [
 				'id' => $b2b_id,
-				'license_id_source' => $csv_line['FromLicenseNumber'], //  $lic_source['id'],
-				'license_id_target' => $lic_data['id'],
+				'source_license_id' => $csv_line['FromLicenseNumber'],
+				'target_license_id' => $lic_data['id'],
 				'stat' => 100,
 				'name' => sprintf('Sold By: %s, Ship To: %s', $csv_line['FromLicenseNumber'], $csv_line['ToLicenseNumber'])
 			]);

@@ -154,47 +154,51 @@ create table lab_result_metric (
 
 create table b2b_incoming (
 	id varchar(64) PRIMARY KEY,
-	license_id_source varchar(64) not null,
-	license_id_target varchar(64) not null,
+	source_license_id varchar(64) not null,
+	target_license_id varchar(64) not null,
 	flag int not null default 0,
 	stat int not null default 100,
 	created_at timestamp with time zone NOT NULL DEFAULT now(),
 	updated_at timestamp with time zone NOT NULL DEFAULT now(),
 	hash varchar(64) NOT NULL DEFAULT '-',
+	name text,
 	data jsonb
 );
 
 create table b2b_incoming_item (
 	id varchar(64) PRIMARY KEY,
-	b2b_sale_id varchar(64) NOT NULL,
+	b2b_incoming_id varchar(64) NOT NULL,
 	flag int not null default 0,
 	stat int not null default 100,
 	created_at timestamp with time zone NOT NULL DEFAULT now(),
 	updated_at timestamp with time zone NOT NULL DEFAULT now(),
 	hash varchar(64) NOT NULL DEFAULT '-',
+	name text,
 	data jsonb
 );
 
 create table b2b_outgoing (
 	id varchar(64) PRIMARY KEY,
-	license_id_source varchar(64) not null,
-	license_id_target varchar(64) not null,
+	source_license_id varchar(64) not null,
+	target_license_id varchar(64) not null,
 	flag int not null default 0,
 	stat int not null default 100,
 	created_at timestamp with time zone NOT NULL DEFAULT now(),
 	updated_at timestamp with time zone NOT NULL DEFAULT now(),
 	hash varchar(64) NOT NULL DEFAULT '-',
+	name text,
 	data jsonb
 );
 
 create table b2b_outgoing_item (
 	id varchar(64) PRIMARY KEY,
-	b2b_sale_id varchar(64) NOT NULL,
+	b2b_outgoing_id varchar(64) NOT NULL,
 	flag int not null default 0,
 	stat int not null default 100,
 	created_at timestamp with time zone NOT NULL DEFAULT now(),
 	updated_at timestamp with time zone NOT NULL DEFAULT now(),
 	hash varchar(64) NOT NULL DEFAULT '-',
+	name text,
 	data jsonb
 );
 
@@ -206,6 +210,7 @@ create table b2c_sale (
 	created_at timestamp with time zone NOT NULL DEFAULT now(),
 	updated_at timestamp with time zone NOT NULL DEFAULT now(),
 	hash varchar(64) NOT NULL DEFAULT '-',
+	name text,
 	data jsonb
 );
 
@@ -217,6 +222,7 @@ create table b2c_sale_item (
 	created_at timestamp with time zone NOT NULL DEFAULT now(),
 	updated_at timestamp with time zone NOT NULL DEFAULT now(),
 	hash varchar(64) NOT NULL DEFAULT '-',
+	name text,
 	data jsonb
 );
 

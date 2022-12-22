@@ -1,6 +1,6 @@
 <?php
 /**
- *
+ * Create new B2B Incoming
  *
  * SPDX-License-Identifier: MIT
  */

@@ -20,6 +20,37 @@ class B2B extends \OpenTHC\Module\Base
 
 		});
 
+		// Create
+		$a->post('', function($REQ, $RES, $ARG) {
+
+			$b2b_type = strtolower($_POST['type']);
+			switch ($b2b_type) {
+				case 'incoming':
+				case 'outgoing':
+					return _from_cre_file(sprintf('b2b/%s/create.php', $b2b_type), $REQ, $RES, $ARG);
+			}
+
+			// Fail
+			return $RES->withStatus(400);
+
+		});
+
+		// Update
+		$a->post('/{id}', function($REQ, $RES, $ARG) {
+
+			$b2b_type = strtolower($_POST['type']);
+			switch ($b2b_type) {
+				case 'incoming':
+				case 'outgoing':
+					return _from_cre_file(sprintf('b2b/%s/update.php', $b2b_type), $REQ, $RES, $ARG);
+			}
+
+			// Fail
+			return $RES->withStatus(400);
+
+		});
+
+
 		$a->get('/outgoing', function($REQ, $RES, $ARG) {
 			return _from_cre_file('b2b/outgoing/search.php', $REQ, $RES, $ARG);
 		});
