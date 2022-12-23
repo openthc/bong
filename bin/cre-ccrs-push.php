@@ -117,7 +117,7 @@ foreach ($src_file_list as $src_file) {
 
 				$sql = <<<SQL
 				UPDATE log_upload
-				SET updated_at = now(), result_data = coalesce(result_data, '[]'::jsonb) || :rd1::jsonb
+				SET updated_at = now(), result_data = coalesce(result_data, '{}'::jsonb) || :rd1::jsonb
 				WHERE id = :u0
 				SQL;
 
@@ -139,7 +139,8 @@ foreach ($src_file_list as $src_file) {
 		}
 
 	} else {
-		echo "No Match on Upload Stuff\n";
+		echo $upload_html;
+		throw new \Exception('No Match on Upload HTML');
 	}
 
 }

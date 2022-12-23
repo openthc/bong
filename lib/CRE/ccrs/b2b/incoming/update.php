@@ -16,7 +16,7 @@ if ( ! empty($chk['id'])) {
 
 	if ($chk['target_license_id'] != $_SESSION['License']['id']) {
 		return $RES->withJSON([
-			'data' => null,
+			'data' => $ARG['id'],
 			'meta' => [
 				'detail' => 'Access Denied [BIU-026]'
 			],
@@ -27,10 +27,10 @@ if ( ! empty($chk['id'])) {
 
 // UPSERT B2B Incoming
 $sql = <<<SQL
-INSERT INTO b2b_incoming (id, source_license_id, target_license_id, name, hash, data)
-VALUES (:o1, :sl0, :tl0, :n0, :h0, :d0)
+INSERT INTO b2b_incoming (id, source_license_id, target_license_id, created_at, updated_at, name, hash, data)
+VALUES (:o1, :sl0, :tl0, :ct0, :ut0, :n0, :h0, :d0)
 ON CONFLICT (id) DO
-UPDATE SET updated_at = now(), stat = 100, name = :n0, hash = :h0, data = coalesce(b2b_incoming.data, '{}'::jsonb) || :d0
+UPDATE SET created_at = :ct0, updated_at = :ut0, stat = 100, name = :n0, hash = :h0, data = coalesce(b2b_incoming.data, '{}'::jsonb) || :d0
 WHERE b2b_incoming.id = :o1 AND b2b_incoming.target_license_id = :tl0
 SQL;
 
@@ -38,6 +38,8 @@ $arg = [
 	':o1' => $ARG['id'],
 	':sl0' => $_POST['source_license']['id'],
 	':tl0' => $_SESSION['License']['id'],
+	':ct0' => $_POST['created_at'],
+	':ut0' => $_POST['updated_at'],
 	':n0' => $_POST['name'],
 	':d0' => json_encode([
 		'@version' => 'openthc/2015',
