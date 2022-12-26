@@ -143,6 +143,23 @@ class Upload extends \OpenTHC\Controller\Base
 
 			}
 
+
+			// This is a Upload that is simply to QUEUE data
+			// Not to be updated in the BONG records
+			// Like in the case of BONG re-uploading stuff in BONG
+			if ( ! empty($_SERVER['HTTP_OPENTHC_DISABLE_UPDATE'])) {
+				return $RES->withJSON([
+					'data' => [
+						$output_file
+					],
+					'meta' => [
+						'update' => 0,
+						'update-disable' => true,
+					],
+				], 200, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+			}
+
+
 			// Symlink to License Code?
 			$csv_pkid = 'ExternalIdentifier';
 			switch ($source_type) {
