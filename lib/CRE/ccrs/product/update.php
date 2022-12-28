@@ -31,7 +31,7 @@ if ( ! empty($chk['id'])) {
 $sql = <<<SQL
 INSERT INTO product (id, license_id, name, hash, data) VALUES (:o1, :l0, :n0, :h0, :d0)
 ON CONFLICT (id) DO
-UPDATE SET updated_at = now(), stat = 100, name = :n0, hash = :h0, data = product.data || :d0
+UPDATE SET updated_at = now(), stat = 100, name = :n0, hash = :h0, data = coalesce(product.data, '{}'::jsonb) || :d0
 WHERE product.id = :o1 AND product.license_id = :l0
 SQL;
 
