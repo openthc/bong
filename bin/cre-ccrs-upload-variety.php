@@ -62,13 +62,26 @@ $res_variety = $dbc->fetchAll($sql, [
 	':d0' => '2022-06-01'
 ]);
 foreach ($res_variety as $variety) {
-	$csv_data[] = [
-		$License['code'], // v1
-		substr($variety['name'], 0, 50)
-		, 'Hybrid'
-		, '-system-'
-		, date('m/d/Y')
-	];
+	switch (CRE_CCRS_VERSION) {
+		case '2022.343':
+			$csv_data[] = [
+				$License['code'], // v1
+				substr($variety['name'], 0, 50)
+				, 'Hybrid'
+				, '-system-'
+				, date('m/d/Y')
+			];
+			break;
+		case '2021.340':
+		default:
+			$csv_data[] = [
+				substr($variety['name'], 0, 50)
+				, 'Hybrid'
+				, '-system-'
+				, date('m/d/Y')
+			];
+			break;
+	}
 }
 
 $output_row_count = count($csv_data);

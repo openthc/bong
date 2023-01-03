@@ -32,18 +32,18 @@ function _section_upload($License)
 	$csv_data = [];
 	$csv_data[] = [ '-canary-', "SECTION UPLOAD $req_ulid", 'FALSE', '-canary-', '-canary-', date('m/d/Y'), '-canary-', date('m/d/Y'), 'UPDATE' ];
 	// DELETE Legacy Value
-	$csv_data[] = [
-		$License['code']
-		, 'Main Section'
-		, 'FALSE'
-		, sprintf('%s-%s', $License['code'], '018NY6XC00SECT10N000000000')
-		, '-system-'
-		, date('m/d/Y')
-		, '-system-'
-		, date('m/d/Y')
-		, 'DELETE'
-	];
-	$csv_name = sprintf('area_%s_%s.csv', $cre_service_key, $req_ulid);
+	// $csv_data[] = [
+	// 	$License['code']
+	// 	, 'Main Section'
+	// 	, 'FALSE'
+	// 	, sprintf('%s-%s', $License['code'], '018NY6XC00SECT10N000000000')
+	// 	, '-system-'
+	// 	, date('m/d/Y')
+	// 	, '-system-'
+	// 	, date('m/d/Y')
+	// 	, 'DELETE'
+	// ];
+	$csv_name = sprintf('Area_%s_%s.csv', $cre_service_key, $req_ulid);
 	$csv_head = explode(',', 'LicenseNumber,Area,IsQuarantine,ExternalIdentifier,CreatedBy,CreatedDate,UpdatedBy,UpdatedDate,Operation');
 	$col_size = count($csv_head);
 	$csv_temp = fopen('php://temp', 'w');
@@ -53,11 +53,11 @@ function _section_upload($License)
 	SELECT section.*, license.code AS license_code
 	FROM section
 	JOIN license ON section.license_id = license.id
-	WHERE section.stat = 100
 	AND license.id = :l0
 	SQL;
 	$res_section = $dbc->fetchAll($sql, [ ':l0' => $License['id'] ]);
 	foreach ($res_section as $section) {
+
 		// INSERT
 		$dtC = new \DateTime($section['created_at'], $tz0);
 		$dtU = new \DateTime($section['updated_at'], $tz0);
