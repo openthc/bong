@@ -24,7 +24,7 @@ if ( ! is_file($cookie_file)) {
 }
 $cookie_list0 = json_decode(file_get_contents($cookie_file), true);
 foreach ($cookie_list0 as $c) {
-	if ('cannabisreporting.lcb.wa.gov' == $c['domain']) {
+	if (preg_match('/lcb\.wa\.gov/', $c['domain'])) {
 		$cookie_list1[] = sprintf('%s=%s', $c['name'], $c['value']);
 	}
 }
@@ -152,16 +152,18 @@ exit(0);
  */
 function _get_main_page($cookie_list1) : string
 {
+	$base_url = \OpenTHC\Config::get('cre/usa/wa/ccrs/server');
+
 	// Get to Verify Access and get RVT
-	$req = __curl_init('https://cannabisreporting.lcb.wa.gov/');
+	$req = __curl_init($base_url);
 	// curl_setopt($req, CURLOPT_VERBOSE, true);
 	curl_setopt($req, CURLOPT_USERAGENT, 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 Safari/537.36');
 	curl_setopt($req, CURLOPT_HTTPHEADER, [
 		'accept: text/html',
-		'authority: cannabisreporting.lcb.wa.gov',
+		sprintf('authority: %s', parse_url($base_url, PHP_URL_HOST)),
 		sprintf('cookie: %s', implode('; ', $cookie_list1)),
-		'origin: https://cannabisreporting.lcb.wa.gov',
-		'referer: https://cannabisreporting.lcb.wa.gov/',
+		sprintf('origin: %s', $base_url),
+		sprintf('referer: %s', $base_url),
 	]);
 	$res = curl_exec($req);
 	$inf = curl_getinfo($req);
@@ -186,7 +188,9 @@ function _get_main_page($cookie_list1) : string
  */
 function _post_home_upload($cookie_list1, $mark, $post) : string
 {
-	$req = __curl_init('https://cannabisreporting.lcb.wa.gov/Home/Upload');
+	$base_url = \OpenTHC\Config::get('cre/usa/wa/ccrs/server');
+	$base_url = rtrim($base_url, '/');
+	$req = __curl_init(sprintf('%s/Home/Upload', $base_url));
 	// curl_setopt($req, CURLOPT_VERBOSE, true);
 	curl_setopt($req, CURLOPT_STDERR, fopen('php://stderr', 'a'));
 	curl_setopt($req, CURLOPT_USERAGENT, 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 Safari/537.36');
@@ -195,13 +199,13 @@ function _post_home_upload($cookie_list1, $mark, $post) : string
 	curl_setopt($req, CURLOPT_HTTPHEADER, [
 		'accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
 		'accept-language: en-US,en;q=0.9',
-		'authority: cannabisreporting.lcb.wa.gov',
+		sprintf('authority: %s', parse_url($base_url, PHP_URL_HOST)),
 		'cache-control: max-age=0',
 		sprintf('content-length: %d', strlen($post)),
 		sprintf('content-type: multipart/form-data; boundary=%s', $mark),
 		sprintf('cookie: %s', implode('; ', $cookie_list1)),
-		'origin: https://cannabisreporting.lcb.wa.gov',
-		'referer: https://cannabisreporting.lcb.wa.gov/',
+		sprintf('origin: %s', $base_url),
+		sprintf('referer: %s', $base_url),
 		// 'sec-ch-ua-mobile: ?0',
 		// 'sec-ch-ua-platform: "Linux"',
 		// 'sec-ch-ua: " Not;A Brand";v="99", "Google Chrome";v="97", "Chromium";v="97"',
