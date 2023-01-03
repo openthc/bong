@@ -15,7 +15,7 @@ if (is_file($cookie_file)) {
 
 	$age = time() - filemtime($cookie_file);
 	if ($age < 600) {
-		echo "AUTH: $age s old\n";
+		// echo "AUTH: $age s old\n";
 		exit(0);
 	}
 
@@ -28,9 +28,12 @@ $p = \OpenTHC\Config::get('cre/usa/wa/ccrs/password');
 $cookie_data = [];
 
 try {
-	$cre = new \OpenTHC\CRE\CCRS([]);
+	$cre = new \OpenTHC\CRE\CCRS([
+		'server' => \OpenTHC\Config::get('cre/usa/wa/ccrs/server')
+	]);
 	$cookie_data = $cre->auth($u, $p);
 } catch (\Exception $e) {
+	unlink($cookie_file);
 	echo "FAIL: ";
 	echo $e->getMessage();
 	echo "\n";
