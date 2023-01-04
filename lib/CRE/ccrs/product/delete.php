@@ -21,7 +21,7 @@ if (empty($chk['id'])) {
 }
 
 // Access?
-if (empty($chk['license_id']) != $_SESSION['License']['id']) {
+if ($chk['license_id'] != $_SESSION['License']['id']) {
 	return $RES->withJSON([
 		'data' => null,
 		'meta' => [
