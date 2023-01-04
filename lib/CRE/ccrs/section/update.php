@@ -7,7 +7,7 @@
 
 $dbc = $REQ->getAttribute('dbc');
 
-$sql = 'SELECT id, license_id FROM section WHERE id = :s0';
+$sql = 'SELECT id, license_id, created_at, updated_at FROM section WHERE id = :s0';
 $arg = [ ':s0' => $ARG['id'] ];
 $chk = $dbc->fetchRow($sql, $arg);
 if ( ! empty($chk['id'])) {
@@ -23,6 +23,14 @@ if ( ! empty($chk['id'])) {
 
 }
 
+$_POST['name'] = trim($_POST['name']);
+
+if (empty($_POST['created_at'])) {
+	$_POST['created_at'] = $chk['created_at'];
+}
+if (empty($_POST['updated_at'])) {
+	$_POST['updated_at'] = 'now()';
+}
 
 // UPSERT Section
 $sql = <<<SQL

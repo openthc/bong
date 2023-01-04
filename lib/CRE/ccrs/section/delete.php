@@ -21,7 +21,7 @@ if (empty($chk['id'])) {
 }
 
 // Access?
-if (empty($chk['license_id']) != $_SESSION['License']['id']) {
+if ($chk['license_id'] != $_SESSION['License']['id']) {
 	return $RES->withJSON([
 		'data' => null,
 		'meta' => [
@@ -50,6 +50,6 @@ if (1 == $ret) {
 return $RES->withJSON([
 	'data' => null,
 	'meta' => [
-		'detail' => 'Invalid Object'
+		'detail' => 'Invalid Object',
 	],
 ], 500);
