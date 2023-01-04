@@ -308,13 +308,13 @@ function _csv_file_incoming($source_mail, $csv_file)
 			$tab_name = 'b2b_outgoing';
 			break;
 		case 'Submittedby,SubmittedDate,NumberRecords,ExternalManifestIdentifier,HeaderOperation,TransportationType,OriginLicenseNumber,OriginLicenseePhone,OriginLicenseeEmailAddress,TransportationLicenseNumber,DriverName,DepartureDateTime,ArrivalDateTime,VIN#,VehiclePlateNumber,VehicleModel,VehicleMake,VehicleColor,DestinationLicenseNumber,DestinationLicenseePhone,DestinationLicenseeEmailAddress,ErrorMessage':
-			$tab_name = 'b2b_manifest';
-			// throw new Exception("File '$tab_name' Not Implemented");
+			$tab_name = 'b2b_outgoing_manifest';
+			_process_csv_file_b2b_outgoing_manifest($csv_file, $csv_pipe, $csv_head);
 			return false;
 			break;
 		case 'InventoryExternalIdentifier,PlantExternalIdentifier,Quantity,UOM,WeightPerUnit,ServingsPerUnit,ExternalIdentifier,CreatedBy,CreatedDate,UpdatedBy,UpdatedDate,Operation,ErrorMessage':
-			$tab_name = 'b2b_manifest_line_item';
-			// throw new Exception("File '$tab_name' Not Implemented");
+			$tab_name = 'b2b_outgoing_manifest_line_item';
+			_process_csv_file_b2b_outgoing_manifest_item($csv_file, $csv_pipe, $csv_head);
 			return false;
 			break;
 		default:
@@ -610,6 +610,108 @@ function _process_csv_file_b2b_incoming($csv_file, $csv_pipe, $csv_head)
 }
 
 /**
+ * Special Case for Manifest Header
+ */
+function _process_csv_file_b2b_outgoing_manifest($csv_file, $csv_pipe, $csv_head)
+{
+	$idx_line = 0;
+
+	// Try to Find SOmething?
+	while ($csv_line = fgetcsv($csv_pipe)) {
+
+		$idx_line++;
+
+		if (count($csv_head) != count($csv_line)) {
+			var_dump($csv_head);
+			var_dump($csv_line);
+			echo "Two Lines Don't Match\n";
+			exit(1);
+		}
+
+		$csv_line = array_combine($csv_head, $csv_line);
+		$csv_line['@id'] = $csv_line['ExternalManifestIdentifier'];
+
+		$err = _process_err_list($csv_line);
+		$err_list = $err['data'];
+
+		switch ($err['code']) {
+			case 200:
+				// Awesome
+				break;
+			case 400:
+				// Somekind of Errors
+				$cre_stat = 400;
+				break;
+			case 403:
+				// Not Authorized on this License
+				$cre_stat = 403;
+				$lic_dead = true;
+				break;
+			case 404:
+				// UPDATE fails, needs INSERT
+				break;
+			default:
+				var_dump($csv_line);
+				var_dump($err);
+				var_dump($err_list);
+				throw new \Exception('WTF');
+		}
+
+	}
+}
+
+/**
+ * Special Case for Manifest Header
+ */
+function _process_csv_file_b2b_outgoing_manifest_item($csv_file, $csv_pipe, $csv_head)
+{
+	$idx_line = 0;
+
+	// Try to Find SOmething?
+	while ($csv_line = fgetcsv($csv_pipe)) {
+
+		$idx_line++;
+
+		if (count($csv_head) != count($csv_line)) {
+			var_dump($csv_head);
+			var_dump($csv_line);
+			echo "Two Lines Don't Match\n";
+			exit(1);
+		}
+
+		$csv_line = array_combine($csv_head, $csv_line);
+		$csv_line['@id'] = $csv_line['ExternalIdentifier'];
+
+		$err = _process_err_list($csv_line);
+		$err_list = $err['data'];
+
+		switch ($err['code']) {
+			case 200:
+				// Awesome
+				break;
+			case 400:
+				// Somekind of Errors
+				$cre_stat = 400;
+				break;
+			case 403:
+				// Not Authorized on this License
+				$cre_stat = 403;
+				$lic_dead = true;
+				break;
+			case 404:
+				// UPDATE fails, needs INSERT
+				break;
+			default:
+				var_dump($csv_line);
+				var_dump($err);
+				var_dump($err_list);
+				throw new \Exception('WTF');
+		}
+
+	}
+}
+
+/**
  * Special Case for Variety
  */
 function _csv_file_incoming_variety($csv_file, $csv_pipe, $csv_head)
@@ -746,20 +848,25 @@ function _process_err_list($csv_line)
 			case 'Area is required':
 			case 'Area name is over 75 characters':
 			case 'CreatedDate must be a date':
+			case 'DestinationLicenseNumber must be numeric':
 			case 'ExternalIdentifier is required':
 			case 'FromInventoryExternalIdentifier is required':
 			case 'InitialQuantity is required':
 			case 'InitialQuantity must be numeric':
 			case 'Invalid Area':
+			case 'Invalid DestinationLicenseNumber':
+			case 'Invalid Details Operation':
 			case 'Invalid FromInventoryExternalIdentifier':
 			case 'Invalid InventoryCategory/InventoryType combination':
 			case 'Invalid InventoryExternalIdentifier':
 			case 'Invalid LicenseeID':
+			case 'Invalid NumberRecords':
 			case 'Invalid Product':
-			case 'Invalid Strain':
 			case 'Invalid Strain Type':
+			case 'Invalid Strain':
 			case 'Invalid To InventoryExternalIdentifier':
 			case 'Invalid ToInventoryExternalIdentifier':
+			case 'Invalid UOM':
 			case 'InventoryCategory is required':
 			case 'InventoryType is required':
 			case 'IsMedical must be True or False':
@@ -769,14 +876,15 @@ function _process_err_list($csv_line)
 			case 'Name is over 75 characters':
 			case 'Name is required':
 			case 'Operation is invalid must be INSERT UPDATE or DELETE':
+			case 'OriginLicenseePhone must not exceed 14 characters':
 			case 'Product is required':
 			case 'Quantity is required':
 			case 'Quantity must be numeric':
 			case 'QuantityOnHand must be numeric':
-			case 'TotalCost must be numeric':
-			case 'UpdatedDate is required for Update or Delete Operations':
 			case 'Strain is required':
 			case 'Strain Name reported is not linked to the license number. Please ensure the strain being reported belongs to the licensee':
+			case 'TotalCost must be numeric':
+			case 'UpdatedDate is required for Update or Delete Operations':
 				// Need to Tag this Object as NOT_SYNC
 				$err_return_list[] = $err_text;
 				break;
@@ -786,8 +894,9 @@ function _process_err_list($csv_line)
 				// So, we just ignore it
 				break;
 			case 'Duplicate External Identifier':
-			case 'Duplicate Strain. The Strain must be unique for the LicenseNumber':
+			case 'Duplicate ExternalManifestIdentifier':
 			case 'Duplicate Sale for Licensee':
+			case 'Duplicate Strain. The Strain must be unique for the LicenseNumber':
 			case 'Duplicate Strain/StrainType':
 				// Cool, this generally means everything is OK
 				// BUT!! It could mean a conflict of IDs -- like if the object wasn't for the same license
@@ -797,8 +906,8 @@ function _process_err_list($csv_line)
 				break;
 			case 'Integrator is not authoritzed to update licensee':
 			case 'Integrator is not authorized to update licensee':
-			case 'LicenseNumber is not assigned to Integrator':
 			case 'License Number is not assigned to Integrator':
+			case 'LicenseNumber is not assigned to Integrator':
 				return [
 					'code' => 403,
 					'data' => [
@@ -807,6 +916,7 @@ function _process_err_list($csv_line)
 				];
 				break;
 			case 'ExternalIdentifier not found':
+			case 'ExternalManifestIdentifier does not exist in CCRS. Cannot Update or Delete':
 			case 'Invalid SaleDetail':
 			case 'SaleDetailExternalIdentifier not found':
 			case 'SaleExternalIdentifier not found':
