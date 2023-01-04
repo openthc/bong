@@ -787,6 +787,8 @@ function _process_err_list($csv_line)
 				break;
 			case 'Duplicate External Identifier':
 			case 'Duplicate Strain. The Strain must be unique for the LicenseNumber':
+			case 'Duplicate Sale for Licensee':
+			case 'Duplicate Strain/StrainType':
 				// Cool, this generally means everything is OK
 				// BUT!! It could mean a conflict of IDs -- like if the object wasn't for the same license
 				// if ('INSERT' == strtoupper($csv_line['Operation'])) {
@@ -805,6 +807,9 @@ function _process_err_list($csv_line)
 				];
 				break;
 			case 'ExternalIdentifier not found':
+			case 'Invalid SaleDetail':
+			case 'SaleDetailExternalIdentifier not found':
+			case 'SaleExternalIdentifier not found':
 				return [
 					'code' => 404,
 					'data' => [
