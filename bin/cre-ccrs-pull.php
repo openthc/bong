@@ -19,10 +19,26 @@ foreach ($message_file_list as $message_file)
 
 	echo "message:$message_file\n";
 
+	$message_type = '';
+
 	// Match Filename
 	$message_mime = mailparse_msg_parse_file($message_file); // resource
 	$message_part_list = mailparse_msg_get_structure($message_mime); // Array
 	// echo "message-part-list: " . implode(' / ', $message_part_list) . "\n";
+
+	// $mime_part = mailparse_msg_get_part($message_mime, 0); // resource
+	$message_head = mailparse_msg_get_part_data($message_mime);
+	if ( ! empty($message_head['headers']['subject'])) {
+		$s = $message_head['headers']['subject'];
+		echo "Subject: {$s}\n";
+		if (preg_match('/CCRS error/', $s)) {
+			$message_type = 'ccrs-failure-data';
+		} elseif (preg_match('/CCRS Processing Error/', $s)) {
+			$message_type = 'ccrs-failure-full';
+		} elseif (preg_match('/Manifest Generated/', $s)) {
+			$message_type = 'b2b-outgoing-manifest';
+		}
+	}
 
 	// Inflate the parts
 	$message_part_data = [];
@@ -51,24 +67,34 @@ foreach ($message_file_list as $message_file)
 				$output_file = sprintf('%s/var/ccrs-incoming/%s', APP_ROOT, $part['content-name']);
 				$output_size = file_put_contents($output_file, $output_data);
 
+				break; // foreach
+
+			} elseif (preg_match('/^Manifest_(.+)_(\w+)\.pdf$/', $part['content-name'])) {
+				// It's the Manifest PDF
+
+				$part_res = mailparse_msg_get_part($message_mime, $part_key);
+				$output_data = mailparse_msg_extract_part_file($part_res, $message_file, null);
+				$output_file = sprintf('%s/var/ccrs-incoming/%s', APP_ROOT, $part['content-name']);
+				$output_size = file_put_contents($output_file, $output_data);
+
+				break; // foreach
 			}
 		}
 	}
 
 	mailparse_msg_free($message_mime);
 
-	if (empty($output_file)) {
-		$message_file_fail = sprintf('%s/var/ccrs-incoming-fail/%s', APP_ROOT, basename($message_file));
-		rename($message_file, $message_file_fail);
-		continue;
-	}
-
-	_csv_file_patch($output_file);
-	_csv_file_incoming($message_file, $output_file);
-
-	$message_file_done = sprintf('%s/var/ccrs-incoming-mail-done/%s', APP_ROOT, basename($message_file));
-	if ( ! rename($message_file, $message_file_done)) {
-		throw new \Exception("Cannot archive incoming email");
+	switch ($message_type) {
+		case 'ccrs-failure-full':
+			// NOthing To do?  What?
+			_ccrs_pull_failure_full($message_file, $output_file);
+			break;
+		case 'ccrs-failure-data':
+			_ccrs_pull_failure_data($message_file, $output_file);
+			break;
+		case 'b2b-outgoing-manifest':
+			_ccrs_pull_manifest_file($message_file, $output_file);
+			break;
 	}
 
 }
@@ -83,7 +109,101 @@ foreach ($file_list as $file) {
 
 }
 
-exit(0);
+
+/**
+ *
+ */
+function _ccrs_pull_failure_data($message_file, $output_file)
+{
+	if (empty($output_file)) {
+		// Failed to Parse Output File
+		echo "Failed to Process: $message_file\n";
+		exit(1);
+		$message_file_fail = sprintf('%s/var/ccrs-incoming-fail/%s', APP_ROOT, basename($message_file));
+		rename($message_file, $message_file_fail);
+		return(0);
+	}
+
+	_csv_file_patch($output_file);
+	_csv_file_incoming($message_file, $output_file);
+
+	$message_file_done = sprintf('%s/var/ccrs-incoming-mail-done/%s', APP_ROOT, basename($message_file));
+	if ( ! rename($message_file, $message_file_done)) {
+		throw new \Exception("Cannot archive incoming email");
+	}
+
+}
+
+/**
+ * Process Full Failure
+ */
+function _ccrs_pull_failure_full($message_file, $output_file)
+{
+	$message_file_fail = sprintf('%s/var/ccrs-incoming-fail/%s', APP_ROOT, basename($message_file));
+
+	if ( ! rename($message_file, $message_file_fail)) {
+		throw new \Exception("Cannot archive incoming email");
+	}
+
+	echo "FAIL $message_file => $message_file_fail\n";
+
+}
+
+/**
+ * Pull the Manifest File into BONG
+ */
+function _ccrs_pull_manifest_file($message_file, $output_file)
+{
+	global $dbc;
+
+	echo "_ccrs_pull_manifest_file($message_file, $output_file)\n";
+
+	if (empty($output_file)) {
+		echo "Failed to Process: $message_file [CCP-161]\n";
+		exit(1);
+	}
+	if ( ! is_file($output_file)) {
+		echo "Failed to Process: $message_file [CCP-165]\n";
+		exit(1);
+	}
+	if (0 == filesize($output_file)) {
+		echo "Failed to Process: $message_file [CCP-169]\n";
+		exit(1);
+	}
+	if ( ! preg_match('/Manifest_(.+)_\w+\.pdf/', $output_file, $m)) {
+		echo "Failed to Process: $message_file [CCP-177]\n";
+		exit(1);
+	}
+	$manifest_id = $m[1];
+
+	$b2b_outgoing_id = $dbc->fetchOne('SELECT id FROM b2b_outgoing WHERE id = :m0', [
+		':m0' => $manifest_id
+	]);
+	if (empty($b2b_outgoing_id)) {
+		echo "Failed to Process: $message_file; Missing B2B Outgoing [CCP-186]\n";
+		exit(1);
+	}
+
+	$sql = <<<SQL
+	INSERT INTO b2b_outgoing_file (id, name, body) VALUES (:b2b0, :n1, :b1)
+	ON CONFLICT (id) DO
+	UPDATE SET name = EXCLUDED.name, body = EXCLUDED.body
+	SQL;
+
+	$cmd = $dbc->prepare($sql, null);
+	$cmd->bindParam(':b2b0', $b2b_outgoing_id);
+	$cmd->bindParam(':n1', basename($output_file));
+	$cmd->bindParam(':b1', file_get_contents($output_file), \PDO::PARAM_LOB);
+	$cmd->execute();
+
+	$message_file_done = sprintf('%s/var/ccrs-incoming-mail-done/%s', APP_ROOT, basename($message_file));
+	if ( ! rename($message_file, $message_file_done)) {
+		throw new \Exception("Cannot archive incoming email");
+	}
+
+	unlink($output_file);
+
+}
 
 
 /**
@@ -153,7 +273,8 @@ function _csv_file_incoming($source_mail, $csv_file)
 			$tab_name = 'b2b_incoming';
 			$tab_name = 'b2b_sale_item';
 			break;
-		case 'LicenseNumber,Name,IsQuarantine,ExternalIdentifier,CreatedBy,CreatedDate,UpdatedBy,UpdatedDate,Operation,ErrorMessage':
+		case 'LicenseNumber,Name,IsQuarantine,ExternalIdentifier,CreatedBy,CreatedDate,UpdatedBy,UpdatedDate,Operation,ErrorMessage': // v2021-340
+		case 'LicenseNumber,Area,IsQuarantine,ExternalIdentifier,CreatedBy,CreatedDate,UpdatedBy,UpdatedDate,Operation,ErrorMessage': // v2022-343
 			// Section is also used for the PING test
 			$tab_name = 'section';
 			break;
@@ -161,12 +282,13 @@ function _csv_file_incoming($source_mail, $csv_file)
 			$tab_name = 'lot';
 			break;
 		case 'LicenseNumber,PlantIdentifier,Area,Strain,PlantSource,PlantState,GrowthStage,HarvestCycle,MotherPlantExternalIdentifier,HarvestDate,IsMotherPlant,ExternalIdentifier,CreatedBy,CreatedDate,UpdatedBy,UpdatedDate,Operation,ErrorMessage':
+		case 'LicenseNumber,PlantIdentifier,Area,Strain,PlantSource,PlantState,GrowthStage,MotherPlantExternalIdentifier,HarvestDate,IsMotherPlant,ExternalIdentifier,CreatedBy,CreatedDate,UpdatedBy,UpdatedDate,Operation,ErrorMessage':
 			$tab_name = 'crop';
 			break;
 		case 'LicenseNumber,InventoryCategory,InventoryType,Name,Description,ExternalIdentifier,CreatedBy,CreatedDate,UpdatedBy,UpdatedDate,Operation,ErrorMessage,UnitWeightGrams':
 			$tab_name = 'product';
 			break;
-		case 'Strain,StrainType,CreatedBy,CreatedDate,ErrorMessage':
+		case 'Strain,StrainType,CreatedBy,CreatedDate,ErrorMessage': // v0
 			// @todo this one needs special processing ?
 			// return _csv_file_incoming_variety($csv_file, $csv_pipe, $csv_head);
 			$csv_pkid = 'Strain';
@@ -178,12 +300,25 @@ function _csv_file_incoming($source_mail, $csv_file)
 				'code' => '-system-',
 			];
 			break;
+		case 'LicenseNumber,Strain,CreatedBy,CreatedDate,StrainType,ErrorMessage': // v1
+			$csv_pkid = 'Strain';
+			$tab_name = 'variety';
+			break;
 		case 'LicenseNumber,SoldToLicenseNumber,InventoryExternalIdentifier,PlantExternalIdentifier,SaleType,SaleDate,Quantity,UnitPrice,Discount,SalesTax,OtherTax,SaleExternalIdentifier,SaleDetailExternalIdentifier,CreatedBy,CreatedDate,UpdatedBy,UpdatedDate,Operation,ErrorMessage':
 			$tab_name = 'b2b_outgoing';
 			break;
+		case 'Submittedby,SubmittedDate,NumberRecords,ExternalManifestIdentifier,HeaderOperation,TransportationType,OriginLicenseNumber,OriginLicenseePhone,OriginLicenseeEmailAddress,TransportationLicenseNumber,DriverName,DepartureDateTime,ArrivalDateTime,VIN#,VehiclePlateNumber,VehicleModel,VehicleMake,VehicleColor,DestinationLicenseNumber,DestinationLicenseePhone,DestinationLicenseeEmailAddress,ErrorMessage':
+			$tab_name = 'b2b_manifest';
+			// throw new Exception("File '$tab_name' Not Implemented");
+			return false;
+			break;
+		case 'InventoryExternalIdentifier,PlantExternalIdentifier,Quantity,UOM,WeightPerUnit,ServingsPerUnit,ExternalIdentifier,CreatedBy,CreatedDate,UpdatedBy,UpdatedDate,Operation,ErrorMessage':
+			$tab_name = 'b2b_manifest_line_item';
+			// throw new Exception("File '$tab_name' Not Implemented");
+			return false;
+			break;
 		default:
-			echo "CSV Header Not Handled\n$tab_name";
-			exit(0);
+			throw new Exception("CSV Header Not Handled\n$tab_name");
 			break;
 	}
 
@@ -221,7 +356,7 @@ function _csv_file_incoming($source_mail, $csv_file)
 			'data' => file_get_contents($csv_file)
 		];
 		if ( ! empty($source_mail)) {
-			$result_data['@result-mail'] = file_get_contents($message_file);
+			$result_data['@result-mail'] = file_get_contents($source_mail);
 		}
 		$update = [
 			'result_data' => json_encode($result_data),
@@ -246,8 +381,19 @@ function _csv_file_incoming($source_mail, $csv_file)
 
 		$csv_line = array_combine($csv_head, $csv_line);
 		$csv_line['@id'] = $csv_line[$csv_pkid];
-		if ('variety' == $tab_name) {
-			$csv_line['LicenseNumber'] = '018NY6XC00L1CENSE000000000';
+
+		// Handle some CCRS Switch-Over Shit
+		switch ($tab_name) {
+			case 'section':
+				if (empty($csv_line['Name'])) {
+					$csv_line['Name'] = $csv_line['Area'];
+				}
+				break;
+			case 'variety':
+				if (empty($csv_line['LicenseNumber'])) {
+					$csv_line['LicenseNumber'] = '018NY6XC00L1CENSE000000000';
+				}
+				break;
 		}
 
 		if (empty($csv_line['LicenseNumber'])) {
@@ -486,6 +632,7 @@ function _csv_file_incoming_variety($csv_file, $csv_pipe, $csv_head)
 			// case 'Name is required':
 				// break;
 			case 'Duplicate Strain/StrainType':
+			case 'Duplicate Strain. The Strain must be unique for the LicenseNumber':
 				// Ignore
 				break;
 			default:
@@ -629,6 +776,7 @@ function _process_err_list($csv_line)
 			case 'TotalCost must be numeric':
 			case 'UpdatedDate is required for Update or Delete Operations':
 			case 'Strain is required':
+			case 'Strain Name reported is not linked to the license number. Please ensure the strain being reported belongs to the licensee':
 				// Need to Tag this Object as NOT_SYNC
 				$err_return_list[] = $err_text;
 				break;
@@ -638,6 +786,7 @@ function _process_err_list($csv_line)
 				// So, we just ignore it
 				break;
 			case 'Duplicate External Identifier':
+			case 'Duplicate Strain. The Strain must be unique for the LicenseNumber':
 				// Cool, this generally means everything is OK
 				// BUT!! It could mean a conflict of IDs -- like if the object wasn't for the same license
 				// if ('INSERT' == strtoupper($csv_line['Operation'])) {
@@ -646,6 +795,7 @@ function _process_err_list($csv_line)
 				break;
 			case 'Integrator is not authoritzed to update licensee':
 			case 'Integrator is not authorized to update licensee':
+			case 'LicenseNumber is not assigned to Integrator':
 			case 'License Number is not assigned to Integrator':
 				return [
 					'code' => 403,
