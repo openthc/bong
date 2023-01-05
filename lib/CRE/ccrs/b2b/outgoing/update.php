@@ -36,7 +36,7 @@ SQL;
 
 $arg = [
 	':o1' => $ARG['id'],
-	':sl0' => $_POST['source_license']['id'],
+	':sl0' => $_POST['source']['id'],
 	':tl0' => $_SESSION['License']['id'],
 	':ct0' => $_POST['created_at'],
 	':ut0' => $_POST['updated_at'],
@@ -91,7 +91,8 @@ foreach ($_POST['item_list'] as $b2b_item) {
 	if (1 == $ret) {
 		$have++;
 		$b2b_ret['item_list'][] = [
-			'id' => $arg[':o1']
+			'id' => $arg[':o1'],
+			'stat' => 200,
 		];
 		// return $RES->withJSON([
 		// 	'data' => [
@@ -100,11 +101,24 @@ foreach ($_POST['item_list'] as $b2b_item) {
 		// 	],
 		// 	'meta' => $_POST,
 		// ]);
+	} else {
+		$b2b_ret['item_list'][] = [
+			'id' => $arg[':o1'],
+			'stat' => 500,
+		];
 	}
 
 }
 
-if (($want > 0) && ($have == $want)) {
+if ($want > 0) {
+
+	if ($have == $want) {
+		return $RES->withJSON([
+			'data' => $b2b_ret,
+			'meta' => null, // $_POST,
+		]);
+	}
+
 	return $RES->withJSON([
 		'data' => $b2b_ret,
 		'meta' => null, // $_POST,
