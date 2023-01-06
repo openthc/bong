@@ -97,6 +97,8 @@ foreach ($message_file_list as $message_file)
 			break;
 	}
 
+	exit(0);
+
 }
 
 // Cleanup Legacy Data Files
@@ -293,12 +295,12 @@ function _csv_file_incoming($source_mail, $csv_file)
 			// return _csv_file_incoming_variety($csv_file, $csv_pipe, $csv_head);
 			$csv_pkid = 'Strain';
 			$tab_name = 'variety';
-			$lic_code = '018NY6XC00L1CENSE000000000';
-			$lic_data = [
-				'id' => '018NY6XC00L1CENSE000000000',
-				'name' => '-system-',
-				'code' => '-system-',
-			];
+			// $lic_code = '018NY6XC00L1CENSE000000000';
+			// $lic_data = [
+			// 	'id' => '018NY6XC00L1CENSE000000000',
+			// 	'name' => '-system-',
+			// 	'code' => '-system-',
+			// ];
 			break;
 		case 'LicenseNumber,Strain,CreatedBy,CreatedDate,StrainType,ErrorMessage': // v1
 			$csv_pkid = 'Strain';
@@ -390,6 +392,7 @@ function _csv_file_incoming($source_mail, $csv_file)
 				}
 				break;
 			case 'variety':
+				$csv_line['@id'] = strtoupper($csv_line['@id']);
 				if (empty($csv_line['LicenseNumber'])) {
 					$csv_line['LicenseNumber'] = '018NY6XC00L1CENSE000000000';
 				}
@@ -456,7 +459,8 @@ function _csv_file_incoming($source_mail, $csv_file)
 		}
 
 		// Inflate the Old Data
-		$rec_data = $dbc->fetchOne("SELECT data FROM {$tab_name} WHERE id = :pk", [
+		$rec_data = $dbc->fetchOne("SELECT data FROM {$tab_name} WHERE license_id = :l0 AND id = :pk", [
+			':l0' => $lic_data['id'],
 			':pk' => $csv_line['@id']
 		]);
 		if (empty($rec_data)) {
@@ -470,16 +474,26 @@ function _csv_file_incoming($source_mail, $csv_file)
 
 		$rec_data['@result'] = $err;
 
-		$sql = "UPDATE {$tab_name} SET flag = :f1::int, stat = :s1, data = :d1, updated_at = now() WHERE id = :pk";
+		$sql = <<<SQL
+		UPDATE {$tab_name} SET
+			stat = :s1,
+			data = :d1,
+			updated_at = now()
+		WHERE license_id = :l0 AND id = :pk
+		SQL;
 		$arg = [
+			':l0' => $lic_data['id'],
 			':pk' => $csv_line['@id'],
-			':f1' => 0, // $cre_flag,
 			':s1' => $err['code'],
 			':d1' => json_encode($rec_data)
 		];
-		// echo $dbc->_sql_debug($sql, $arg);
-		// echo "\n";
 		$chk = $dbc->query($sql, $arg);
+		if (1 != $chk) {
+			echo "FAIL: ";
+			echo $dbc->_sql_debug($sql, $arg);
+			echo "\n";
+		}
+
 		// echo "UPDATE: {$csv_line['@id']} == $chk\n";
 
 	}
@@ -586,10 +600,9 @@ function _process_csv_file_b2b_incoming($csv_file, $csv_pipe, $csv_head)
 		}
 
 		// INSERT or UPDATE
-		$sql = "UPDATE b2b_sale_item SET flag = :f1::int, stat = :s1, data = :d1 WHERE id = :pk";
+		$sql = "UPDATE b2b_sale_item SET stat = :s1, data = :d1 WHERE id = :pk";
 		$arg = [
 			':pk' => $csv_line['ExternalId'],
-			':f1' => 0, // $cre_flag,
 			':s1' => $cre_stat,
 			':d1' => json_encode($rec_data)
 			// ':cs' => $cre_stat,
@@ -611,9 +624,15 @@ function _process_csv_file_b2b_incoming($csv_file, $csv_pipe, $csv_head)
 
 /**
  * Special Case for Manifest Header
+ * It's almost always only ONE error line
+ * They fold the header-rows of the Maniest.csv into columns
  */
 function _process_csv_file_b2b_outgoing_manifest($csv_file, $csv_pipe, $csv_head)
 {
+	global $dbc;
+
+	echo "_process_csv_file_b2b_outgoing_manifest($csv_file)\n";
+
 	$idx_line = 0;
 
 	// Try to Find SOmething?
@@ -630,26 +649,57 @@ function _process_csv_file_b2b_outgoing_manifest($csv_file, $csv_pipe, $csv_head
 
 		$csv_line = array_combine($csv_head, $csv_line);
 		$csv_line['@id'] = $csv_line['ExternalManifestIdentifier'];
+		// var_dump($csv_line);
 
 		$err = _process_err_list($csv_line);
+		// var_dump($err);
 		$err_list = $err['data'];
 
 		switch ($err['code']) {
 			case 200:
 				// Awesome
+				// Find this mainfest and mark something?
+				// $b2b_outgoing_id = $dbc->fetchRow('$csv_line['@']
+				$res = $dbc->query('UPDATE b2b_outgoing SET updated_at = now(), stat = 200, data = (data || :d1) WHERE id = :b0', [
+					':b0' => $csv_line['@id'],
+					':d1' => json_encode([
+						'@result' => $csv_line
+					])
+				]);
+				var_dump($res);
+
+				// How to Find This?
+				// $dbc->update('log_upload', [
+				// 	'stat' => $cre_stat,
+				// ], [ 'id' => $req_ulid ]);
+
 				break;
+
 			case 400:
-				// Somekind of Errors
-				$cre_stat = 400;
-				break;
-			case 403:
-				// Not Authorized on this License
-				$cre_stat = 403;
-				$lic_dead = true;
-				break;
 			case 404:
-				// UPDATE fails, needs INSERT
+
+				// Somekind of Errors
+				$res = $dbc->query('UPDATE b2b_outgoing SET updated_at = now(), stat = :s1, data = (data || :d1) WHERE id = :b0', [
+					':b0' => $csv_line['@id'],
+					':s1' => $err['code'],
+					':d1' => json_encode([
+						'@result' => $csv_line
+					])
+				]);
+
+				if (1 != $res) {
+					throw new \Exception(sprintf('Failed to Update B2B Outgoing "%s"', $csv_line['@id']));
+				}
+
 				break;
+
+			// case 403:
+			// 	// Not Authorized on this License
+			// 	$lic_dead = true;
+			// 	break;
+			// case 404:
+			// 	// UPDATE fails, needs INSERT
+			// 	break;
 			default:
 				var_dump($csv_line);
 				var_dump($err);
@@ -658,13 +708,24 @@ function _process_csv_file_b2b_outgoing_manifest($csv_file, $csv_pipe, $csv_head
 		}
 
 	}
+
+	// Archive
+	$csv_name = basename($csv_file);
+	rename($csv_file, sprintf('%s/var/ccrs-incoming-done/%s', APP_ROOT, $csv_name));
+
 }
 
 /**
- * Special Case for Manifest Header
+ * Special Case for Manifest Detail
+ *
+ * There is also an odd case where this file shows up but it's empty
+ * That is, it's only the header row, and it's name is ManifestHeader*.csv
+ * But it's columns are that of ManifestDetail*.csv
  */
 function _process_csv_file_b2b_outgoing_manifest_item($csv_file, $csv_pipe, $csv_head)
 {
+	global $dbc;
+
 	$idx_line = 0;
 
 	// Try to Find SOmething?
@@ -681,26 +742,56 @@ function _process_csv_file_b2b_outgoing_manifest_item($csv_file, $csv_pipe, $csv
 
 		$csv_line = array_combine($csv_head, $csv_line);
 		$csv_line['@id'] = $csv_line['ExternalIdentifier'];
+		var_dump($csv_line);
 
 		$err = _process_err_list($csv_line);
+		var_dump($err);
 		$err_list = $err['data'];
 
 		switch ($err['code']) {
-			case 200:
-				// Awesome
-				break;
+			// case 200:
+			// 	// Awesome
+			// 	break;
+
 			case 400:
-				// Somekind of Errors
-				$cre_stat = 400;
-				break;
-			case 403:
-				// Not Authorized on this License
-				$cre_stat = 403;
-				$lic_dead = true;
-				break;
 			case 404:
-				// UPDATE fails, needs INSERT
+
+				$b2b_item = $dbc->fetchRow('SELECT id, b2b_outgoing_id FROM b2b_outgoing_item WHERE id = :i0', [
+					':i0' => $csv_line['@id']
+				]);
+
+				if (empty($b2b_item['id'])) {
+					throw new \Exception("WHERE IS OUTOING ITEM?");
+				}
+
+				// Somekind of Errors
+				$res = $dbc->query('UPDATE b2b_outgoing_item SET updated_at = now(), stat = :s1, data = (data || :d1) WHERE id = :b0', [
+					':b0' => $b2b_item['id'],
+					':s1' => $err['code'],
+					':d1' => json_encode([
+						'@result' => $csv_line
+					])
+				]);
+
+				if (1 != $res) {
+					throw new \Exception(sprintf('Failed to Update B2B Outgoing Item "%s"', $csv_line['@id']));
+				}
+
+				$res = $dbc->query('UPDATE b2b_outgoing SET updated_at = now(), stat = :s1 WHERE id = :b0', [
+					':b0' => $b2b_item['b2b_outgoing_id'],
+					':s1' => $err['code'],
+				]);
+
+
 				break;
+
+			// case 403:
+			// 	// Not Authorized on this License
+			// 	$lic_dead = true;
+			// 	break;
+			// case 404:
+			// 	// UPDATE fails, needs INSERT
+			// 	break;
 			default:
 				var_dump($csv_line);
 				var_dump($err);
@@ -709,6 +800,11 @@ function _process_csv_file_b2b_outgoing_manifest_item($csv_file, $csv_pipe, $csv
 		}
 
 	}
+
+	// Archive
+	$csv_name = basename($csv_file);
+	rename($csv_file, sprintf('%s/var/ccrs-incoming-done/%s', APP_ROOT, $csv_name));
+
 }
 
 /**
