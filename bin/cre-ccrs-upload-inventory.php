@@ -23,19 +23,40 @@ $csv_head = explode(',', 'LicenseNumber,Strain,Area,Product,InitialQuantity,Quan
 $csv_name = sprintf('Inventory_%s_%s.csv', $cre_service_key, $req_ulid);
 $col_size = count($csv_head);
 
+$sql = <<<SQL
+SELECT *
+FROM lot
+WHERE license_id = :l0
+SQL;
 
-$res_inventory = $dbc->fetchAll('SELECT * FROM lot WHERE license_id = :l0', [ ':l0' => $License['id'] ]);
+$res_inventory = $dbc->fetchAll($sql, [ ':l0' => $License['id'] ]);
 foreach ($res_inventory as $inv) {
 
 	$inv_data = json_decode($inv['data'], true);
 	$inv_source = $inv_data['@source'];
 
-	// var_dump($inv_source); exit;
-
-
 	$dtC = new DateTime($inv['created_at']);
-	// $dtC = new DateTime($inv['created_at'], $tz0);
+	$dtC->setTimezone($tz0);
+
 	$dtU = new DateTime($inv['updated_at']);
+	$dtU->setTimezone($tz0);
+
+	$command = 'INSERT';
+	switch ($inv['stat']) {
+		case '100':
+			$command = 'UPDATE';
+			break;
+		case '404':
+			$command = 'INSERT';
+			break;
+		case '200':
+			// SKIP
+			continue 2; // foreach
+			break;
+		case '410':
+			$command = 'DELETE';
+			break;
+	}
 
 	// Insert
 	$row = [
@@ -52,7 +73,7 @@ foreach ($res_inventory as $inv) {
 		, $dtC->format('m/d/Y')
 		, '-system-'
 		, $dtU->format('m/d/Y')
-		, 'INSERT'
+		, $command
 	];
 
 	$csv_data[] = $row;
