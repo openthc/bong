@@ -36,7 +36,7 @@ SQL;
 
 $arg = [
 	':o1' => $ARG['id'],
-	':sl0' => $_POST['source_license']['id'],
+	':sl0' => $_POST['source']['id'],
 	':tl0' => $_SESSION['License']['id'],
 	':ct0' => $_POST['created_at'],
 	':ut0' => $_POST['updated_at'],

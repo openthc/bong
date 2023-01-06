@@ -47,8 +47,8 @@ foreach ($res_b2b_incoming_item as $x) {
 	$dtU->setTimezone($tz0);
 
 	$rec = [
-		$x['data']['@source']['source_license']['code'], // FromLicenseNumber
-		$x['data']['@source']['target_license']['code'] // ToLicenseNumber
+		$x['data']['@source']['source']['code'], // FromLicenseNumber
+		$x['data']['@source']['target']['code'] // ToLicenseNumber
 		, $x['b2b_incoming_item_data']['@source']['source_lot']['id'] //   ['origin_lot_id'] // FromInventoryExternalIdentifier
 		, $x['b2b_incoming_item_data']['@source']['target_lot']['id'] //   ['target_lot_id'] // ToInventoryExternalIdentifier
 		, $x['b2b_incoming_item_data']['@source']['unit_count'] // Quantity
