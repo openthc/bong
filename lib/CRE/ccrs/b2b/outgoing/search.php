@@ -39,7 +39,7 @@ SQL;
 $sql_param = [];
 $sql_where = [];
 
-$sql_where[] = 'license_id_target = :l0';
+$sql_where[] = 'source_license_id = :l0';
 $sql_param[':l0'] = $_SESSION['License']['id'];
 
 if ( ! empty($_GET['q'])) {
@@ -69,15 +69,20 @@ switch ($want_type) {
 		$data['object_list'] = $res['data'];
 		$data['column_list'] = [
 			'id',
-			'license_id_source',
-			'license_id_target',
+			'stat',
+			'source_license_id',
+			'target_license_id',
 			'name',
 			'data',
 		];
 		$data['column_function'] = [
 			'id' => function($val, $rec) { return sprintf('<td><a href="/b2b/outgoing/%s">%s</a></td>', $val, $val); },
 			'name' => function($val, $rec) { return sprintf('<td>%s</td>', __h($val)); },
-			'data' => function($val, $rec) { return sprintf('<td>%s</td>', __h($val)); },
+			'data' => function($val, $rec) {
+				$val = json_decode($val, true);
+				// return sprintf('<td>%s</td>', json_encode($val['@result']), JSON_PRETTY_PRINT);
+				return sprintf('<td>%s</td>', implode(', ', array_keys($val)));
+			},
 		];
 
 		return $x->render('browse/search.php', $data);

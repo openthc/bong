@@ -128,7 +128,10 @@ if ($want > 0) {
 
 
 return $RES->withJSON([
-	'data' => null,
+	'data' => [
+		'have' => $have,
+		'want' => $want,
+	],
 	'meta' => [
 		'detail' => 'Not Implemented',
 	],
