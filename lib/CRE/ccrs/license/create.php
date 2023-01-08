@@ -14,6 +14,7 @@ $rec = [
 	'name' => $_POST['name'],
 	'stat' => 100,
 ];
+$rec['hash'] = sha1(json_encode($rec));
 
 $res = $dbc->insert('license', $rec);
 
