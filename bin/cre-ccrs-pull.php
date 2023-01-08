@@ -17,7 +17,7 @@ $message_file_list = glob(sprintf('%s/var/ccrs-incoming-mail/*.txt', APP_ROOT));
 foreach ($message_file_list as $message_file)
 {
 
-	echo "message:$message_file\n";
+	echo "message: $message_file\n";
 
 	$message_type = '';
 
@@ -272,8 +272,7 @@ function _csv_file_incoming($source_mail, $csv_file)
 	$tab_name = implode(',', $csv_head);
 	switch ($tab_name) {
 		case 'FromLicenseNumber,ToLicenseNumber,FromInventoryExternalIdentifier,ToInventoryExternalIdentifier,Quantity,TransferDate,ExternalIdentifier,CreatedBy,CreatedDate,UpdatedBy,UpdatedDate,Operation,ErrorMessage':
-			$tab_name = 'b2b_incoming';
-			$tab_name = 'b2b_sale_item';
+			$tab_name = 'b2b_incoming_item';
 			break;
 		case 'LicenseNumber,Name,IsQuarantine,ExternalIdentifier,CreatedBy,CreatedDate,UpdatedBy,UpdatedDate,Operation,ErrorMessage': // v2021-340
 		case 'LicenseNumber,Area,IsQuarantine,ExternalIdentifier,CreatedBy,CreatedDate,UpdatedBy,UpdatedDate,Operation,ErrorMessage': // v2022-343
@@ -367,9 +366,7 @@ function _csv_file_incoming($source_mail, $csv_file)
 		$dbc->update('log_upload', $update, [ 'id' => $req_ulid ]);
 	}
 
-	// Should spin the whole file once to verify all the good lines
-	// Then spin a second time
-
+	// Spin the CSV File
 	while ($csv_line = fgetcsv($csv_pipe)) {
 
 		$idx_line++;
@@ -386,6 +383,9 @@ function _csv_file_incoming($source_mail, $csv_file)
 
 		// Handle some CCRS Switch-Over Shit
 		switch ($tab_name) {
+			case 'b2b_incoming_item':
+				$csv_line['LicenseNumber'] = $csv_line['ToLicenseNumber'];
+				break;
 			case 'section':
 				if (empty($csv_line['Name'])) {
 					$csv_line['Name'] = $csv_line['Area'];
@@ -426,20 +426,14 @@ function _csv_file_incoming($source_mail, $csv_file)
 		$err_list = $err['data'];
 
 		switch ($err['code']) {
-			case 200:
-				// Awesome
+			case 200: // Awesome
+			case 400: // Somekind of Errors
+			case 404: // Not Found (should INSERT)
+				$cre_stat = $err['code'];
 				break;
-			case 400:
-				// Somekind of Errors
-				$cre_stat = 400;
-				break;
-			case 403:
-				// Not Authorized on this License
-				$cre_stat = 403;
+			case 403: // Not Authorized on this License
+				$cre_stat = $err['code'];
 				$lic_dead = true;
-				break;
-			case 404:
-				// UPDATE fails, needs INSERT
 				break;
 			default:
 				var_dump($csv_line);
@@ -459,43 +453,105 @@ function _csv_file_incoming($source_mail, $csv_file)
 		}
 
 		// Inflate the Old Data
-		$rec_data = $dbc->fetchOne("SELECT data FROM {$tab_name} WHERE license_id = :l0 AND id = :pk", [
-			':l0' => $lic_data['id'],
-			':pk' => $csv_line['@id']
-		]);
-		if (empty($rec_data)) {
-			// Fake It
-			$rec_data = [
-				'@source' => $csv_line,
-			];
-		} else {
-			$rec_data = json_decode($rec_data, true);
+		$rec_data = [];
+		switch ($tab_name) {
+			case 'b2b_incoming_item':
+				$rec_data = $dbc->fetchOne("SELECT data FROM {$tab_name} WHERE id = :pk", [
+					':pk' => $csv_line['@id']
+				]);
+				if (empty($rec_data)) {
+					// Fake It
+					$rec_data = [
+						'@source' => $csv_line,
+					];
+				} else {
+					$rec_data = json_decode($rec_data, true);
+				}
+				break;
+			default:
+				$rec_data = $dbc->fetchOne("SELECT data FROM {$tab_name} WHERE license_id = :l0 AND id = :pk", [
+					':l0' => $lic_data['id'],
+					':pk' => $csv_line['@id']
+				]);
+				if (empty($rec_data)) {
+					// Fake It
+					$rec_data = [
+						'@source' => $csv_line,
+					];
+				} else {
+					$rec_data = json_decode($rec_data, true);
+				}
+
 		}
 
 		$rec_data['@result'] = $err;
 
-		$sql = <<<SQL
-		UPDATE {$tab_name} SET
-			stat = :s1,
-			data = :d1,
-			updated_at = now()
-		WHERE license_id = :l0 AND id = :pk
-		SQL;
-		$arg = [
-			':l0' => $lic_data['id'],
-			':pk' => $csv_line['@id'],
-			':s1' => $err['code'],
-			':d1' => json_encode($rec_data)
-		];
-		$chk = $dbc->query($sql, $arg);
-		if (1 != $chk) {
-			echo "FAIL: ";
-			echo $dbc->_sql_debug($sql, $arg);
-			echo "\n";
+		// Special Case Two Table Inserts
+		switch ($tab_name) {
+			case 'b2b_incoming_item':
+				$sql = <<<SQL
+				UPDATE {$tab_name} SET
+					stat = :s1,
+					data = :d1,
+					updated_at = now()
+				WHERE id = :pk
+				SQL;
+				$arg = [
+					':pk' => $csv_line['@id'],
+					':s1' => $err['code'],
+					':d1' => json_encode($rec_data)
+				];
+				$chk = $dbc->query($sql, $arg);
+				if (1 != $chk) {
+					echo "FAIL: ";
+					echo $dbc->_sql_debug($sql, $arg);
+					echo "\n";
+				}
+				break;
+			default:
+				$sql = <<<SQL
+				UPDATE {$tab_name} SET
+					stat = :s1,
+					data = :d1,
+					updated_at = now()
+				WHERE license_id = :l0 AND id = :pk
+				SQL;
+				$arg = [
+					':l0' => $lic_data['id'],
+					':pk' => $csv_line['@id'],
+					':s1' => $err['code'],
+					':d1' => json_encode($rec_data)
+				];
+				$chk = $dbc->query($sql, $arg);
+				if (1 != $chk) {
+					echo "FAIL: ";
+					echo $dbc->_sql_debug($sql, $arg);
+					echo "\n";
+				}
+
 		}
 
 		// echo "UPDATE: {$csv_line['@id']} == $chk\n";
 
+	}
+
+	switch ($tab_name) {
+		case 'b2b_incoming_item':
+			$sql = <<<SQL
+			UPDATE b2b_incoming
+			SET stat = (SELECT max(stat) FROM b2b_incoming_item WHERE b2b_incoming_item.b2b_incoming_id = b2b_incoming.id)
+			WHERE target_license_id = :l0
+			SQL;
+			$dbc->query($sql, [ ':l0' => $lic_data['id'] ]);
+			break;
+		case 'b2b_outgoing_item':
+			$sql = <<<SQL
+			UPDATE b2b_outgoing
+			SET stat = (SELECT max(stat) FROM b2b_outgoing_item WHERE b2b_outgoing_item.b2b_outgoing_id = b2b_outgoing.id)
+			WHERE source_license_id = :l0
+			SQL;
+			$dbc->query($sql, [ ':l0' => $lic_data['id'] ]);
+			break;
 	}
 
 	if ($lic_dead) {
@@ -534,11 +590,13 @@ function _csv_file_incoming($source_mail, $csv_file)
 /**
  *
  */
-function _process_csv_file_b2b_incoming($csv_file, $csv_pipe, $csv_head)
+function _process_csv_file_b2b_incoming(string $csv_file, string $req_ulid, $csv_pipe, array $csv_head)
 {
 	global $dbc;
 
+	$cre_stat = 200;
 	$lic_data = [];
+	$update_count = 0;
 
 	while ($csv_line = fgetcsv($csv_pipe)) {
 
@@ -559,34 +617,31 @@ function _process_csv_file_b2b_incoming($csv_file, $csv_pipe, $csv_head)
 		}
 
 		// Build ID from Hash
-		$b2b_id = md5(sprintf('%s.%s.%s', $csv_line['FromLicenseNumber'], $csv_line['ToLicenseNumber'], $csv_line['TransferDate']));
-		$chk = $dbc->fetchRow('SELECT * FROM b2b_incoming WHERE id = :pk', [ ':pk' => $b2b_id ]);
-		if (empty($chk)) {
-			$dbc->insert('b2b_incoming', [
-				'id' => $b2b_id,
-				'source_license_id' => $csv_line['FromLicenseNumber'],
-				'target_license_id' => $lic_data['id'],
-				'stat' => 100,
-				'name' => sprintf('Sold By: %s, Ship To: %s', $csv_line['FromLicenseNumber'], $csv_line['ToLicenseNumber'])
-			]);
-		}
+		// $b2b_id = md5(sprintf('%s.%s.%s', $csv_line['FromLicenseNumber'], $csv_line['ToLicenseNumber'], $csv_line['TransferDate']));
+		// $chk = $dbc->fetchRow('SELECT * FROM b2b_incoming WHERE id = :pk', [ ':pk' => $b2b_id ]);
+		// if (empty($chk)) {
+		// 	$dbc->insert('b2b_incoming', [
+		// 		'id' => $b2b_id,
+		// 		'source_license_id' => $csv_line['FromLicenseNumber'],
+		// 		'target_license_id' => $lic_data['id'],
+		// 		'stat' => 100,
+		// 		'name' => sprintf('Sold By: %s, Ship To: %s', $csv_line['FromLicenseNumber'], $csv_line['ToLicenseNumber'])
+		// 	]);
+		// }
 
 		$err = _process_err_list($csv_line);
 		$err_list = $err['data'];
 
 		switch ($err['code']) {
 			case 200:
-				// Aweomse
-				break;
 			case 400:
-				// Somekind of Errors
-				$cre_stat = 400;
-				break;
+			case 404:
 			case 403:
 				// Not Authorized on this License
-				$cre_stat = 403;
-				$lic_dead = true;
+				$cre_stat = $err['code'];
 				break;
+			default:
+				throw new \Exception('Unexpected Status');
 		}
 
 		// Result
@@ -600,15 +655,15 @@ function _process_csv_file_b2b_incoming($csv_file, $csv_pipe, $csv_head)
 		}
 
 		// INSERT or UPDATE
-		$sql = "UPDATE b2b_sale_item SET stat = :s1, data = :d1 WHERE id = :pk";
+		$sql = "UPDATE b2b_incoming_item SET stat = :s1, data = :d1 WHERE id = :pk";
 		$arg = [
-			':pk' => $csv_line['ExternalId'],
+			':pk' => $csv_line['ExternalIdentifier'],
 			':s1' => $cre_stat,
 			':d1' => json_encode($rec_data)
 			// ':cs' => $cre_stat,
 		];
 		$chk = $dbc->query($sql, $arg);
-
+		$update_count += $chk;
 
 	}
 
@@ -619,6 +674,12 @@ function _process_csv_file_b2b_incoming($csv_file, $csv_pipe, $csv_head)
 	// Archive
 	$csv_name = basename($csv_file);
 	rename($csv_file, sprintf('%s/var/ccrs-incoming-done/%s', APP_ROOT, $csv_name));
+
+	return [
+		'req' => $req_ulid,
+		'stat' => $cre_stat,
+		'update' => $update_count
+	];
 
 }
 
