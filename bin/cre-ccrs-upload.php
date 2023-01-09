@@ -14,8 +14,8 @@ $script = array_shift($argv);
 $action = array_shift($argv);
 
 $action_file = null;
-if (! preg_match('/^(create|variety|section|product|crop|inventory|b2b\-incoming|b2b\-outgoing)$/', $action)) {
-	echo "Cannot Match Action\n";
+if (! preg_match('/^(create|variety|section|product|crop|inventory|b2b\-incoming|b2b\-outgoing|b2b\-outgoing\-manifest)$/', $action)) {
+	echo "Cannot Match Action [CCU-018]\n";
 	exit(1);
 }
 
@@ -25,19 +25,22 @@ if (! preg_match('/^(create|variety|section|product|crop|inventory|b2b\-incoming
 if ('create' == $action) {
 
 	$dbc = _dbc();
-
-	// CCRS v2021-340
-	echo "./bin/cre-ccrs-upload.php variety\n";
+	$license_id = array_shift($argv);
 
 	$sql = 'SELECT * FROM license WHERE stat IN (100, 200)';
 	$arg = [];
+
+	if ($license_id) {
+		$sql = 'SELECT * FROM license WHERE id = :l0';
+		$arg[':l0'] = $license_id;
+	}
+
 	$res_license = $dbc->fetchAll($sql, $arg);
 	foreach ($res_license as $l0) {
 
 		echo "# License: {$l0['id']} / {$l0['name']}\n";
 
-		// CCRS v2022-343
-		// echo "./bin/cre-ccrs-upload.php variety {$l0['id']}\n";
+		echo "./bin/cre-ccrs-upload.php variety {$l0['id']}\n";
 		echo "./bin/cre-ccrs-upload.php section {$l0['id']}\n";
 		echo "./bin/cre-ccrs-upload.php product {$l0['id']}\n";
 		echo "./bin/cre-ccrs-upload.php crop {$l0['id']}\n";
@@ -48,15 +51,14 @@ if ('create' == $action) {
 
 	}
 
-	exit(0);
-}
+} else {
 
-$action_file = sprintf('%s/cre-ccrs-upload-%s.php', __DIR__, $action);
-if (is_file($action_file)) {
-	include_once($action_file);
-}
+	$action_file = sprintf('%s/cre-ccrs-upload-%s.php', __DIR__, $action);
+	if (is_file($action_file)) {
+		include_once($action_file);
+	}
 
-exit(0);
+}
 
 /**
  * Utility Functions
@@ -65,7 +67,7 @@ function _load_license($dbc, $license_id)
 {
 	$License = $dbc->fetchRow('SELECT * FROM license WHERE id = :l0', [ ':l0' => $license_id ]);
 	if (empty($License['id'])) {
-		echo "Invalid License\n";
+		echo "Invalid License '{$license_id}' [CCU-071]\n";
 		exit(1);
 	}
 	switch ($License['stat']) {
@@ -82,6 +84,9 @@ function _load_license($dbc, $license_id)
 
 }
 
+/**
+ *
+ */
 function _upload_to_queue_only(array $License, string $csv_name, $csv_data)
 {
 	$url_base = \OpenTHC\Config::get('openthc/bong/base');
@@ -107,7 +112,20 @@ function _upload_to_queue_only(array $License, string $csv_name, $csv_data)
 		],
 		'body' => $csv_data // this resource is closed by Guzzle
 	];
-	// var_dump($arg);
+
+	// if (getenv('OPENTHC_BONG_DUMP)'))
+	if ( ! empty($_SERVER['argv'])) {
+		$argv = implode(' ', $_SERVER['argv']);
+		if (strpos($argv, '--dump')) {
+			if (is_resource($arg['body'])) {
+				$arg['body'] = stream_get_contents($arg['body']);
+			}
+			var_dump($arg['headers']);
+			echo ">>>\n{$arg['body']}###\n";
+			return;
+		}
+	}
+
 	$res = $api_bong->post('/upload/outgoing', $arg);
 
 	$hrc = $res->getStatusCode();
@@ -116,6 +134,5 @@ function _upload_to_queue_only(array $License, string $csv_name, $csv_data)
 
 	echo "## BONG $csv_name = $hrc\n";
 	echo $buf;
-
 
 }
