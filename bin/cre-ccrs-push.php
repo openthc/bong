@@ -45,10 +45,10 @@ foreach ($src_file_list as $src_file) {
 
 	// Fix Name on Upload
 	$src_name = basename($src_file);
-	if (preg_match('/(\w+_\w+)_01\w{24}/', $src_name, $m)) {
-		$dt0 = new \DateTime('now', $dtz);
-		$src_name = sprintf('%s_%s.csv', $m[1], $dt0->format('Ymd\TGisv'));
-	}
+	// if (preg_match('/(\w+_\w+)_01\w{24}/', $src_name, $m)) {
+	// 	$dt0 = new \DateTime('now', $dtz);
+	// 	$src_name = sprintf('%s_%s.csv', $m[1], $dt0->format('Ymd\TGisv'));
+	// }
 
 	$post[] = sprintf('--%s', $mark);
 	$post[] = sprintf('content-disposition: form-data; name="files"; filename="%s"', $src_name);
@@ -82,8 +82,13 @@ foreach ($src_file_list as $src_file) {
 	$upload_time = null;
 	if (preg_match('/(Your submission was received at .+ Pacific Time)/', $upload_html, $m)) {
 
+		$dt = new \DateTime();
+		$dt->setTimezone(new \DateTimezone('America/Los_Angeles'));
+
 		$upload_time = $m[1];
-		echo "Uploaded At: {$m[1]}\n";
+		$cts = $dt->format('Y-m-d H:i:s');
+
+		echo "Uploaded At: {$upload_time} == $cts\n";
 
 		// Move Files
 		$new_file = sprintf('%s/var/ccrs-complete/%s', APP_ROOT, basename($src_file));
@@ -135,7 +140,7 @@ foreach ($src_file_list as $src_file) {
 
 		} else {
 			echo "NO MATCH, eval canary line, RE_SUMBIT?\n";
-			echo "file: $new_file\n";
+			// echo "file: $new_file\n";
 		}
 
 	} else {
