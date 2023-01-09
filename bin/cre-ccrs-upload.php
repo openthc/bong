@@ -76,7 +76,7 @@ function _load_license($dbc, $license_id)
 			// OK
 			break;
 		default:
-			echo "Invalid License Status\n";
+			echo "Invalid License Status '{$License['stat']}'\n";
 			exit(1);
 	}
 

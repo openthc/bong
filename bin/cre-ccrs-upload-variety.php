@@ -22,7 +22,6 @@ switch (CRE_CCRS_VERSION) {
 		$License = _load_license($dbc, $license_id);
 		break;
 	case '2021.340':
-	default:
 		$License = [];
 		$License['id'] = \OpenTHC\Config::get('openthc/root/license/id');
 		$License['company_id'] = \OpenTHC\Config::get('openthc/root/company/id');
@@ -41,7 +40,6 @@ switch (CRE_CCRS_VERSION) {
 		$csv_head = explode(',', 'LicenseNumber,Strain,StrainType,CreatedBy,CreatedDate');
 		break;
 	case '2021.340':
-	default:
 		$csv_data[] = [ "VARIETY UPLOAD $req_ulid", '-canary-', '-canary-', '-canary-' ];
 		$csv_head = explode(',', 'Strain,StrainType,CreatedBy,CreatedDate');
 		break;
@@ -73,7 +71,6 @@ foreach ($res_variety as $variety) {
 			];
 			break;
 		case '2021.340':
-		default:
 			$csv_data[] = [
 				substr($variety['name'], 0, 50)
 				, 'Hybrid'
