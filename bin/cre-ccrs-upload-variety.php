@@ -14,7 +14,8 @@ $cre_service_key = \OpenTHC\Config::get('cre/usa/wa/ccrs/service-key');
 
 $License = [];
 
-define('CRE_CCRS_VERSION', getenv('CRE_CCRS_VERSION'));
+define('CRE_CCRS_VERSION', getenv('CRE_CCRS_VERSION') ?: '2022.343');
+
 switch (CRE_CCRS_VERSION) {
 	case '2022.343'	:
 		$license_id = array_shift($argv);
