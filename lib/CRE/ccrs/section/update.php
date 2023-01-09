@@ -7,7 +7,7 @@
 
 $dbc = $REQ->getAttribute('dbc');
 
-$sql = 'SELECT id, license_id, created_at, updated_at FROM section WHERE id = :s0';
+$sql = 'SELECT id, license_id FROM section WHERE id = :s0';
 $arg = [ ':s0' => $ARG['id'] ];
 $chk = $dbc->fetchRow($sql, $arg);
 if ( ! empty($chk['id'])) {
@@ -24,27 +24,23 @@ if ( ! empty($chk['id'])) {
 }
 
 $_POST['name'] = trim($_POST['name']);
-
-if (empty($_POST['created_at'])) {
-	$_POST['created_at'] = $chk['created_at'];
-}
-if (empty($_POST['updated_at'])) {
-	$_POST['updated_at'] = 'now()';
+if (empty($_POST['name'])) {
+	return $RES->withJSON([
+		'data' => null,
+		'meta' => [ 'detail' => 'Invalid Name [CSU-030]' ]
+	], 400);
 }
 
 // UPSERT Section
 $sql = <<<SQL
-INSERT INTO section (id, license_id, name, created_at, updated_at, hash, data)
-VALUES (:o0, :l0, :n0, :ct0, :ut0, :h0, :d0)
+INSERT INTO section (id, license_id, name, hash, data)
+VALUES (:o0, :l0, :n0, :h0, :d0)
 ON CONFLICT (id) DO
-UPDATE SET created_at = :ct0, updated_at = :ut0, stat = 100, name = :n0, hash = :h0, data = coalesce(section.data, '{}'::jsonb) || :d0
+UPDATE SET updated_at = now(), stat = 100, name = :n0, hash = :h0, data = coalesce(section.data, '{}'::jsonb) || :d0
 SQL;
-// $sql = 'UPDATE section SET name = :n0, updated_at = now() WHERE license_id = :l0 AND id = :s0';
 $arg = [
 	':o0' => $ARG['id'],
 	':l0' => $_SESSION['License']['id'],
-	':ct0' => $_POST['created_at'],
-	':ut0' => $_POST['updated_at'],
 	':n0' => $_POST['name'],
 	':h0' => '-',
 	':d0' => json_encode([
