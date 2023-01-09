@@ -54,12 +54,11 @@ $csv_temp = fopen('php://temp', 'w');
 $sql = <<<SQL
 SELECT id, name
 FROM variety
-WHERE license_id = :l0 AND stat = 100 OR updated_at >= :d0
+WHERE license_id = :l0
 SQL;
 
 $res_variety = $dbc->fetchAll($sql, [
 	':l0' => $License['id'],
-	':d0' => '2022-06-01'
 ]);
 foreach ($res_variety as $variety) {
 	switch (CRE_CCRS_VERSION) {
