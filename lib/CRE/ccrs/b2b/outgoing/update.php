@@ -27,19 +27,18 @@ if ( ! empty($chk['id'])) {
 
 // UPSERT B2B Outgoing
 $sql = <<<SQL
-INSERT INTO b2b_outgoing (id, source_license_id, target_license_id, created_at, updated_at, name, hash, data)
-VALUES (:o1, :sl0, :tl0, :ct0, :ut0, :n0, :h0, :d0)
+INSERT INTO b2b_outgoing (id, source_license_id, target_license_id, created_at, name, hash, data)
+VALUES (:o1, :sl0, :tl0, :ct0, :n0, :h0, :d0)
 ON CONFLICT (id) DO
-UPDATE SET created_at = :ct0, updated_at = :ut0, stat = 100, name = :n0, hash = :h0, data = coalesce(b2b_outgoing.data, '{}'::jsonb) || :d0
-WHERE b2b_outgoing.id = :o1 AND b2b_outgoing.target_license_id = :tl0
+UPDATE SET source_license_id = :sl0, target_license_id = :tl0, created_at = :ct0, updated_at = now(), stat = 100, name = :n0, hash = :h0, data = coalesce(b2b_outgoing.data, '{}'::jsonb) || :d0
+WHERE b2b_outgoing.id = :o1
 SQL;
 
 $arg = [
 	':o1' => $ARG['id'],
-	':sl0' => $_POST['source']['id'],
-	':tl0' => $_SESSION['License']['id'],
+	':sl0' => $_SESSION['License']['id'],
+	':tl0' => $_POST['target']['id'],
 	':ct0' => $_POST['created_at'],
-	':ut0' => $_POST['updated_at'],
 	':n0' => $_POST['name'],
 	':d0' => json_encode([
 		'@version' => 'openthc/2015',
