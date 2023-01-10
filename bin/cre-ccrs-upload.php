@@ -14,7 +14,7 @@ $script = array_shift($argv);
 $action = array_shift($argv);
 
 $action_file = null;
-if (! preg_match('/^(create|variety|section|product|crop|inventory|b2b\-incoming|b2b\-outgoing|b2b\-outgoing\-manifest)$/', $action)) {
+if (! preg_match('/^(create|single|variety|section|product|crop|inventory|b2b\-incoming|b2b\-outgoing|b2b\-outgoing\-manifest)$/', $action)) {
 	echo "Cannot Match Action [CCU-018]\n";
 	exit(1);
 }
@@ -51,6 +51,9 @@ if ('create' == $action) {
 
 	}
 
+} elseif ('single' == $action) {
+	$req_ulid = array_shift($argv);
+	_upload_single($req_ulid);
 } else {
 
 	$action_file = sprintf('%s/cre-ccrs-upload-%s.php', __DIR__, $action);
@@ -76,7 +79,7 @@ function _load_license($dbc, $license_id)
 			// OK
 			break;
 		default:
-			echo "Invalid License Status '{$License['stat']}'\n";
+			echo "Invalid License:'$license_id' status:'{$License['stat']}'\n";
 			exit(1);
 	}
 
@@ -135,4 +138,89 @@ function _upload_to_queue_only(array $License, string $csv_name, $csv_data)
 	echo "## BONG $csv_name = $hrc\n";
 	echo $buf;
 
+}
+
+/**
+ * Upload a Single Item from the Log_Upload Records
+ */
+function _upload_single($req_ulid)
+{
+	$cfg = \OpenTHC\Config::get('cre/usa/wa/ccrs');
+
+	$dbc = _dbc();
+
+	$req = $dbc->fetchRow('SELECT * FROM log_upload WHERE id = :r0', [ ':r0' => $req_ulid ]);
+	if (empty($req['id'])) {
+		echo "Failed\n";
+		exit(1);
+	}
+
+	if (empty($req['source_data'])) {
+		echo "Failed [CCU-067]";
+		exit(1);
+	}
+
+	$src = json_decode($req['source_data'], true);
+
+	if (preg_match('/Manifest__(\w+)\.csv$/', $src['name'], $m)) {
+		$src['name'] = sprintf('Manifest_%s_%s.csv', $cfg['service-key'], $m[1]);
+	}
+
+	//print_r($src);
+	if ( ! empty($src['data']) && ! empty($src['name'])) {
+
+
+		$cookie_file = sprintf('%s/var/ccrs-cookies.json', APP_ROOT);
+		if ( ! is_file($cookie_file)) {
+			echo "Cannot find Cookie File\n";
+			exit(1);
+		}
+		$cookie_list = json_decode(file_get_contents($cookie_file), true);
+		// foreach ($cookie_list0 as $c) {
+		// 	if (preg_match('/lcb\.wa\.gov/', $c['domain'])) {
+		// 		$cookie_list1[] = sprintf('%s=%s', $c['name'], $c['value']);
+		// 	}
+		// }
+
+		$cfg['cookie-list'] = $cookie_list;
+		// var_dump($cfg);
+
+		$cre = new \OpenTHC\CRE\CCRS($cfg);
+		$res = $cre->ping();
+		if (200 != $res['code']) {
+			$res = $cre->auth($cfg['username'], $cfg['password']);
+			var_dump($res);
+		}
+
+		$res = $cre->upload($src);
+		switch ($res['code']) {
+			case 200:
+
+				// OK
+
+				// Save in Database
+				$sql = <<<SQL
+				UPDATE log_upload
+				SET updated_at = now(), result_data = coalesce(result_data, '{}'::jsonb) || :rd1::jsonb
+				WHERE id = :u0
+				SQL;
+
+				$arg = [
+					':u0' => $req_ulid,
+					':rd1' => json_encode([
+						'@upload' => $res,
+					])
+				];
+
+				$dbc->query($sql, $arg);
+
+				echo "Uploaded: {$res['meta']['created_at']}\n";
+
+				break;
+			default:
+				var_dump($res);
+				exit(1);
+		}
+
+	}
 }
