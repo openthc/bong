@@ -9,21 +9,56 @@ $have = $want = 0;
 
 $dbc = $REQ->getAttribute('dbc');
 
-$sql = 'SELECT id, target_license_id FROM b2b_outgoing WHERE id = :s0';
+$sql = 'SELECT id, source_license_id FROM b2b_outgoing WHERE id = :s0';
 $arg = [ ':s0' => $ARG['id'] ];
 $chk = $dbc->fetchRow($sql, $arg);
 if ( ! empty($chk['id'])) {
 
-	if ($chk['target_license_id'] != $_SESSION['License']['id']) {
+	if ($chk['source_license_id'] != $_SESSION['License']['id']) {
 		return $RES->withJSON([
 			'data' => $ARG['id'],
 			'meta' => [
-				'detail' => 'Access Denied [BIU-026]'
+				'detail' => 'Access Denied [BOU-026]'
 			],
 		], 409);
 	}
 
 }
+
+// Target License Check
+if (empty($_POST['target']['id'])) {
+	return $RES->withJSON([
+		'data' => $ARG['id'],
+		'meta' => [
+			'detail' => 'Invalid Target License [BOU-032]'
+		]
+	], 400);
+}
+if (strlen($_POST['target']['code']) > 10) {
+	return $RES->withJSON([
+		'data' => $ARG['id'],
+		'meta' => [
+			'detail' => 'Invalid Target License [BOU-041]'
+		]
+	], 400);
+}
+if (empty($_POST['target']['phone'])) {
+	return $RES->withJSON([
+		'data' => $ARG['id'],
+		'meta' => [
+			'detail' => 'Invalid Target License [BOU-049]'
+		]
+	], 400);
+}
+if (empty($_POST['target']['email'])) {
+	return $RES->withJSON([
+		'data' => $ARG['id'],
+		'meta' => [
+			'detail' => 'Invalid Target License [BOU-057]'
+		]
+	], 400);
+}
+
 
 // UPSERT B2B Outgoing
 $sql = <<<SQL
