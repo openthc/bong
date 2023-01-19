@@ -14,7 +14,7 @@
 
 <section class="mb-4">
 <h2>Selected License</h2>
-<form action="/auth/open" method="post">
+<form action="/auth/open" autocomplete="off" method="post">
 <div>
 <div class="input-group">
 	<?php
@@ -28,7 +28,7 @@
 		}
 		echo '</select>';
 	} else {
-		echo sprintf('<input class="form-control" name="license" value="%s">', h($data['cre_meta_license']));
+		echo sprintf('<input autocomplete="off" class="form-control" name="license" value="%s">', h($data['cre_meta_license']));
 	}
 	?>
 	<button class="btn btn-outline-secondary" name="a" value="set-license"><i class="fas fa-save"></i></button>
