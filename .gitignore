@@ -17,9 +17,7 @@ bower_components/
 build/
 composer.lock
 Custom/
-env*
 etc/
-lib/RBE/
 node_modules/
 public/
 release/
