@@ -24,25 +24,67 @@ if (isset($_GET['e'])) {
 
 }
 
-// $dbc = $REQ->getAttribute('dbc');
-// $res = $dbc->fetchAll("SELECT id, license_id, stat, hash, updated_at FROM product ORDER BY updated_at DESC");
-// return $RES->withJSON($res);
-
-
 $sql = <<<SQL
-SELECT id, name
+SELECT *
 FROM product
-WHERE license_id = :l0
+{WHERE}
 ORDER BY updated_at DESC
+OFFSET 0
+LIMIT 250
 SQL;
 
-$arg = [
-	':l0' => $_SESSION['License']['id'],
-];
+$sql_param = [];
+$sql_where = [];
 
-$res = $dbc->fetchAll($sql, $arg);
+$sql_where[] = 'license_id = :l0';
+$sql_param[':l0'] = $_SESSION['License']['id'];
 
-return $RES->withJSON([
-	'data' => $res,
-	'meta' => [],
-], 501);
+if ( ! empty($_GET['q'])) {
+	$sql_where[] = 'data::text LIKE :q23';
+	$sql_param[':q23'] = sprintf('%%%s%%', $_GET['q']);
+}
+
+if (count($sql_where)) {
+	$sql_where = implode(' AND ', $sql_where);
+	$sql = str_replace('{WHERE}', sprintf(' WHERE %s', $sql_where), $sql);
+} else {
+	$sql = str_replace('{WHERE}', '', $sql);
+}
+
+$res = [];
+// $res['sql'] = $sql;
+$res['data'] = $dbc->fetchAll($sql, $sql_param);
+
+$want_type = strtolower(trim(strtok($_SERVER['HTTP_ACCEPT'], ';')));
+switch ($want_type) {
+	case 'application/json':
+		return $RES->withJSON($res, 200, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+	case 'text/html':
+	default:
+		$x = new \OpenTHC\Controller\Base(null);
+		$data = [];
+		$data['object_list'] = $res['data'];
+		$data['column_list'] = [
+			'id',
+			'name',
+			'stat',
+			'created_at',
+			'updated_at',
+			'data',
+		// 	// 'license_id',
+		// 	// 'license_id_target',
+		];
+		$data['column_function'] = [
+			'id' => function($val, $rec) { return sprintf('<td><a href="/product/%s">%s</a></td>', $val, $val); },
+			'name' => function($val, $rec) { return sprintf('<td>%s</td>', __h($val)); },
+			'data' => function($val, $rec) {
+				$val = json_decode($val, true);
+				// return sprintf('<td>%s</td>', json_encode($val['@result']), JSON_PRETTY_PRINT);
+				return sprintf('<td>%s</td>', implode(', ', array_keys($val)));
+			},
+		];
+
+		return $x->render('browse/search.php', $data);
+
+
+}
