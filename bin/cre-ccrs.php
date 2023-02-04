@@ -17,8 +17,8 @@ define('COOKIE_FILE_NEXT', sprintf('%s/var/ccrs-cookies-%s.json', APP_ROOT, _uli
 $doc = <<<DOC
 BONG CRE CCRS Upload Tool
 Usage:
-	cre-ccrs-upload --license <command> [<command-options>...]
-	cre-ccrs-upload [options] <command> [<command-options>...]
+	cre-ccrs --license <command> [<command-options>...]
+	cre-ccrs [options] <command> [<command-options>...]
 
 Options:
 	--none
@@ -36,21 +36,28 @@ $res = Docopt::handle($doc, [
 	'optionsFirst' => true,
 ]);
 $cli_args = $res->args;
+var_dump($cli_args);
 
 switch ($cli_args['<command>']) {
 	case 'auth':
 		_cre_ccrs_auth(array_merge([ 'auth' ], $cli_args['<command-options>']));
 		break;
+	case 'upload':
+		_cre_ccrs_upload(array_merge([ 'upload' ], $cli_args['<command-options>']));
+		break;
 	case 'upload-queue':
-
+		// require_once(APP_ROOT . '/lib/CRE/ccrs/cli/upload-queue.php')
+		// _cre_ccrs_upload_queue(array_merge([ 'upload-queue' ], $cli_args['<command-options>']));
 		$R = \OpenTHC\Service\Redis::factory();
 		$key_list = $R->keys('/license/*/variety');
 		foreach ($key_list as $k) {
-			// ./bin/cre-ccrs-upload.php upload --license=$l --object=variety
-			// echo "./bin/cre-ccrs-upload.php upload-single --upload-id={$k}\n";
+			if (preg_match('/license\/(\w+)\/variety/', $k, $m)) {
+				$l = $m[1];
+				echo "./bin/cre-ccrs-upload.php upload --license=$l --object=variety\n";
+				$R->del($k);
+			}
 		}
-		// var_dump($key_list);
-		// exit;
+		exit;
 		// $R->set('/license/%s/stat', 100);  ', $req_ulid);
 
 		while ($k = $R->lpop('/cre/ccrs/upload-queue')) {
@@ -225,6 +232,32 @@ function _cre_ccrs_auth_cookies()
 }
 
 
+function _cre_ccrs_upload($args)
+{
+	// var_dump($args);
+
+	$doc = <<<DOC
+	BONG CRE CCRS Authentication
+	Usage:
+		cre-ccrs upload <OBJECT> [OID]
+
+	Options:
+		OBJECT is one of:
+			variety|section|product|crop|inventory|b2b\-incoming|b2b\-outgoing|b2b\-outgoing\-manifest
+
+		OID is the Objects ID
+	DOC;
+
+	$res = Docopt::handle($doc, [
+		'argv' => $args,
+		// 'optionsFirst' => true,
+	]);
+	$cli_args = $res->args;
+	var_dump($cli_args);
+
+
+}
+
 /**
  *
  */
@@ -259,7 +292,7 @@ function _cre_ccrs_upload_verify($cli_args)
 	$jwt = new \OpenTHC\JWT([
 		'iss' => 'bong.openthc.com',
 		'exp' => (time() + 120),
-		'sub' => 'SFDFDSFDSD',
+		'sub' => '',
 		'company' => $cfg['company'],
 		'license' => $cfg['license'],
 		'service' => 'bong', // CRE or BONG or PIPE?
