@@ -13,6 +13,12 @@ require_once(__DIR__ . '/../boot.php');
 $dbc = _dbc();
 $tz0 = new DateTimezone(\OpenTHC\Config::get('cre/usa/wa/ccrs/tz'));
 
+// The Compliance Engine
+$cre = new \OpenTHC\CRE\CCRS([
+	'tz' => $tz0,
+]);
+
+
 // Process incoming message queue
 $message_file_list = glob(sprintf('%s/var/ccrs-incoming-mail/*.txt', APP_ROOT));
 foreach ($message_file_list as $message_file)
@@ -220,7 +226,7 @@ function _ccrs_pull_failure_full($message_file, $message_head, $message_body, $o
 }
 
 /**
- * Pull the Manifest File into BONG
+ * Pull the Manifest PDF File into BONG
  */
 function _ccrs_pull_manifest_file($message_file, $output_file)
 {
@@ -256,8 +262,8 @@ function _ccrs_pull_manifest_file($message_file, $output_file)
 	$License = $dbc->fetchRow('SELECT id, company_id FROM license WHERE id = :l0', [
 		':l0' => $b2b_outgoing['source_license_id']
 	]);
-	var_dump($License);
 
+	// Update b2b_outgoing with some stat or flag?
 	$sql = <<<SQL
 	INSERT INTO b2b_outgoing_file (id, name, body) VALUES (:b2b0, :n1, :b1)
 	ON CONFLICT (id) DO
@@ -356,6 +362,7 @@ function _csv_file_incoming($source_mail, $csv_file)
 	$lic_code = null;
 	$lic_dead = false;
 
+	// $csv_time = $cre->csv_file_date($csv_file);
 	/**
 	 * error-response-file from the LCB sometimes are missing the
 	 * milliseconds portion of the time in the file name
@@ -368,7 +375,7 @@ function _csv_file_incoming($source_mail, $csv_file)
 
 	$csv_time = DateTime::createFromFormat('Ymd\TGisv', $csv_time, new DateTimeZone('America/Los_Angeles'));
 
-	// Need to actually keep file name to understand the ?
+	// Need to keep file name to understand the data-type
 	$csv_pipe = fopen($csv_file, 'r');
 	$idx_line = 1;
 	$csv_head = fgetcsv($csv_pipe);
