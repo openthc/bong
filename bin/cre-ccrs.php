@@ -17,30 +17,39 @@ define('COOKIE_FILE_NEXT', sprintf('%s/var/ccrs-cookies-%s.json', APP_ROOT, _uli
 $doc = <<<DOC
 BONG CRE CCRS Upload Tool
 Usage:
-	cre-ccrs --license <command> [<command-options>...]
-	cre-ccrs [options] <command> [<command-options>...]
-
-Options:
-	--none
-	--license=LICENSE
+	cre-ccrs <command> [<command-options>...]
 
 Commands:
 	auth
+	push
 	single
 	upload
 	verify
 DOC;
+
+// cre-ccrs auth [ --ping | --refresh ]
+// cre-ccrs push
+// cre-ccrs sync
+// cre-ccrs upload-single --upload-id=ULID
+// cre-ccrs [options] <command> [<command-options>...]
+
+// Options:
+// --license=LICENSE
+
 
 $res = Docopt::handle($doc, [
 	'help' => true,
 	'optionsFirst' => true,
 ]);
 $cli_args = $res->args;
-var_dump($cli_args);
+// var_dump($cli_args);
 
 switch ($cli_args['<command>']) {
 	case 'auth':
 		_cre_ccrs_auth(array_merge([ 'auth' ], $cli_args['<command-options>']));
+		break;
+	case 'push':
+		_cre_ccrs_push(array_merge([ 'push' ], $cli_args['<command-options>']));
 		break;
 	case 'upload':
 		_cre_ccrs_upload(array_merge([ 'upload' ], $cli_args['<command-options>']));
@@ -118,10 +127,8 @@ switch ($cli_args['<command>']) {
 /**
  *
  */
-function _cre_ccrs_auth($args)
+function _cre_ccrs_auth($cli_args)
 {
-	// var_dump($args);
-
 	$doc = <<<DOC
 	BONG CRE CCRS Authentication
 	Usage:
@@ -133,7 +140,7 @@ function _cre_ccrs_auth($args)
 	DOC;
 
 	$res = Docopt::handle($doc, [
-		'argv' => $args,
+		'argv' => $cli_args,
 		// 'optionsFirst' => true,
 	]);
 	$cli_args = $res->args;
@@ -148,7 +155,7 @@ function _cre_ccrs_auth($args)
 	if (empty($cli_args['--ping']) && empty($cli_args['--refresh'])) {
 		$res = $cre->ping();
 		if (200 != $res['code']) {
-			$cli_args['--refresh'];
+			$cli_args['--refresh'] = true;
 		}
 	}
 
@@ -231,11 +238,25 @@ function _cre_ccrs_auth_cookies()
 
 }
 
+/**
+ * Push Queue from log_upload to CCRS
+ */
+function _cre_ccrs_push($cli_args)
+{
+	$dbc = _dbc();
+	$res_upload = $dbc->fetchAll('SELECT id, license_id, name FROM log_upload WHERE stat = 100 ORDER BY id ASC');
+	foreach ($res_upload as $rec) {
+		$cli_args['<command-options>'] = [
+			'upload-id' => $rec['id']
+		];
+		$opt = [ 'upload-single', "--upload-id={$rec['id']}" ];
+		_cre_ccrs_upload_single($opt);
+	}
+}
+
 
 function _cre_ccrs_upload($args)
 {
-	// var_dump($args);
-
 	$doc = <<<DOC
 	BONG CRE CCRS Authentication
 	Usage:
@@ -257,6 +278,150 @@ function _cre_ccrs_upload($args)
 
 
 }
+
+/**
+ * Upload a Single Item from the Log_Upload Records
+ */
+function _cre_ccrs_upload_single($cli_args)
+{
+	$doc = <<<DOC
+	BONG CRE CCRS Authentication
+	Usage:
+		cre-ccrs upload-single --upload-id=ULID
+	DOC;
+
+	$res = Docopt::handle($doc, [
+		'argv' => $cli_args,
+	]);
+	$cli_args = $res->args;
+
+	$req_ulid = $cli_args['--upload-id'];
+	if (empty($req_ulid)) {
+		echo "Invalid --upload-id\n";
+		exit(1);
+	}
+
+	$dbc = _dbc();
+
+	$req = $dbc->fetchRow('SELECT * FROM log_upload WHERE id = :r0', [ ':r0' => $req_ulid ]);
+	if (empty($req['id'])) {
+		echo "Failed\n";
+		exit(1);
+	}
+
+	if (empty($req['source_data'])) {
+		echo "Failed [CCU-067]";
+		exit(1);
+	}
+
+	$src = json_decode($req['source_data'], true);
+
+	if ( ! empty($src['data']) && ! empty($src['name'])) {
+
+		// Special Case our Manifests to fix email
+		// So we can send the old ones
+		if (preg_match('/^Manifest.+/', $src['name'])) {
+
+			$src['data'] = preg_replace(
+				'/DestinationLicenseeEmailAddress,(.+),,,,,,,,,,/',
+				sprintf('DestinationLicenseeEmailAddress,code+demand-%s@openthc.com,,,,,,,,,,', $req_ulid),
+				$src['data']);
+
+			// $src['data'] = preg_replace(
+			// 		'/VehiclePlateNumber,,,,,,,,,,,/',
+			// 		sprintf('VehicleColor,COLOR,,,,,,,,,,', $req_ulid),
+			// 		$src['data']);
+			if (preg_match('/VehiclePlateNumber,(.+),,,,,,,,,,/', $src['data'], $m)) {
+				$fixed = str_replace(' ', '', $m[1]);
+				$fixed = substr($fixed, 0, 7);
+				$src['data'] = preg_replace('/VehiclePlateNumber,(.+),,,,,,,,,,/',
+					sprintf('VehiclePlateNumber,%s,,,,,,,,,,', $fixed),
+					$src['data']);
+			}
+
+			// $src['data'] = preg_replace(
+			// 	'/VehicleColor,,,,,,,,,,,/',
+			// 	'VehicleColor,COLOR,,,,,,,,,,',
+			// 	$src['data']);
+
+			// $src['data'] = preg_replace(
+			// 	'/VehicleModel,,,,,,,,,,,/',
+			// 	'VehicleModel,MODEL,,,,,,,,,,',
+			// 	$src['data']);
+
+			// Lookup the Manifest ID?
+			if (preg_match('/ExternalManifestIdentifier,(.+),,,,,,,,,,/', $src['data'], $m)) {
+
+				$b2b_outgoing_id = $m[1];
+				$chk0 = $dbc->fetchRow('SELECT id, stat FROM b2b_outgoing WHERE id = :b0', [
+					':b0' => $b2b_outgoing_id
+				]);
+				$chk1 = $dbc->fetchRow('SELECT id, name FROM b2b_outgoing_file WHERE id = :b0', [
+					':b0' => $b2b_outgoing_id
+				]);
+
+				if ( ! empty($chk0['id']) && ! empty($chk1['id'])) {
+					var_dump($chk1);
+					var_dump($chk2);
+					echo "SEEMS ALREADY UPLOADED\n";
+					$dbc->query('UPDATE log_upload SET stat = 208 WHERE id = :l0', [
+						':l0' => $req_ulid
+					]);
+					exit(0);
+				}
+
+			} else {
+				echo "NOPE\n";
+				exit(1);
+			}
+
+		}
+
+		// $res = $cre->ping();
+		// if (200 != $res['code']) {
+		// 	$res = $cre->auth($cfg['username'], $cfg['password']);
+		// 	// var_dump($res);
+		// }
+
+		// Upload
+		$cfg = \OpenTHC\Config::get('cre/usa/wa/ccrs');
+		$cfg['cookie-list'] = _cre_ccrs_auth_cookies();
+		$cre = new \OpenTHC\CRE\CCRS($cfg);
+
+		// go slow to not make their IDS trip up
+		sleep(2);
+
+		$res = $cre->upload($src);
+		switch ($res['code']) {
+			case 200:
+
+				// Save in Database
+				$sql = <<<SQL
+				UPDATE log_upload
+				SET stat = 102, updated_at = now(), result_data = coalesce(result_data, '{}'::jsonb) || :rd1::jsonb
+				WHERE id = :u0
+				SQL;
+
+				$arg = [
+					':u0' => $req_ulid,
+					':rd1' => json_encode([
+						'@upload' => $res,
+					])
+				];
+
+				$dbc->query($sql, $arg);
+
+				echo "Uploaded: {$res['meta']['created_at']}\n";
+
+				break;
+			default:
+				var_dump($res);
+				exit(1);
+		}
+
+	}
+}
+
 
 /**
  *
