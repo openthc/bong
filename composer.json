@@ -17,7 +17,8 @@
 		"edoceo/lowline": "2022.0.266",
 		"edoceo/radix": "2021.0.0",
 		"openthc/common": "dev-master",
-		"openthc/cre-adapter": "dev-master"
+		"openthc/cre-adapter": "dev-master",
+		"justinrainbow/json-schema": "5.2.12"
 	},
 	"require-dev": {
 		"behat/behat": "3.10.0",
