@@ -23,6 +23,9 @@ class Variety extends \OpenTHC\Module\Base
 
 		});
 
+		// Status
+		$a->get('/status','\OpenTHC\Bong\Controller\Variety\Status');
+
 		// Create
 		$a->post('', function($REQ, $RES, $ARG) {
 			return _from_cre_file('variety/create.php', $REQ, $RES, $ARG);

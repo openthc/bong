@@ -22,6 +22,10 @@ class Lot extends \OpenTHC\Module\Base
 			return _from_cre_file('lot/search.php', $REQ, $RES, $ARG);
 		});
 
+		// Status
+		$a->get('/status','\OpenTHC\Bong\Controller\Inventory\Status');
+
+
 		$a->post('', function($REQ, $RES, $ARG) {
 			return _from_cre_file('lot/create.php', $REQ, $RES, $ARG);
 		});
@@ -40,7 +44,7 @@ class Lot extends \OpenTHC\Module\Base
 		});
 
 		// View Item
-		// $a->get('/{guid}', function($REQ, $RES, $ARG) {
+		// $a->get('/{id}', function($REQ, $RES, $ARG) {
 		// 	return _from_cre_file('lot/single.php', $REQ, $RES, $ARG);
 		// });
 

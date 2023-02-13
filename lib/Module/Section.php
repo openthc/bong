@@ -47,6 +47,9 @@ class Section extends \OpenTHC\Module\Base
 
 		});
 
+		// Status
+		$a->get('/status','\OpenTHC\Bong\Controller\Section\Status');
+
 		// Create
 		$a->post('', function($REQ, $RES, $ARG) {
 			return _from_cre_file('section/create.php', $REQ, $RES, $ARG);

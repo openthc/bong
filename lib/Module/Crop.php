@@ -21,6 +21,9 @@ class Crop extends \OpenTHC\Module\Base
 
 		});
 
+		// Status
+		$a->get('/status','\OpenTHC\Bong\Controller\Crop\Status');
+
 		// Single
 		$c = new \OpenTHC\Bong\Controller\Single($this->_container);
 		$c->tab = 'crop';
