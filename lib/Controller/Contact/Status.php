@@ -7,7 +7,7 @@
 
 namespace OpenTHC\Bong\Controller\Contact;
 
-class Status extends \OpenTHC\Controller\Base
+class Status extends \OpenTHC\Bong\Controller\Base\Status
 {
 	protected $_tab_name = 'contact';
 }
