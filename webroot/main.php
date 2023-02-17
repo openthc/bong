@@ -9,7 +9,7 @@ require_once(dirname(dirname(__FILE__)) . '/boot.php');
 
 // Slim Application
 $cfg = [];
-$cfg['debug'] = false;
+// $cfg['debug'] = true;
 $app = new \OpenTHC\App($cfg);
 
 // Container Stuff
@@ -103,15 +103,28 @@ $app->group('/vehicle', 'OpenTHC\Bong\Module\Vehicle')
 // 	->add('OpenTHC\Middleware\Session');
 
 
-// Crop
+// Crop - v1
 $app->group('/crop', 'OpenTHC\Bong\Module\Crop')
 	->add('OpenTHC\Bong\Middleware\Database')
 	->add('OpenTHC\Bong\Middleware\CRE')
 	->add('OpenTHC\Bong\Middleware\Auth')
 	->add('OpenTHC\Middleware\Session');
 
+// Plant - v0
+$app->group('/plant', 'OpenTHC\Bong\Module\Crop')
+	->add('OpenTHC\Bong\Middleware\Database')
+	->add('OpenTHC\Bong\Middleware\CRE')
+	->add('OpenTHC\Bong\Middleware\Auth')
+	->add('OpenTHC\Middleware\Session');
 
-// Lot
+// Inventory - v1
+$app->group('/inventory', 'OpenTHC\Bong\Module\Lot')
+	->add('OpenTHC\Bong\Middleware\Database')
+	->add('OpenTHC\Bong\Middleware\CRE')
+	->add('OpenTHC\Bong\Middleware\Auth')
+	->add('OpenTHC\Middleware\Session');
+
+// Lot - v0
 $app->group('/lot', 'OpenTHC\Bong\Module\Lot')
 	->add('OpenTHC\Bong\Middleware\Database')
 	->add('OpenTHC\Bong\Middleware\CRE')
