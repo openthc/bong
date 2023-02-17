@@ -22,9 +22,30 @@ class Status extends \OpenTHC\Controller\Base
 
 		$dbc = _dbc();
 
-		$sql = "SELECT count(id) AS c, stat, data->'@result'->'data' AS e FROM %s GROUP BY 2, 3 ORDER BY 2";
+		$arg = [];
+		$sql_where = [];
 
-		$res = $dbc->fetchAll(sprintf($sql, $this->_tab_name));
+		$sql = <<<SQL
+		SELECT count(id) AS c, stat, data->'@result'->'data' AS e
+		FROM %s
+		{WHERE}
+		GROUP BY 2, 3
+		ORDER BY 2
+		SQL;
+
+		if ( ! empty($_SESSION['License']['id'])) {
+			$sql_where[] = 'license.id = :l0';
+			$arg[':l0'] = $_SESSION['License']['id'];
+		}
+
+		if ( ! empty($sql_where)) {
+			$sql = str_replace('{WHERE}', sprintf('WHERE %s', implode(' AND ', $sql_where)), $sql);
+		} else {
+			$sql = str_replace('{WHERE}', '', $sql);
+		}
+
+		$sql = sprintf($sql, $this->_tab_name);
+		$res = $dbc->fetchAll($sql, $arg);
 		$out = object_status_tbody($this->_tab_name, $res);
 		echo html_table_wrap(implode('', $out));
 
