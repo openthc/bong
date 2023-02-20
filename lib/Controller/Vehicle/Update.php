@@ -10,7 +10,7 @@ namespace OpenTHC\Bong\Controller\Vehicle;
 use Opis\JsonSchema\Validator;
 use Swaggest\JsonSchema\Schema;
 
-class Update extends \OpenTHC\Bong\Controller\Base\Status
+class Update extends \OpenTHC\Bong\Controller\Base\Update
 {
 	protected $_tab_name = 'vehicle';
 

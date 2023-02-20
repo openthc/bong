@@ -10,7 +10,7 @@ namespace OpenTHC\Bong\Controller\Inventory;
 use Opis\JsonSchema\Validator;
 use Swaggest\JsonSchema\Schema;
 
-class Create extends \OpenTHC\Bong\Controller\Base\Status
+class Create extends \OpenTHC\Bong\Controller\Base\Create
 {
 	protected $_tab_name = 'inventory';
 
@@ -120,6 +120,8 @@ class Create extends \OpenTHC\Bong\Controller\Base\Status
 		$ret = $dbc->insert('lot', $rec);
 
 		$rec['data'] = json_decode($rec['data'], true);
+
+		$this->updateStatus();
 
 		return $RES->withJSON([
 			'data' => $rec,
