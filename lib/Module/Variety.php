@@ -23,13 +23,11 @@ class Variety extends \OpenTHC\Module\Base
 
 		});
 
+		// Create
+		$a->post('', '\OpenTHC\Bong\Controller\Variety\Create');
+
 		// Status
 		$a->get('/status','\OpenTHC\Bong\Controller\Variety\Status');
-
-		// Create
-		$a->post('', function($REQ, $RES, $ARG) {
-			return _from_cre_file('variety/create.php', $REQ, $RES, $ARG);
-		});
 
 		// Single
 		$c = new \OpenTHC\Bong\Controller\Single($this->_container);
@@ -37,14 +35,10 @@ class Variety extends \OpenTHC\Module\Base
 		$a->get('/{id}', $c);
 
 		// Update
-		$a->post('/{id}', function($REQ, $RES, $ARG) {
-			return _from_cre_file('variety/update.php', $REQ, $RES, $ARG);
-		});
+		$a->post('/{id}', '\OpenTHC\Bong\Controller\Variety\Update');
 
 		// Delete
-		$a->delete('/{id}', function($REQ, $RES, $ARG) {
-			return _from_cre_file('variety/delete.php', $REQ, $RES, $ARG);
-		});
+		$a->delete('/{id}', '\OpenTHC\Bong\Controller\Variety\Delete');
 
 	}
 }
