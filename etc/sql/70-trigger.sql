@@ -20,9 +20,33 @@ $FUNC$
 LANGUAGE 'plpgsql' SECURITY DEFINER;
 
 
-CREATE TRIGGER log_delta_b2b_sale
+CREATE TRIGGER log_delta_b2b_incoming
 	AFTER INSERT OR UPDATE OR DELETE
-	ON b2b_sale
+	ON b2b_incoming
+	FOR EACH ROW
+	EXECUTE PROCEDURE log_delta_trigger();
+
+CREATE TRIGGER log_delta_b2b_incoming_item
+	AFTER INSERT OR UPDATE OR DELETE
+	ON b2b_incoming_item
+	FOR EACH ROW
+	EXECUTE PROCEDURE log_delta_trigger();
+
+CREATE TRIGGER log_delta_b2b_outgoing
+	AFTER INSERT OR UPDATE OR DELETE
+	ON b2b_outgoing
+	FOR EACH ROW
+	EXECUTE PROCEDURE log_delta_trigger();
+
+CREATE TRIGGER log_delta_b2b_outgoing_file
+	AFTER INSERT OR UPDATE OR DELETE
+	ON b2b_outgoing_file
+	FOR EACH ROW
+	EXECUTE PROCEDURE log_delta_trigger();
+
+CREATE TRIGGER log_delta_b2b_outgoing_item
+	AFTER INSERT OR UPDATE OR DELETE
+	ON b2b_outgoing_item
 	FOR EACH ROW
 	EXECUTE PROCEDURE log_delta_trigger();
 
@@ -32,9 +56,9 @@ CREATE TRIGGER log_delta_b2c_sale
 	FOR EACH ROW
 	EXECUTE PROCEDURE log_delta_trigger();
 
-CREATE TRIGGER log_delta_batch
+CREATE TRIGGER log_delta_b2c_sale_item
 	AFTER INSERT OR UPDATE OR DELETE
-	ON batch
+	ON b2c_sale
 	FOR EACH ROW
 	EXECUTE PROCEDURE log_delta_trigger();
 
@@ -44,21 +68,9 @@ CREATE TRIGGER log_delta_company
 	FOR EACH ROW
 	EXECUTE PROCEDURE log_delta_trigger();
 
-CREATE TRIGGER log_delta_contact
-	AFTER INSERT OR UPDATE OR DELETE
-	ON contact
-	FOR EACH ROW
-	EXECUTE PROCEDURE log_delta_trigger();
-
 CREATE TRIGGER log_delta_crop
 	AFTER INSERT OR UPDATE OR DELETE
 	ON crop
-	FOR EACH ROW
-	EXECUTE PROCEDURE log_delta_trigger();
-
-CREATE TRIGGER log_delta_disposal
-	AFTER INSERT OR UPDATE OR DELETE
-	ON disposal
 	FOR EACH ROW
 	EXECUTE PROCEDURE log_delta_trigger();
 
@@ -104,8 +116,8 @@ CREATE TRIGGER log_delta_variety
 	FOR EACH ROW
 	EXECUTE PROCEDURE log_delta_trigger();
 
-CREATE TRIGGER log_delta_vehicle
-	AFTER INSERT OR UPDATE OR DELETE
-	ON vehicle
-	FOR EACH ROW
-	EXECUTE PROCEDURE log_delta_trigger();
+-- CREATE TRIGGER log_delta_vehicle
+-- 	AFTER INSERT OR UPDATE OR DELETE
+-- 	ON vehicle
+-- 	FOR EACH ROW
+-- 	EXECUTE PROCEDURE log_delta_trigger();
