@@ -29,6 +29,8 @@ class License extends \OpenTHC\Module\Base
 			return _from_cre_file('license/create.php', $REQ, $RES, $ARG);
 		});
 
+		// License Type
+		$a->get('/type', 'OpenTHC\Bong\Controller\System:license_type');
 
 		// Single
 		$a->get('/{id}', function($REQ, $RES, $ARG) {
@@ -36,24 +38,8 @@ class License extends \OpenTHC\Module\Base
 			if ('current' == $ARG['id']) {
 				$ARG['id'] = $_SESSION['License']['id'];
 			}
-			// return _from_cre_file('license/single.php', $REQ, $RES, $ARG);
 
-			$ret = [];
-			$ret['data'] = null;
-			$ret['meta'] = [];
-
-			$ret_code = 200;
-
-			$dbc = $REQ->getAttribute('dbc');
-			$res = $dbc->fetchRow('SELECT * FROM license WHERE id = :l0', [ ':l0' => $ARG['id'] ]);
-			if (empty($res['id'])) {
-				$ret['meta']['detail'] = 'License Not Found';
-				$ret_code = 404;
-			} else {
-				$ret['data'] = $res;
-			}
-
-			return $RES->withJSON($ret, $ret_code, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+			return _from_cre_file('license/single.php', $REQ, $RES, $ARG);
 
 		});
 

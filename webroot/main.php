@@ -14,13 +14,13 @@ $app = new \OpenTHC\App($cfg);
 
 // Container Stuff
 $con = $app->getContainer();
-if ( ! empty($cfg['debug'])) {
-	unset($con['errorHandler']);
-	unset($con['phpErrorHandler']);
-}
-$con['response'] = function($c) {
-	return new \OpenTHC\HTTP\Response();
-};
+// if ( ! empty($cfg['debug'])) {
+// 	unset($con['errorHandler']);
+// 	unset($con['phpErrorHandler']);
+// }
+// $con['response'] = function($c) {
+// 	return new \OpenTHC\HTTP\Response();
+// };
 
 
 // Authentication
@@ -36,11 +36,6 @@ $app->map([ 'GET', 'POST' ], '/browse', 'OpenTHC\Bong\Controller\Browse')
 	->add('OpenTHC\Bong\Middleware\Auth')
 	->add('OpenTHC\Middleware\Session');
 
-
-// License Type (move to /license/type-list?)
-$app->get('/license-type', 'OpenTHC\Bong\Controller\System:license_type')
-	->add('OpenTHC\Bong\Middleware\CRE')
-	->add('OpenTHC\Middleware\Session');
 
 // Product Type (move to /product/type-list?)
 $app->get('/product-type', 'OpenTHC\Bong\Controller\System:product_type')
