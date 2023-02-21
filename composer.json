@@ -18,7 +18,8 @@
 		"edoceo/radix": "2021.0.0",
 		"openthc/common": "dev-master",
 		"openthc/cre-adapter": "dev-master",
-		"justinrainbow/json-schema": "5.2.12"
+		"swaggest/json-schema": "0.12.41",
+		"opis/json-schema": "^2.3"
 	},
 	"require-dev": {
 		"behat/behat": "3.10.0",
