@@ -22,14 +22,11 @@ class Lot extends \OpenTHC\Module\Base
 			return _from_cre_file('lot/search.php', $REQ, $RES, $ARG);
 		});
 
-		// Status
-		$a->get('/status', '\OpenTHC\Bong\Controller\Inventory\Status');
-
 		// Create
 		$a->post('', '\OpenTHC\Bong\Controller\Inventory\Create');
-		// $a->post('', function($REQ, $RES, $ARG) {
-		// 	return _from_cre_file('lot/create.php', $REQ, $RES, $ARG);
-		// });
+
+		// Status
+		$a->get('/status', '\OpenTHC\Bong\Controller\Inventory\Status');
 
 		// $a->get('/history', function($REQ, $RES, $ARG) {
 		// 	return _from_cre_file('lot/history/search.php', $REQ, $RES, $ARG);
