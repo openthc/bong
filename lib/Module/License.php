@@ -29,6 +29,9 @@ class License extends \OpenTHC\Module\Base
 			return _from_cre_file('license/create.php', $REQ, $RES, $ARG);
 		});
 
+		// Status
+		$a->get('/status', 'OpenTHC\Bong\Controller\License\Status');
+
 		// License Type
 		$a->get('/type', 'OpenTHC\Bong\Controller\System:license_type');
 
