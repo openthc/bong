@@ -54,24 +54,24 @@ class Auth
 			$_SESSION['sql-name'] = 'openthc_bong_ccrs';
 
 			// Mostly Real Now
-			$_SESSION['contact'] = [
+			$_SESSION['Contact'] = [
 				'id' => $chk['sub'],
 			];
-			$_SESSION['company'] = [
+			$_SESSION['Company'] = [
 				'id' => $chk['company'],
 			];
-			$_SESSION['license'] = [
+			$_SESSION['License'] = [
 				'id' => $chk['license'],
 			];
 
-			if (empty($_SESSION['company']['id'])) {
-				return $RES->withStatus(400);
+			if (empty($_SESSION['Company']['id'])) {
+				return $RES->withJSON(['meta' => [ 'detail' => 'Invalid Company' ]], 400);
 			}
-			if (empty($_SESSION['contact']['id'])) {
-				return $RES->withStatus(400);
+			if (empty($_SESSION['Contact']['id'])) {
+				return $RES->withJSON(['meta' => [ 'detail' => 'Invalid Contact' ]], 400);
 			}
-			if (empty($_SESSION['license']['id'])) {
-				return $RES->withStatus(400);
+			if (empty($_SESSION['License']['id'])) {
+				return $RES->withJSON(['meta' => [ 'detail' => 'Invalid License' ]], 400);
 			}
 
 		}
