@@ -7,11 +7,10 @@
 
 namespace OpenTHC\Bong\Controller\Variety;
 
-use Opis\JsonSchema\Validator;
-use Swaggest\JsonSchema\Schema;
-
 class Update extends \OpenTHC\Bong\Controller\Base\Update
 {
+	use \OpenTHC\Common\Traits\JSONValidator;
+
 	protected $_tab_name = 'variety';
 
 	/**
@@ -22,8 +21,6 @@ class Update extends \OpenTHC\Bong\Controller\Base\Update
 		$source_data = $_POST;
 		$source_data = \Opis\JsonSchema\Helper::toJSON($source_data);
 
-		$schema_spec = \OpenTHC\Bong\Variety::getJSONSchema();
-
 		// pre-validation stuff
 		if (empty($source_data->id)) {
 			$source_data->id = \OpenTHC\CRE\CCRS::sanatize(strtoupper($source_data->name), 100);
@@ -32,28 +29,9 @@ class Update extends \OpenTHC\Bong\Controller\Base\Update
 			$source_data->type = 'Hybrid';
 		}
 
-		$schema = Schema::import($schema_spec);
-		try {
-			$res_json = $schema->in($source_data);
-		} catch (\Exception $e) {
-			__exit_text($e->getMessage(), 500);
-		}
+		$schema_spec = \OpenTHC\Bong\Variety::getJSONSchema();
 
-		$validator = new Validator();
-		$res_json = $validator->validate($source_data, $schema_spec);
-		if ( ! $res_json->isValid()) {
-			__exit_text($res_json->error()->__toString(), 500);
-		}
-
-		// $rec = [
-		// 	'id' => $source_data->id,
-		// 	'license_id' => $_SESSION['License']['id'],
-		// 	'name' => $source_data->name,
-		// 	'data' => json_encode([
-		// 		'@version' => 'openthc/2015',
-		// 		'@source' => $source_data
-		// 	]),
-		// ];
+		$this->validateJSON($source_data, $schema_spec);
 
 		$dbc = $REQ->getAttribute('dbc');
 
@@ -94,8 +72,14 @@ class Update extends \OpenTHC\Bong\Controller\Base\Update
 		$res = $cmd->execute($arg);
 		$ret = $cmd->fetchAll();
 
-		// $rec['data'] = json_decode($rec['data'], true);
 		$this->updateStatus();
+
+		// Rewrite on Output
+		switch ($_SESSION['cre']['id']) {
+			case 'usa/wa/ccrs':
+				$source_data->id = $ARG['id'];
+				break;
+		}
 
 		return $RES->withJSON([
 			'data' => $source_data,

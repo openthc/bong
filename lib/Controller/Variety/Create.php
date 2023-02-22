@@ -7,11 +7,10 @@
 
 namespace OpenTHC\Bong\Controller\Variety;
 
-use Opis\JsonSchema\Validator;
-use Swaggest\JsonSchema\Schema;
-
 class Create extends \OpenTHC\Bong\Controller\Base\Create
 {
+	use \OpenTHC\Common\Traits\JSONValidator;
+
 	protected $_tab_name = 'variety';
 
 	/**
@@ -20,36 +19,35 @@ class Create extends \OpenTHC\Bong\Controller\Base\Create
 	function __invoke($REQ, $RES, $ARG)
 	{
 		$source_data = $_POST;
+		$source_data = \Opis\JsonSchema\Helper::toJSON($source_data);
 
-		switch ($_SESSION['cre']['id']) {
-			case 'usa/hi':
-			case 'usa/nm':
-				// unset($source_data['id']);
-				break;
-			case 'usa/wa/ccrs':
-				if (empty($source_data['id'])) {
-					$source_data['id'] = substr(_ulid(), 0, 16);
-				}
-				$source_data['id'] = substr($source_data['id'], 0, 16);
-				break;
+		if (empty($source_data->type)) {
+			$source_data->type = 'Hybrid';
 		}
 
-		$source_data = \Opis\JsonSchema\Helper::toJSON($source_data);
+		// pre-validation stuff
+		if (empty($source_data->id)) {
+			$source_data->id = \OpenTHC\CRE\CCRS::sanatize(strtoupper($source_data->name), 100);
+		}
+
+		// switch ($_SESSION['cre']['id']) {
+		// 	case 'usa/hi':
+		// 	case 'usa/nm':
+		// 		// unset($source_data['id']);
+		// 		break;
+		// 	case 'usa/wa/ccrs':
+		// 		if (empty($source_data->id)) {
+		// 			$source_data->id = substr(_ulid(), 0, 16);
+		// 		}
+		// 		$source_data->id = substr($source_data->id, 0, 16);
+		// 		break;
+		// }
 
 		$schema_spec = \OpenTHC\Bong\Variety::getJSONSchema();
 
-		$schema = Schema::import($schema_spec);
-		try {
-			$res_json = $schema->in($source_data);
-		} catch (\Exception $e) {
-			__exit_text($e->getMessage(), 500);
-		}
+		$schema_spec = \OpenTHC\Bong\Variety::getJSONSchema();
 
-		$validator = new Validator();
-		$res_json = $validator->validate($source_data, $schema_spec);
-		if ( ! $res_json->isValid()) {
-			__exit_text($res_json->error()->__toString(), 500);
-		}
+		$this->validateJSON($source_data, $schema_spec);
 
 		$dbc = $REQ->getAttribute('dbc');
 
@@ -60,11 +58,7 @@ class Create extends \OpenTHC\Bong\Controller\Base\Create
 			':n0' => $source_data->name,
 			':d0' => json_encode([
 				'@version' => 'openthc/2015',
-				'@source' => [
-					'id' => $ARG['id'],
-					'name' => $source_data->name,
-					'type' => $source_data->type,
-				]
+				'@source' => $source_data
 			])
 		];
 		$arg[':h0'] = \OpenTHC\CRE\Base::objHash([

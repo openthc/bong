@@ -14,8 +14,8 @@ function _cre_ccrs_upload_section($cli_args)
 	$dbc = _dbc();
 	$License = _load_license($dbc, $cli_args['--license']);
 
-	$R = \OpenTHC\Service\Redis::factory();
-	$chk = $R->get(sprintf('/license/%s/section', $License['id']));
+	$rdb = \OpenTHC\Service\Redis::factory();
+	$chk = $rdb->hget(sprintf('/license/%s', $License['id']), 'section/stat');
 	syslog(LOG_DEBUG, "license:{$License['id']}; section-stat={$chk}");
 
 	$tz0 = new DateTimezone(\OpenTHC\Config::get('cre/usa/wa/ccrs/tz'));
@@ -108,27 +108,29 @@ function _cre_ccrs_upload_section($cli_args)
 	}
 
 	$row_size = count($csv_data);
-	if ($row_size <= 1) {
-		echo "No Data to Upload\n";
-		return(0);
+	if ($row_size > 1) {
+
+		// Output
+		\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'SubmittedBy',   'OpenTHC' ], $col_size, '')));
+		\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'SubmittedDate', date('m/d/Y') ], $col_size, '')));
+		\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'NumberRecords', $row_size ], $col_size, '')));
+		\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values($csv_head));
+		foreach ($csv_data as $row) {
+			\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, $row);
+		}
+
+		// Upload
+		fseek($csv_temp, 0);
+
+		_upload_to_queue_only($License, $csv_name, $csv_temp);
+
 	}
-
-	// Output
-	\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'SubmittedBy',   'OpenTHC' ], $col_size, '')));
-	\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'SubmittedDate', date('m/d/Y') ], $col_size, '')));
-	\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'NumberRecords', $row_size ], $col_size, '')));
-	\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values($csv_head));
-	foreach ($csv_data as $row) {
-		\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, $row);
-	}
-
-	// Upload
-	fseek($csv_temp, 0);
-
-	_upload_to_queue_only($License, $csv_name, $csv_temp);
 
 	unset($csv_temp);
 
-	$R->set(sprintf('/license/%s/section', $License['id']), 200);
+	$rdb->hset(sprintf('/license/%s', $License['id']), 'section/stat', 200);
+	$rdb->hset(sprintf('/license/%s', $License['id']), 'section/stat/time', time());
+	$rdb->hset(sprintf('/license/%s', $License['id']), 'section/sync', 0);
+	$rdb->hset(sprintf('/license/%s', $License['id']), 'section/sync/time', 0);
 
 }

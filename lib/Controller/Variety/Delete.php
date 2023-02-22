@@ -19,8 +19,9 @@ class Delete extends \OpenTHC\Controller\Base
 
 		$dbc = $REQ->getAttribute('dbc');
 
-		$sql = 'SELECT * FROM variety WHERE name = :v0';
+		$sql = 'SELECT * FROM variety WHERE license_id = :l0 AND name = :v0';
 		$arg = [
+			':l0' => $_SESSION['License']['id'],
 			':v0' => $ARG['id'],
 		];
 
@@ -33,9 +34,10 @@ class Delete extends \OpenTHC\Controller\Base
 			], 404);
 		}
 
-		// $V = new \OpenTHC\Variety($dbc, $res);
-		// $V->setFlag(\OpenTHC\Variety::FLAG_MUTE);
-		// $V->save('Variety/Delete');
+		$V = new \OpenTHC\Variety($dbc, $res);
+		$V['stat'] = 410;
+		$V->setFlag(\OpenTHC\Variety::FLAG_MUTE);
+		$V->save('Variety/Delete');
 
 		return $RES->withJSON([
 			'data' => $V->toArray(),

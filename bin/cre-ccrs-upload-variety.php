@@ -10,19 +10,24 @@ use OpenTHC\Bong\CRE;
 
 function _cre_ccrs_upload_variety($cli_args)
 {
-	$R = \OpenTHC\Service\Redis::factory();
-	$chk = $R->get(sprintf('/license/%s/variety', $License['id']));
-	syslog(LOG_DEBUG, "license:{$License['id']}; variety-stat={$chk}");
-
+	$rdb = \OpenTHC\Service\Redis::factory();
 
 	$dbc = _dbc();
 
 	$tz0 = new DateTimezone(\OpenTHC\Config::get('cre/usa/wa/ccrs/tz'));
 	$cre_service_key = \OpenTHC\Config::get('cre/usa/wa/ccrs/service-key');
 
-	$License = [];
-
 	$License = _load_license($dbc, $cli_args['--license']);
+
+	$chk = $R->hget(sprintf('/license/%s', $License['id']), 'variety/stat');
+	switch ($chk) {
+		case 102:
+		case 200:
+			return(0);
+			break;
+		default:
+			syslog(LOG_DEBUG, "license:{$License['id']}; variety-stat={$chk}");
+	}
 
 	$req_ulid = _ulid();
 	$csv_data = [];
@@ -82,26 +87,30 @@ function _cre_ccrs_upload_variety($cli_args)
 	}
 
 	$row_size = count($csv_data);
-	if ($row_size <= 1) {
-		echo "No Data to Upload\n";
-		return(0);
+	if ($row_size > 1) {
+
+		\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'SubmittedBy',   'OpenTHC' ], $col_size, '')));
+		\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'SubmittedDate', date('m/d/Y') ], $col_size, '')));
+		\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'NumberRecords', $row_size ], $col_size, '')));
+		\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values($csv_head));
+		foreach ($csv_data as $row) {
+			\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, $row);
+		}
+
+		// Should upload all the way to CCRS here?
+
+		// Upload
+		fseek($csv_temp, 0);
+
+		_upload_to_queue_only($License, $csv_name, $csv_temp);
+
 	}
-
-	\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'SubmittedBy',   'OpenTHC' ], $col_size, '')));
-	\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'SubmittedDate', date('m/d/Y') ], $col_size, '')));
-	\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'NumberRecords', $row_size ], $col_size, '')));
-	\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values($csv_head));
-	foreach ($csv_data as $row) {
-		\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, $row);
-	}
-
-	// Upload
-	fseek($csv_temp, 0);
-
-	_upload_to_queue_only($License, $csv_name, $csv_temp);
 
 	unset($csv_temp);
 
-	$R->set(sprintf('/license/%s/variety', $License['id']), 200);
+	$rdb->hset(sprintf('/license/%s', $License['id']), 'variety/stat', 102);
+	$rdb->hset(sprintf('/license/%s', $License['id']), 'variety/stat/time', time());
+	$rdb->hset(sprintf('/license/%s', $License['id']), 'variety/sync', 0);
+	$rdb->hset(sprintf('/license/%s', $License['id']), 'variety/sync/time', 0);
 
 }
