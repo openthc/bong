@@ -138,9 +138,8 @@ function _cre_ccrs_upload_section($cli_args)
 
 	$rdb->del(sprintf('/license/%s/section', $License['id']));
 
-	$rdb->hset(sprintf('/license/%s', $License['id']), 'section/stat', 200);
+	$rdb->hset(sprintf('/license/%s', $License['id']), 'section/stat', 102);
 	$rdb->hset(sprintf('/license/%s', $License['id']), 'section/stat/time', time());
-	$rdb->hset(sprintf('/license/%s', $License['id']), 'section/sync', 0);
-	$rdb->hset(sprintf('/license/%s', $License['id']), 'section/sync/time', 0);
+	$rdb->hset(sprintf('/license/%s', $License['id']), 'section/sync', 100);
 
 }

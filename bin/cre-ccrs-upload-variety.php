@@ -122,7 +122,7 @@ function _cre_ccrs_upload_variety($cli_args)
 
 	$rdb->hset(sprintf('/license/%s', $License['id']), 'variety/stat', 102);
 	$rdb->hset(sprintf('/license/%s', $License['id']), 'variety/stat/time', time());
-	$rdb->hset(sprintf('/license/%s', $License['id']), 'variety/sync', 0);
-	$rdb->hset(sprintf('/license/%s', $License['id']), 'variety/sync/time', 0);
+	$rdb->hset(sprintf('/license/%s', $License['id']), 'variety/sync', 100);
+
 
 }
