@@ -10,13 +10,21 @@ use OpenTHC\Bong\CRE;
 
 function _cre_ccrs_upload_section($cli_args)
 {
-
-	$dbc = _dbc();
-	$License = _load_license($dbc, $cli_args['--license']);
+	$lic = $cli_args['--license'];
 
 	$rdb = \OpenTHC\Service\Redis::factory();
-	$chk = $rdb->hget(sprintf('/license/%s', $License['id']), 'section/stat');
-	syslog(LOG_DEBUG, "license:{$License['id']}; section-stat={$chk}");
+	$chk = $rdb->hget(sprintf('/license/%s', $lic), 'section/stat');
+	switch ($chk) {
+		case 102:
+		case 200:
+			return(0);
+			break;
+		default:
+			syslog(LOG_DEBUG, "license:{$lic}; section-stat={$chk}");
+	}
+
+	$dbc = _dbc();
+	$License = _load_license($dbc, $lic);
 
 	$tz0 = new DateTimezone(\OpenTHC\Config::get('cre/usa/wa/ccrs/tz'));
 	$cre_service_key = \OpenTHC\Config::get('cre/usa/wa/ccrs/service-key');
@@ -127,6 +135,8 @@ function _cre_ccrs_upload_section($cli_args)
 	}
 
 	unset($csv_temp);
+
+	$rdb->del(sprintf('/license/%s/section', $License['id']));
 
 	$rdb->hset(sprintf('/license/%s', $License['id']), 'section/stat', 200);
 	$rdb->hset(sprintf('/license/%s', $License['id']), 'section/stat/time', time());

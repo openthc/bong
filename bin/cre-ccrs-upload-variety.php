@@ -10,7 +10,19 @@ use OpenTHC\Bong\CRE;
 
 function _cre_ccrs_upload_variety($cli_args)
 {
+	$lic = $cli_args['--license'];
+
 	$rdb = \OpenTHC\Service\Redis::factory();
+	$chk = $rdb->hget(sprintf('/license/%s', $lic), 'variety/stat');
+	switch ($chk) {
+		case 102:
+		case 200:
+			return(0);
+			break;
+		default:
+			syslog(LOG_DEBUG, "license:{$lic}; variety-stat={$chk}");
+	}
+
 
 	$dbc = _dbc();
 
@@ -19,7 +31,7 @@ function _cre_ccrs_upload_variety($cli_args)
 
 	$License = _load_license($dbc, $cli_args['--license']);
 
-	$chk = $R->hget(sprintf('/license/%s', $License['id']), 'variety/stat');
+	$chk = $rdb->hget(sprintf('/license/%s', $License['id']), 'variety/stat');
 	switch ($chk) {
 		case 102:
 		case 200:
