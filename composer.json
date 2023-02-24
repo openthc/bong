@@ -16,7 +16,7 @@
 		"docopt/docopt": "1.0.4",
 		"edoceo/lowline": "2022.0.266",
 		"edoceo/radix": "2021.0.0",
-		"openthc/common": "dev-master",
+		"openthc/common": "2023.0",
 		"openthc/cre-adapter": "dev-master"
 	},
 	"require-dev": {
