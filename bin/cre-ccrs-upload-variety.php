@@ -31,16 +31,6 @@ function _cre_ccrs_upload_variety($cli_args)
 
 	$License = _load_license($dbc, $cli_args['--license']);
 
-	$chk = $rdb->hget(sprintf('/license/%s', $License['id']), 'variety/stat');
-	switch ($chk) {
-		case 102:
-		case 200:
-			return(0);
-			break;
-		default:
-			syslog(LOG_DEBUG, "license:{$License['id']}; variety-stat={$chk}");
-	}
-
 	$req_ulid = _ulid();
 	$csv_data = [];
 	$csv_head = [];
@@ -109,8 +99,6 @@ function _cre_ccrs_upload_variety($cli_args)
 			\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, $row);
 		}
 
-		// Should upload all the way to CCRS here?
-
 		// Upload
 		fseek($csv_temp, 0);
 
@@ -123,6 +111,5 @@ function _cre_ccrs_upload_variety($cli_args)
 	$rdb->hset(sprintf('/license/%s', $License['id']), 'variety/stat', 102);
 	$rdb->hset(sprintf('/license/%s', $License['id']), 'variety/stat/time', time());
 	$rdb->hset(sprintf('/license/%s', $License['id']), 'variety/sync', 100);
-
 
 }
