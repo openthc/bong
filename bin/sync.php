@@ -63,8 +63,8 @@ function _tab_name_map($obj): string
 		case 'disposal':
 		case 'lab_result':
 		case 'license':
-		case 'lot':
-		case 'lot_delta':
+		case 'inventory':
+		case 'inventory_adjust':
 		case 'product':
 		case 'section':
 		case 'uom':

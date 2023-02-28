@@ -106,7 +106,7 @@ create table crop (
 	data jsonb
 );
 
-create table lot (
+create table inventory (
 	id varchar(64) PRIMARY KEY,
 	license_id varchar(64) not null,
 	flag int not null default 0,
@@ -117,7 +117,7 @@ create table lot (
 	data jsonb
 );
 
-create table lot_delta (
+create table inventory_adjust (
 	id varchar(64) PRIMARY KEY,
 	lot_id varchar(64) NOT NULL,
 	license_id varchar(64) not null,

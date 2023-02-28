@@ -23,11 +23,11 @@ $tz = new \DateTimezone($data['tz']);
 			<option>product</option>
 			<option>variety</option>
 			<option>crop</option>
-			<option>lot</option>
+			<option>inventory</option>
+			<option>inventory_adjust</option>
 			<option>lab_result</option>
 			<option>b2b_sale</option>
 			<option>b2c_sale</option>
-			<option>lot_delta</option>
 			<option>disposal</option>
 		</datalist>
 	</div>

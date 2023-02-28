@@ -86,15 +86,15 @@ CREATE TRIGGER log_delta_license
 	FOR EACH ROW
 	EXECUTE PROCEDURE log_delta_trigger();
 
-CREATE TRIGGER log_delta_lot
+CREATE TRIGGER log_delta_inventory
 	AFTER INSERT OR UPDATE OR DELETE
-	ON lot
+	ON inventory
 	FOR EACH ROW
 	EXECUTE PROCEDURE log_delta_trigger();
 
-CREATE TRIGGER log_delta_lot_delta
+CREATE TRIGGER log_delta_inventory_adjust
 	AFTER INSERT OR UPDATE OR DELETE
-	ON lot_delta
+	ON inventory_adjust
 	FOR EACH ROW
 	EXECUTE PROCEDURE log_delta_trigger();
 
