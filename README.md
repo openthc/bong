@@ -28,8 +28,9 @@ curl --cookie=cookie-file.dat https://$BONG/auth/open
 The APIs that BONG interfaces with don't all agree on how to do pages of data, or sorting, or filtering.
 BONG has tools that work in the background to pull and cache data.
 
-```php
-curl https://$BONG/status
+```
+GET https://$BONG/status
+GET https://$BONG/inventory/status
 ```
 
 
@@ -38,6 +39,39 @@ curl https://$BONG/status
 A low level, GET and POST/PUT interface exists.
 
 
-```php
-curl https://$BONG/license
+```
+GET https://$BONG/license
+GET https://$BONG/license/current/status
+GET https://$BONG/license/$ID/status
+```
+
+
+
+
+## Reading Crop
+
+```
+GET /crop
+GET /crop?filter=(active|wet-collect|dry-collect|done|dead)
+GET /crop?filter=and&f-[n0]=[v0]&f-[n1]=[v1]
+GET /crop?filter=or&f-[n0]=[v0]&f-[n1]=[v1]
+```
+
+## Reading Inventory
+
+```
+GET /inventory
+GET /inventory?filter=(active)
+GET /inventory?filter=and
+GET /inventory?filter=or
+```
+
+## Reading Transfer Data
+
+```
+GET /b2b
+GET /b2b/outgoing?filter=(active)
+GET /b2b/incoming?filter=(active)
+GET /b2b?filter=and
+GET /b2b?filter=or
 ```
