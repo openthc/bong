@@ -7,11 +7,10 @@
 
 namespace OpenTHC\Bong\Controller\Inventory;
 
-use Opis\JsonSchema\Validator;
-// use Swaggest\JsonSchema\Schema;
-
 class Update extends \OpenTHC\Bong\Controller\Base\Update
 {
+	use \OpenTHC\Traits\JSONValidator;
+
 	protected $_tab_name = 'inventory';
 
 	/**
@@ -23,11 +22,8 @@ class Update extends \OpenTHC\Bong\Controller\Base\Update
 		$source_data = \Opis\JsonSchema\Helper::toJSON($source_data);
 		$source_data->qty = floatval($source_data->qty);
 
-		$validator = new Validator();
-		$res_json = $validator->validate($source_data, $schema_spec);
-		if ( ! $res_json->isValid()) {
-			__exit_text($res_json->error()->__toString(), 500);
-		}
+		$schema_spec = \OpenTHC\Bong\Inventory::getJSONSchema();
+		$this->validateJSON($source_data, $schema_spec);
 
 		// UPSERT IT
 		$sql = <<<SQL
@@ -48,16 +44,8 @@ class Update extends \OpenTHC\Bong\Controller\Base\Update
 		];
 		$arg[':h0'] = \OpenTHC\CRE\Base::objHash($source_data);
 
+		$dbc = $REQ->getAttribute('dbc');
 		$ret = $dbc->query($sql, $arg);
-		if (1 == $ret) {
-			return $RES->withJSON([
-				'data' => [
-					'id' => $ARG['id'],
-					'name' => $_POST['name']
-				],
-				'meta' => $_POST,
-			]);
-		}
 
 		$this->updateStatus();
 

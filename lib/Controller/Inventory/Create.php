@@ -7,11 +7,10 @@
 
 namespace OpenTHC\Bong\Controller\Inventory;
 
-use Opis\JsonSchema\Validator;
-use Swaggest\JsonSchema\Schema;
-
 class Create extends \OpenTHC\Bong\Controller\Base\Create
 {
+	use \OpenTHC\Traits\JSONValidator;
+
 	protected $_tab_name = 'inventory';
 
 	/**
@@ -37,22 +36,8 @@ class Create extends \OpenTHC\Bong\Controller\Base\Create
 				break;
 		}
 
-		$source_data = \Opis\JsonSchema\Helper::toJSON($source_data);
-
 		$schema_spec = \OpenTHC\Bong\Inventory::getJSONSchema();
-
-		$schema = Schema::import($schema_spec);
-		try {
-			$res_json = $schema->in($source_data);
-		} catch (\Exception $e) {
-			__exit_text($e->getMessage(), 500);
-		}
-
-		$validator = new Validator();
-		$res_json = $validator->validate($source_data, $schema_spec);
-		if ( ! $res_json->isValid()) {
-			__exit_text($res_json->error()->__toString(), 500);
-		}
+		$this->validateJSON($source_data, $schema_spec);
 
 		$rec = [
 			'id' => $source_data->id,
