@@ -41,6 +41,7 @@ class Create extends \OpenTHC\Bong\Controller\Base\Create
 
 		$rec = [
 			'id' => $source_data->id,
+			'name' => $source_data->name ?: $source_data->id,
 			'license_id' => $_SESSION['License']['id'],
 			'data' => json_encode([
 				'@version' => 'openthc/2015',
