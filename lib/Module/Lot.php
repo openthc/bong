@@ -28,33 +28,24 @@ class Lot extends \OpenTHC\Module\Base
 		// Status
 		$a->get('/status', '\OpenTHC\Bong\Controller\Inventory\Status');
 
-		// $a->get('/history', function($REQ, $RES, $ARG) {
-		// 	return _from_cre_file('lot/history/search.php', $REQ, $RES, $ARG);
-		// });
-
 		// Single
 		$c = new \OpenTHC\Bong\Controller\Single($this->_container);
 		$c->tab = 'lot';
 		$a->get('/{id}', $c);
-
-		$a->post('/{id}', function($REQ, $RES, $ARG) {
-			return _from_cre_file('lot/update.php', $REQ, $RES, $ARG);
-		});
-
-		// View Item
 		// $a->get('/{id}', function($REQ, $RES, $ARG) {
 		// 	return _from_cre_file('lot/single.php', $REQ, $RES, $ARG);
 		// });
 
-		//	// Update Item
-		//	$a->post('/{guid:[0-9a-f]+}', function($REQ, $RES, $ARG) {
-		//		die('Update Inventory Item');
-		//	});
+		// Update
+		$a->post('/{id}', '\OpenTHC\Bong\Controller\Inventory\Update');
 
 		// Delete Item
 		$a->delete('/{id}', function($REQ, $RES, $ARG) {
 			return _from_cre_file('lot/delete.php', $REQ, $RES, $ARG);
 		});
+
+		// Adjust
+		$a->post('/{id}/adjust', 'OpenTHC\Bong\Controller\Inventory\Adjust');
 
 		//	$a->post('/', function($REQ, $RES, $ARG) {
 		//		die('Create Inventory');
