@@ -13,14 +13,7 @@ class Variety extends \OpenTHC\Module\Base
 	{
 		// Search
 		$a->get('', function($REQ, $RES, $ARG) {
-
-			// return _from_cre_file('variety/search.php', $REQ, $RES, $ARG);
-
-			$dbc = $REQ->getAttribute('dbc');
-			$res = $dbc->fetchAll('SELECT id, stat, hash, updated_at FROM variety ORDER BY updated_at DESC');
-
-			return $RES->withJSON($res);
-
+			return _from_cre_file('variety/search.php', $REQ, $RES, $ARG);
 		});
 
 		// Create

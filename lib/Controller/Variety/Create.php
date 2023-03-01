@@ -9,7 +9,7 @@ namespace OpenTHC\Bong\Controller\Variety;
 
 class Create extends \OpenTHC\Bong\Controller\Base\Create
 {
-	use \OpenTHC\Common\Traits\JSONValidator;
+	use \OpenTHC\Traits\JSONValidator;
 
 	protected $_tab_name = 'variety';
 
@@ -90,6 +90,14 @@ class Create extends \OpenTHC\Bong\Controller\Base\Create
 
 		// $rec['data'] = json_decode($rec['data'], true);
 		$this->updateStatus();
+
+		// Rewrite on Output
+		switch ($_SESSION['cre']['id']) {
+			case 'usa/wa/ccrs':
+					// \OpenTHC\CRE\CCRS::createId();
+					$source_data->id = substr(_ulid(), 0, 16);
+					break;
+		}
 
 		return $RES->withJSON([
 			'data' => $source_data,

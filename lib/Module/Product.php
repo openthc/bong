@@ -19,12 +19,12 @@ class Product extends \OpenTHC\Module\Base
 			return _from_cre_file('product/search.php', $REQ, $RES, $ARG);
 		});
 
-		// Status
-		$a->get('/status','\OpenTHC\Bong\Controller\Product\Status');
+		// Create
+		$a->post('', '\OpenTHC\Bong\Controller\Product\Create');
 
-		$a->post('', function($REQ, $RES, $ARG) {
-			return _from_cre_file('product/create.php', $REQ, $RES, $ARG);
-		});
+		// Status
+		$a->get('/status', '\OpenTHC\Bong\Controller\Product\Status');
+
 
 		// $a->get('/{id}', function($REQ, $RES, $ARG) {
 		// 	return _from_cre_file('product/single.php', $RES, $ARG);

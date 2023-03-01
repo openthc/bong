@@ -9,7 +9,7 @@ namespace OpenTHC\Bong\Controller\Variety;
 
 class Update extends \OpenTHC\Bong\Controller\Base\Update
 {
-	use \OpenTHC\Common\Traits\JSONValidator;
+	use \OpenTHC\Traits\JSONValidator;
 
 	protected $_tab_name = 'variety';
 
@@ -32,8 +32,6 @@ class Update extends \OpenTHC\Bong\Controller\Base\Update
 		$schema_spec = \OpenTHC\Bong\Variety::getJSONSchema();
 
 		$this->validateJSON($source_data, $schema_spec);
-
-		$dbc = $REQ->getAttribute('dbc');
 
 		// CCRS uses Name as Primary Key, limit of 100 characters
 		$arg = [
@@ -67,9 +65,10 @@ class Update extends \OpenTHC\Bong\Controller\Base\Update
 		SQL;
 
 		// $ret = $dbc->query($sql, $arg);
-
+		$dbc = $REQ->getAttribute('dbc');
 		$cmd = $dbc->prepare($sql);
 		$res = $cmd->execute($arg);
+		$hit = $cmd->rowCount();
 		$ret = $cmd->fetchAll();
 
 		$this->updateStatus();
