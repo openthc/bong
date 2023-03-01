@@ -12,9 +12,7 @@ class Variety extends \OpenTHC\Module\Base
 	function __invoke($a)
 	{
 		// Search
-		$a->get('', function($REQ, $RES, $ARG) {
-			return _from_cre_file('variety/search.php', $REQ, $RES, $ARG);
-		});
+		$a->get('', 'OpenTHC\Bong\Controller\Variety\Search');
 
 		// Create
 		$a->post('', '\OpenTHC\Bong\Controller\Variety\Create');
