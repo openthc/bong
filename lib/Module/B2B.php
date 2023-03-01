@@ -79,23 +79,8 @@ class B2B extends \OpenTHC\Module\Base
 
 		});
 
-		// Search Outgoing
-		$a->get('/outgoing', function($REQ, $RES, $ARG) {
-			return _from_cre_file('b2b/outgoing/search.php', $REQ, $RES, $ARG);
-		});
-
-		$a->get('/outgoing/{id}', function($REQ, $RES, $ARG) {
-			return _from_cre_file('b2b/outgoing/single.php', $REQ, $RES, $ARG);
-		});
-
-		$a->post('/outgoing/{id}/commit', function($REQ, $RES, $ARG) {
-			return _from_cre_file('b2b/outgoing/commit.php', $REQ, $RES, $ARG);
-		});
-
 		// Search Incoming
-		$a->get('/incoming', function($REQ, $RES, $ARG) {
-			return _from_cre_file('b2b/incoming/search.php', $REQ, $RES, $ARG);
-		});
+		$a->get('/incoming', 'OpenTHC\Bong\Controller\B2B\Incoming\Search');
 
 		$a->get('/incoming/{id}', function($REQ, $RES, $ARG) {
 			return _from_cre_file('b2b/outgoing/single.php', $REQ, $RES, $ARG);
@@ -103,6 +88,20 @@ class B2B extends \OpenTHC\Module\Base
 
 		$a->post('/incoming/{id}/accept', function($REQ, $RES, $ARG) {
 			return _from_cre_file('b2b/incoming/accept.php', $REQ, $RES, $ARG);
+		});
+
+		// Search Outgoing
+		$a->get('/outgoing', 'OpenTHC\Bong\Controller\B2B\Outgoing\Search');
+		// function($REQ, $RES, $ARG) {
+		// 	return _from_cre_file('b2b/outgoing/search.php', $REQ, $RES, $ARG);
+		// });
+
+		$a->get('/outgoing/{id}', function($REQ, $RES, $ARG) {
+			return _from_cre_file('b2b/outgoing/single.php', $REQ, $RES, $ARG);
+		});
+
+		$a->post('/outgoing/{id}/commit', function($REQ, $RES, $ARG) {
+			return _from_cre_file('b2b/outgoing/commit.php', $REQ, $RES, $ARG);
 		});
 
 		// Search Rejected
