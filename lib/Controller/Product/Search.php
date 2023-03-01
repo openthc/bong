@@ -19,23 +19,6 @@ class Search extends \OpenTHC\Bong\Controller\Base\Search
 
 		$dbc = $REQ->getAttribute('dbc');
 
-		// if ($_GET['e'])
-		if (isset($_GET['e'])) {
-
-			$sql = <<<SQL
-			SELECT id, name, code, stat FROM license
-			WHERE id IN (SELECT license_id FROM product where data::text LIKE '%Integrator is not authorized%')
-			ORDER BY id
-			SQL;
-
-			$res = $dbc->fetchAll($sql);
-
-			if (count($res)) {
-				__exit_text($res);
-			}
-
-		}
-
 		$sql = <<<SQL
 		SELECT *
 		FROM product

@@ -7,7 +7,7 @@
 
 namespace OpenTHC\Bong\Controller\InventoryAdjust;
 
-class Search extends \OpenTHC\Controller\Base
+class Search extends \OpenTHC\Bong\Controller\Base\Search
 {
 	public $tab = 'inventory_adjust';
 

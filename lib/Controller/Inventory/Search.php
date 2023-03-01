@@ -19,20 +19,6 @@ class Search extends \OpenTHC\Bong\Controller\Base\Search
 
 		$dbc = $REQ->getAttribute('dbc');
 
-		if ( ! empty($_GET['e'])) {
-
-			$sql = <<<SQL
-			SELECT id, name, code, stat FROM license
-			WHERE id IN (SELECT license_id FROM lot where data::text LIKE '%Invalid Area%')
-			ORDER BY id
-			SQL;
-			$res = $dbc->fetchAll($sql);
-			if (count($res)) {
-					__exit_text($res);
-			}
-
-		}
-
 		// $sql = <<<SQL
 		// SELECT *
 		// FROM lot
