@@ -145,6 +145,22 @@ printf($fmt, 'sync-time-omega', $t1);
 	</div>
 </li>
 <li class="list-group-item d-flex justify-content-between align-items-center">
+	<div><a href="/section">/section</a> - an Area or Room or Zone</div>
+	<div>
+		<span class="badge bg-primary">BioTrack</span>
+		<span class="badge bg-primary">CCRS</span>
+		<span class="badge bg-primary">METRC</span>
+	</div>
+</li>
+<li class="list-group-item d-flex justify-content-between align-items-center">
+	<div><a href="/variety">/variety</a> - Variety (aka: Cultivar, Strains)</div>
+	<div>
+		<span class="badge bg-warning">BioTrack</span>
+		<span class="badge bg-primary">CCRS</span>
+		<span class="badge bg-primary">METRC</span>
+	</div>
+</li>
+<li class="list-group-item d-flex justify-content-between align-items-center">
 	<div><a href="/product-type">/product-type</a> - System Defined Product Type Details</div>
 	<div>
 		<span class="badge bg-dark">system</span>
@@ -162,27 +178,11 @@ printf($fmt, 'sync-time-omega', $t1);
 	</div>
 </li>
 <li class="list-group-item d-flex justify-content-between align-items-center">
-	<div><a href="/variety">/variety</a> - Variety (aka: Cultivar, Strains)</div>
-	<div>
-		<span class="badge bg-warning">BioTrack</span>
-		<span class="badge bg-primary">CCRS</span>
-		<span class="badge bg-primary">METRC</span>
-	</div>
-</li>
-<li class="list-group-item d-flex justify-content-between align-items-center">
 	<div><a href="/vehicle">/vehicle</a> - Vehicles</div>
 	<div>
 		<span class="badge bg-primary">BioTrack</span>
 		<span class="badge bg-warning">CCRS</span>
 		<span class="badge bg-secondary">METRC</span>
-	</div>
-</li>
-<li class="list-group-item d-flex justify-content-between align-items-center">
-	<div><a href="/section">/section</a> - an Area or Room or Zone</div>
-	<div>
-		<span class="badge bg-primary">BioTrack</span>
-		<span class="badge bg-primary">CCRS</span>
-		<span class="badge bg-primary">METRC</span>
 	</div>
 </li>
 </ul>
@@ -245,7 +245,7 @@ printf($fmt, 'sync-time-omega', $t1);
 	</div>
 </li>
 <li class="list-group-item d-flex justify-content-between align-items-center">
-	<div><a href="/lot/history">/lot/history</a> - Inventory Lot History (Adjustment) Details</div>
+	<div><a href="/inventory-adjust">/inventory-adjust</a> - Inventory Adjust Details</div>
 	<div>
 		<span class="badge bg-primary">BioTrack</span>
 		<span class="badge bg-primary">CCRS</span>
