@@ -113,7 +113,7 @@ $app->group('/plant', 'OpenTHC\Bong\Module\Crop')
 	->add('OpenTHC\Middleware\Session');
 
 // Inventory - v1
-$app->group('/inventory', 'OpenTHC\Bong\Module\Lot')
+$app->group('/inventory', 'OpenTHC\Bong\Module\Inventory')
 	->add('OpenTHC\Bong\Middleware\Database')
 	->add('OpenTHC\Bong\Middleware\CRE')
 	->add('OpenTHC\Bong\Middleware\Auth')
@@ -128,7 +128,7 @@ $app->group('/inventory-adjust', 'OpenTHC\Bong\Module\InventoryAdjust')
 
 
 // Lot - v0
-$app->group('/lot', 'OpenTHC\Bong\Module\Lot')
+$app->group('/lot', 'OpenTHC\Bong\Module\Inventory')
 	->add('OpenTHC\Bong\Middleware\Database')
 	->add('OpenTHC\Bong\Middleware\CRE')
 	->add('OpenTHC\Bong\Middleware\Auth')
