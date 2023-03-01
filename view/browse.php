@@ -232,12 +232,12 @@ printf($fmt, 'sync-time-omega', $t1);
 
 
 <div class="mb-4">
-<h2>Lots / Inventory</h2>
+<h2>Inventory / Lots</h2>
 <p>Bulk Materials, Conversion, Production Lots, Conversion (again), Packaged Lots</p>
 
 <ul class="list-group">
 <li class="list-group-item d-flex justify-content-between align-items-center">
-	<div><a href="/lot">/lot</a> - Inventory Lot Details</div>
+	<div><a href="/inventory">/inventory</a> - Inventory Lot Details</div>
 	<div>
 		<span class="badge bg-primary">BioTrack</span>
 		<span class="badge bg-primary">CCRS</span>

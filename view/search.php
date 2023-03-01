@@ -5,6 +5,11 @@
  * SPDX-License-Identifier: MIT
  */
 
+if (empty($data['object_list'])) {
+	echo '<div class="alert alert-warning">No Data Provided to List</div>';
+	return;
+}
+
 $chk = $data['object_list'][0];
 // unset($chk['id']);
 if (empty($data['column_list'])) {
