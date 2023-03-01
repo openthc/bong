@@ -119,6 +119,14 @@ $app->group('/inventory', 'OpenTHC\Bong\Module\Lot')
 	->add('OpenTHC\Bong\Middleware\Auth')
 	->add('OpenTHC\Middleware\Session');
 
+// InventoryAdjust - v1
+$app->group('/inventory-adjust', 'OpenTHC\Bong\Module\InventoryAdjust')
+	->add('OpenTHC\Bong\Middleware\Database')
+	->add('OpenTHC\Bong\Middleware\CRE')
+	->add('OpenTHC\Bong\Middleware\Auth')
+	->add('OpenTHC\Middleware\Session');
+
+
 // Lot - v0
 $app->group('/lot', 'OpenTHC\Bong\Module\Lot')
 	->add('OpenTHC\Bong\Middleware\Database')
