@@ -36,7 +36,7 @@ class Product
 		// 	]
 		// ];
 
-		$schema_spec['properties']['package_size'] = [ 'type' => 'number' ];
+		// $schema_spec['properties']['package_size'] = [ 'type' => 'number' ];
 
 		// @todo Make Enum
 		$schema_spec['properties']['uom'] = [ 'type' => 'string' ];

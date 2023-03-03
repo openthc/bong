@@ -1,11 +1,11 @@
 <?php
 /**
- * Variety Create
+ * Product Create
  *
  * SPDX-License-Identifier: MIT
  */
 
-namespace OpenTHC\Bong\Controller\Variety;
+namespace OpenTHC\Bong\Controller\Product;
 
 class Create extends \OpenTHC\Bong\Controller\Base\Create
 {
@@ -21,29 +21,12 @@ class Create extends \OpenTHC\Bong\Controller\Base\Create
 		$source_data = $_POST;
 		$source_data = \Opis\JsonSchema\Helper::toJSON($source_data);
 
-		if (empty($source_data->type)) {
-			$source_data->type = 'Hybrid';
-		}
-
 		// pre-validation stuff
 		if (empty($source_data->id)) {
 			$source_data->id = \OpenTHC\CRE\CCRS::sanatize(strtoupper($source_data->name), 100);
 		}
 
-		// switch ($_SESSION['cre']['id']) {
-		// 	case 'usa/hi':
-		// 	case 'usa/nm':
-		// 		// unset($source_data['id']);
-		// 		break;
-		// 	case 'usa/wa/ccrs':
-		// 		if (empty($source_data->id)) {
-		// 			$source_data->id = substr(_ulid(), 0, 16);
-		// 		}
-		// 		$source_data->id = substr($source_data->id, 0, 16);
-		// 		break;
-		// }
-
-		$schema_spec = \OpenTHC\Bong\Variety::getJSONSchema();
+		$schema_spec = \OpenTHC\Bong\Product::getJSONSchema();
 
 		$this->validateJSON($source_data, $schema_spec);
 
@@ -67,7 +50,7 @@ class Create extends \OpenTHC\Bong\Controller\Base\Create
 
 		// UPSERT
 		$sql = <<<SQL
-		INSERT INTO variety (id, license_id, name, hash, data)
+		INSERT INTO product (id, license_id, name, hash, data)
 		VALUES (:v0, :l0, :n0, :h0, :d0)
 		ON CONFLICT (id, license_id) DO
 		UPDATE SET
@@ -75,8 +58,8 @@ class Create extends \OpenTHC\Bong\Controller\Base\Create
 			, hash = :h0
 			, stat = 100
 			, updated_at = now()
-			, data = coalesce(variety.data, '{}'::jsonb) || :d0
-		WHERE variety.hash != :h0
+			, data = coalesce(product.data, '{}'::jsonb) || :d0
+		WHERE product.hash != :h0
 		RETURNING id, name, updated_at, (hash = :h0) AS hash_match
 		SQL;
 
