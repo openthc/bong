@@ -1,16 +1,16 @@
 <?php
 /**
- * Variety Search
+ * Product Search
  *
  * SPDX-License-Identifier: MIT
  */
 
-namespace OpenTHC\Bong\Controller\Variety;
+namespace OpenTHC\Bong\Controller\Product;
 
 class Search extends \OpenTHC\Bong\Controller\Base\Search
 {
-	public $tab = 'variety';
-	protected $_tab_name = 'variety';
+	public $tab = 'crop';
+	public $_tab_name = 'crop';
 
 	/**
 	 *
@@ -20,25 +20,9 @@ class Search extends \OpenTHC\Bong\Controller\Base\Search
 
 		$dbc = $REQ->getAttribute('dbc');
 
-		$res = $this->search($dbc);
-
-		// Search
-		// $sql = <<<SQL
-		// SELECT *
-		// FROM variety
-		// WHERE name = :v0 OR name LIKE :v1
-		// ORDER BY name
-		// LIMIT 25
-		// SQL;
-		// $arg = [];
-		// $arg[':v0'] = $q;
-		// $arg[':v1'] = sprintf('%%%s%%', $arg[':v0']);
-
 		$ret = [];
-		// $ret['sql'] = $sql;
-		$ret['data'] = $res; // $dbc->fetchAll($sql, $arg);
+		$ret['data'] = $this->search($dbc);
 		$ret['meta'] = [];
-
 
 		$want_type = strtolower(trim(strtok($_SERVER['HTTP_ACCEPT'], ';')));
 		switch ($want_type) {
@@ -46,6 +30,7 @@ class Search extends \OpenTHC\Bong\Controller\Base\Search
 				return $RES->withJSON($ret, 200, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 			case 'text/html':
 			default:
+
 				$data = [];
 				$data['object_list'] = $ret['data'];
 				$data['column_list'] = [
@@ -55,11 +40,11 @@ class Search extends \OpenTHC\Bong\Controller\Base\Search
 					'stat',
 					// 'created_at',
 					// 'updated_at',
-					// 'hash',
+					// 'data',
 				];
 				$data['column_function'] = [
-					'id' => function($val, $rec) { return sprintf('<td><a href="/variety/%s">%s</a></td>', $val, $val); },
-					'license_id' => function($val, $rec) { return sprintf('<td><a href="/license/%s">%s</a></td>', $val, $val); },
+					'id' => function($val, $rec) { return sprintf('<td><a href="/crop/%s">%s</a></td>', $val, $val); },
+					'licenseid' => function($val, $rec) { return sprintf('<td><a href="/license/%s">%s</a></td>', $val, $val); },
 					'name' => function($val, $rec) { return sprintf('<td>%s</td>', __h($val)); },
 					'data' => function($val, $rec) {
 						$val = json_decode($val, true);
@@ -68,10 +53,10 @@ class Search extends \OpenTHC\Bong\Controller\Base\Search
 					},
 				];
 
-				return $this->asHTML($data);
+				return $this->render('search.php', $data);
+
 
 		}
-
 
 	}
 

@@ -12,14 +12,7 @@ class Crop extends \OpenTHC\Module\Base
 	function __invoke($a)
 	{
 		// Search
-		$a->get('', function($REQ, $RES, $ARG) {
-
-			$dbc = $REQ->getAttribute('dbc');
-			$res = $dbc->fetchAll('SELECT id, hash, updated_at FROM crop ORDER BY updated_at DESC');
-
-			return $RES->withJSON($res);
-
-		});
+		$a->get('', 'OpenTHC\Bong\Controller\Crop\Search');
 
 		// Status
 		$a->get('/status','\OpenTHC\Bong\Controller\Crop\Status');

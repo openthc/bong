@@ -25,7 +25,10 @@ class Search extends \OpenTHC\Bong\Controller\Base\Search
 		switch ($want_type) {
 			case 'application/json':
 				unset($res['sql']);
-				return $RES->withJSON($res, 200, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+				return $RES->withJSON([
+					'data' => $res,
+					'meta' => [],
+				], 200, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 			case 'text/html':
 			default:
 
