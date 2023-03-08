@@ -27,7 +27,7 @@ class Search extends \OpenTHC\Bong\Controller\Base\Search
 		$want_type = strtolower(trim(strtok($_SERVER['HTTP_ACCEPT'], ';')));
 		switch ($want_type) {
 			case 'application/json':
-				return $RES->withJSON($res['data'], 200, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+				return $RES->withJSON($ret, 200, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 			case 'text/html':
 			default:
 
@@ -44,8 +44,7 @@ class Search extends \OpenTHC\Bong\Controller\Base\Search
 					'inventory_id' => function($val, $rec) { return sprintf('<td><a href="/inventory/%s">%s</a></td>', $val, $val); },
 				];
 
-				return $x->render('search.php', $data);
-
+				return $this->asHTML($data);
 
 		}
 

@@ -35,7 +35,7 @@ class Search extends \OpenTHC\Bong\Controller\Base\Search
 				$data['object_list'] = $ret['data'];
 				$data['column_function']['id'] = function($val, $rec) { return sprintf('<td><a href="/product/%s">%s</a></td>', $val, $val); };
 
-				return $this->render('search.php', $data);
+				return $this->asHTML($data);
 
 		}
 

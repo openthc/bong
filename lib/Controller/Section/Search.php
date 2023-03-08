@@ -19,17 +19,15 @@ class Search extends \OpenTHC\Bong\Controller\Base\Search
 
 		$dbc = $REQ->getAttribute('dbc');
 
-		$res = $this->search($dbc);
+		$ret = [];
+		$ret['data'] = $this->search($dbc);
+		$ret['meta'] = [];
 
 		// Content Type
 		$want_type = strtolower(trim(strtok($_SERVER['HTTP_ACCEPT'], ';')));
 		switch ($want_type) {
 			case 'application/json':
-				unset($res['sql']);
-				return $RES->withJSON([
-					'data' => $res,
-					'meta' => [],
-				], 200, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+				return $RES->withJSON($ret, 200, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 			case 'text/html':
 			default:
 

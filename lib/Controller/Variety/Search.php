@@ -19,8 +19,6 @@ class Search extends \OpenTHC\Bong\Controller\Base\Search
 
 		$dbc = $REQ->getAttribute('dbc');
 
-		$res = $this->search($dbc);
-
 		// Search
 		// $sql = <<<SQL
 		// SELECT *
@@ -34,8 +32,7 @@ class Search extends \OpenTHC\Bong\Controller\Base\Search
 		// $arg[':v1'] = sprintf('%%%s%%', $arg[':v0']);
 
 		$ret = [];
-		// $ret['sql'] = $sql;
-		$ret['data'] = $res; // $dbc->fetchAll($sql, $arg);
+		$ret['data'] = $this->search($dbc);
 		$ret['meta'] = [];
 
 		// Content Type
