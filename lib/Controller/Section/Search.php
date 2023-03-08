@@ -9,7 +9,6 @@ namespace OpenTHC\Bong\Controller\Section;
 
 class Search extends \OpenTHC\Bong\Controller\Base\Search
 {
-	public $tab = 'section';
 	protected $_tab_name = 'section';
 
 	/**
@@ -32,27 +31,9 @@ class Search extends \OpenTHC\Bong\Controller\Base\Search
 			case 'text/html':
 			default:
 
-				$data = [];
-				$data['object_list'] = $res;
-				$data['column_list'] = [
-					'id',
-					'license_id',
-					// 'license_id_target',
-					'stat',
-					'name',
-					// 'data',
-					// 'created_at',
-					// 'updated_at',
-				];
-				$data['column_function'] = [
-					'id' => function($val, $rec) { return sprintf('<td><a href="/lot/%s">%s</a></td>', $val, $val); },
-					'license_id' => function($val, $rec) { return sprintf('<td><a href="/license/%s">%s</a></td>', $val, $val); },
-					'name' => function($val, $rec) { return sprintf('<td>%s</td>', __h($val)); },
-					// 'data' => function($val, $rec) {
-					// 	// $val = json_decode($val, true);
-					// 	// return sprintf('<td>%s</td>', json_encode($val['@result']), JSON_PRETTY_PRINT);
-					// },
-				];
+				$data = $this->getDefaultColumns();
+				$data['object_list'] = $ret['data'];
+				$data['column_function']['id'] = function($val, $rec) { return sprintf('<td><a href="/section/%s">%s</a></td>', $val, $val); };
 
 				return $this->asHTML($data);
 

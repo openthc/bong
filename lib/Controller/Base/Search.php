@@ -65,6 +65,37 @@ class Search extends \OpenTHC\Controller\Base
 	}
 
 	/**
+	 * Default Columns
+	 */
+	function getDefaultColumns()
+	{
+		$data = [];
+		$data['object_list'] = [];
+		$data['column_list'] = [
+			'id',
+			'license_id',
+			'name',
+			'stat',
+			// 'created_at',
+			// 'updated_at',
+			// 'data',
+		];
+		$data['column_function'] = [
+			// 'id' => function($val, $rec) { return sprintf('<td><a href="/crop/%s">%s</a></td>', $val, $val); },
+			'license_id' => function($val, $rec) { return sprintf('<td><a href="/license/%s">%s</a></td>', $val, $val); },
+			'name' => function($val, $rec) { return sprintf('<td>%s</td>', __h($val)); },
+			'data' => function($val, $rec) {
+				$val = json_decode($val, true);
+				// return sprintf('<td>%s</td>', json_encode($val['@result']), JSON_PRETTY_PRINT);
+				return sprintf('<td>%s</td>', implode(', ', array_keys($val)));
+			},
+		];
+
+		return $data;
+
+	}
+
+	/**
 	 *
 	 */
 	function showErrors()
