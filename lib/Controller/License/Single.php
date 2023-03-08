@@ -33,23 +33,28 @@ class Single extends \OpenTHC\Controller\Base
 			$ret['meta']['note'] = 'License Not Found';
 			$ret_code = 404;
 		} else {
+
 			$ret['data'] = $res;
 
-			// Get Stats?
-			$arg = [ ':l0' => $ARG['id'] ];
-			$stat = [];
-			$stat['variety'] = $dbc->fetchAll('SELECT count(id) AS c, stat FROM variety WHERE license_id = :l0 GROUP BY stat ORDER BY stat', $arg);
-			$stat['section'] = $dbc->fetchAll('SELECT count(id) AS c, stat FROM section WHERE license_id = :l0 GROUP BY stat ORDER BY stat', $arg);
-			$stat['product'] = $dbc->fetchAll('SELECT count(id) AS c, stat FROM product WHERE license_id = :l0 GROUP BY stat ORDER BY stat', $arg);
+			if ( ! empty($_GET['object-status'])) {
 
-			$stat['crop'] = $dbc->fetchAll('SELECT count(id) AS c, stat FROM crop WHERE license_id = :l0 GROUP BY stat ORDER BY stat', $arg);
-			$stat['inventory'] = $dbc->fetchAll('SELECT count(id) AS c, stat FROM lot WHERE license_id = :l0 GROUP BY stat ORDER BY stat', $arg);
-			// $stat['inventory_adjust'] = $dbc->fetchAll('SELECT count(id) AS c, stat FROM inventory_adjust WHERE license_id = :l0 GROUP BY stat ORDER BY stat', $arg);
+				// Get Stats?
+				$arg = [ ':l0' => $ARG['id'] ];
+				$stat = [];
+				$stat['section'] = $dbc->fetchAll('SELECT count(id) AS c, stat FROM section WHERE license_id = :l0 GROUP BY stat ORDER BY stat', $arg);
+				$stat['variety'] = $dbc->fetchAll('SELECT count(id) AS c, stat FROM variety WHERE license_id = :l0 GROUP BY stat ORDER BY stat', $arg);
+				$stat['product'] = $dbc->fetchAll('SELECT count(id) AS c, stat FROM product WHERE license_id = :l0 GROUP BY stat ORDER BY stat', $arg);
 
-			$stat['b2b-incoming'] = $dbc->fetchAll('SELECT count(id) AS c, stat FROM b2b_incoming WHERE target_license_id = :l0 GROUP BY stat ORDER BY stat', $arg);
-			$stat['b2b-outgoing'] = $dbc->fetchAll('SELECT count(id) AS c, stat FROM b2b_outgoing WHERE source_license_id = :l0 GROUP BY stat ORDER BY stat', $arg);
+				$stat['crop'] = $dbc->fetchAll('SELECT count(id) AS c, stat FROM crop WHERE license_id = :l0 GROUP BY stat ORDER BY stat', $arg);
+				$stat['inventory'] = $dbc->fetchAll('SELECT count(id) AS c, stat FROM lot WHERE license_id = :l0 GROUP BY stat ORDER BY stat', $arg);
+				// $stat['inventory_adjust'] = $dbc->fetchAll('SELECT count(id) AS c, stat FROM inventory_adjust WHERE license_id = :l0 GROUP BY stat ORDER BY stat', $arg);
 
-			$ret['data']['object-status'] = $stat;
+				$stat['b2b-incoming'] = $dbc->fetchAll('SELECT count(id) AS c, stat FROM b2b_incoming WHERE target_license_id = :l0 GROUP BY stat ORDER BY stat', $arg);
+				$stat['b2b-outgoing'] = $dbc->fetchAll('SELECT count(id) AS c, stat FROM b2b_outgoing WHERE source_license_id = :l0 GROUP BY stat ORDER BY stat', $arg);
+
+				$ret['data']['object-status'] = $stat;
+
+			}
 
 		}
 
