@@ -12,6 +12,54 @@ class Search extends \OpenTHC\Controller\Base
 	protected $_tab_name;
 
 	/**
+	 * Common Search Routine
+	 */
+	function search($dbc)
+	{
+		$sql = <<<SQL
+		SELECT *
+		FROM {$this->_tab_name}
+		{WHERE}
+		ORDER BY updated_at DESC
+		SQL;
+
+		// $sql = 'SELECT id, stat, hash, updated_at FROM section {WHERE} ORDER BY updated_at DESC';
+		// $res = $dbc->fetchAll("SELECT id, hash, updated_at, data->'result' AS result FROM section ORDER BY updated_at DESC");
+		// $sql = 'SELECT * FROM section {WHERE} ORDER BY updated_at DESC';
+		// $sql = 'SELECT id, stat, hash, updated_at FROM section {WHERE} ORDER BY updated_at DESC';
+
+		$sql_param = [];
+		$sql_where = [];
+
+		if ($_SESSION['License']['id']) {
+			$sql_where[] = 'license_id = :l0';
+			$sql_param[':l0'] = $_SESSION['License']['id'];
+		}
+
+		if ( ! empty($_GET['q'])) {
+			$sql_where[] = 'data::text LIKE :q23';
+			$sql_param[':q23'] = sprintf('%%%s%%', $_GET['q']);
+		}
+
+		if ( ! empty($_GET['stat'])) {
+			$sql_where[] = 'stat = :q52';
+			$sql_param[':q52'] = $_GET['stat'];
+		}
+
+		if (count($sql_where)) {
+			$sql_where = implode(' AND ', $sql_where);
+			$sql = str_replace('{WHERE}', sprintf(' WHERE %s', $sql_where), $sql);
+		} else {
+			$sql = str_replace('{WHERE}', '', $sql);
+		}
+
+		$res = $dbc->fetchAll($sql, $sql_param);
+
+		return $res;
+
+	}
+
+	/**
 	 *
 	 */
 	function showErrors()

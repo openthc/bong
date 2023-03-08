@@ -17,44 +17,9 @@ class Search extends \OpenTHC\Bong\Controller\Base\Search
 	 */
 	function __invoke($REQ, $RES, $ARG)
 	{
-		// return _from_cre_file('section/search.php', $RES, $ARG);
-
 		$dbc = $REQ->getAttribute('dbc');
 
-		// $res = $dbc->fetchAll("SELECT id, hash, updated_at, data->'result' AS result FROM section ORDER BY updated_at DESC");
-
-		$sql = <<<SQL
-		SELECT *
-		FROM {$this->_tab_name}
-		{WHERE}
-		ORDER BY updated_at DESC
-		SQL;
-
-		// $sql = 'SELECT id, stat, hash, updated_at FROM section {WHERE} ORDER BY updated_at DESC';
-		// $res = $dbc->fetchAll("SELECT id, hash, updated_at, data->'result' AS result FROM section ORDER BY updated_at DESC");
-		// $sql = 'SELECT * FROM section {WHERE} ORDER BY updated_at DESC';
-		// $sql = 'SELECT id, stat, hash, updated_at FROM section {WHERE} ORDER BY updated_at DESC';
-
-		$sql_param = [];
-		$sql_where = [];
-
-		// $sql_where[] = 'license_id = :l0';
-		// $sql_param[':l0'] = $_SESSION['License']['id'];
-
-		if ( ! empty($_GET['q'])) {
-			$sql_where[] = 'data::text LIKE :q23';
-			$sql_param[':q23'] = sprintf('%%%s%%', $_GET['q']);
-		}
-
-		if (count($sql_where)) {
-			$sql_where = implode(' AND ', $sql_where);
-			$sql = str_replace('{WHERE}', sprintf(' WHERE %s', $sql_where), $sql);
-		} else {
-			$sql = str_replace('{WHERE}', '', $sql);
-		}
-
-		$res = $dbc->fetchAll($sql, $sql_param);
-		// return $RES->withJSON($res);
+		$res = $this->search($dbc);
 
 		$want_type = strtolower(trim(strtok($_SERVER['HTTP_ACCEPT'], ';')));
 		switch ($want_type) {
@@ -68,7 +33,7 @@ class Search extends \OpenTHC\Bong\Controller\Base\Search
 				$data['object_list'] = $res;
 				$data['column_list'] = [
 					'id',
-					// 'license_id',
+					'license_id',
 					// 'license_id_target',
 					'stat',
 					'name',
@@ -78,6 +43,7 @@ class Search extends \OpenTHC\Bong\Controller\Base\Search
 				];
 				$data['column_function'] = [
 					'id' => function($val, $rec) { return sprintf('<td><a href="/lot/%s">%s</a></td>', $val, $val); },
+					'license_id' => function($val, $rec) { return sprintf('<td><a href="/license/%s">%s</a></td>', $val, $val); },
 					'name' => function($val, $rec) { return sprintf('<td>%s</td>', __h($val)); },
 					// 'data' => function($val, $rec) {
 					// 	// $val = json_decode($val, true);
