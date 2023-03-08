@@ -18,17 +18,9 @@ class Search extends \OpenTHC\Bong\Controller\Base\Search
 	function __invoke($REQ, $RES, $ARG)
 	{
 
-		$sql = <<<SQL
-		SELECT id, name, stat, hash, created_at, updated_at
-		FROM variety
-		WHERE license_id = :l0
-		ORDER BY updated_at DESC
-		OFFSET 0
-		LIMIT 500
-		SQL;
+		$dbc = $REQ->getAttribute('dbc');
 
-		$arg = [];
-		$arg[':l0'] = $_SESSION['License']['id'];
+		$res = $this->search($dbc);
 
 		// Search
 		// $sql = <<<SQL
@@ -42,11 +34,10 @@ class Search extends \OpenTHC\Bong\Controller\Base\Search
 		// $arg[':v0'] = $q;
 		// $arg[':v1'] = sprintf('%%%s%%', $arg[':v0']);
 
-		$dbc = $REQ->getAttribute('dbc');
-
 		$res = [];
 		// $res['sql'] = $sql;
 		$res['data'] = $dbc->fetchAll($sql, $arg);
+		$res['meta'] = [];
 
 
 		$want_type = strtolower(trim(strtok($_SERVER['HTTP_ACCEPT'], ';')));
@@ -59,6 +50,7 @@ class Search extends \OpenTHC\Bong\Controller\Base\Search
 				$data['object_list'] = $res['data'];
 				$data['column_list'] = [
 					'id',
+					'license_id',
 					'name',
 					'stat',
 					// 'created_at',
@@ -67,6 +59,7 @@ class Search extends \OpenTHC\Bong\Controller\Base\Search
 				];
 				$data['column_function'] = [
 					'id' => function($val, $rec) { return sprintf('<td><a href="/variety/%s">%s</a></td>', $val, $val); },
+					'licenses_id' => function($val, $rec) { return sprintf('<td><a href="/license/%s">%s</a></td>', $val, $val); },
 					'name' => function($val, $rec) { return sprintf('<td>%s</td>', __h($val)); },
 					'data' => function($val, $rec) {
 						$val = json_decode($val, true);

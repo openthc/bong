@@ -21,7 +21,12 @@ class Search extends \OpenTHC\Controller\Base
 		FROM {$this->_tab_name}
 		{WHERE}
 		ORDER BY updated_at DESC
+		OFFSET %d
+		LIMIT 500
 		SQL;
+
+		$off = intval($_GET['offset']);
+		$sql = sprintf($sql, $off);
 
 		// $sql = 'SELECT id, stat, hash, updated_at FROM section {WHERE} ORDER BY updated_at DESC';
 		// $res = $dbc->fetchAll("SELECT id, hash, updated_at, data->'result' AS result FROM section ORDER BY updated_at DESC");
