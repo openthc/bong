@@ -44,7 +44,7 @@ class Search extends \OpenTHC\Bong\Controller\Base\Search
 				];
 				$data['column_function'] = [
 					'id' => function($val, $rec) { return sprintf('<td><a href="/crop/%s">%s</a></td>', $val, $val); },
-					'licenseid' => function($val, $rec) { return sprintf('<td><a href="/license/%s">%s</a></td>', $val, $val); },
+					'license_id' => function($val, $rec) { return sprintf('<td><a href="/license/%s">%s</a></td>', $val, $val); },
 					'name' => function($val, $rec) { return sprintf('<td>%s</td>', __h($val)); },
 					'data' => function($val, $rec) {
 						$val = json_decode($val, true);
