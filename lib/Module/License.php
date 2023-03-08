@@ -35,7 +35,7 @@ class License extends \OpenTHC\Module\Base
 		$a->post('/{id}', 'OpenTHC\Bong\Controller\License\Update');
 
 		// Verify
-		$a->post('/{id}', 'OpenTHC\Bong\Controller\License\Verify');
+		$a->post('/{id}/verify', 'OpenTHC\Bong\Controller\License\Verify');
 
 	}
 }

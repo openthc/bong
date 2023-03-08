@@ -22,15 +22,17 @@ if (empty($_ENV['title'])) {
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="google" content="notranslate">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css" integrity="sha256-0fuNgzfNIlaClbDtmYyFxY8LTNCDrwsNshywr4AALy0=" crossorigin="anonymous">
-<link rel="stylesheet" href="/css/jquery-ui.min.css" integrity="sha256-VNxxeWv78fBpVZ3cM8LomS7+xUH2IXl6hJ1EKmmCJpY=" crossorigin="anonymous">
-<link rel="stylesheet" href="/css/bootstrap.min.css" integrity="sha256-wLz3iY/cO4e6vKZ4zRmo4+9XDpMcgKOvv/zEU3OMlRo=" crossorigin="anonymous" referrerpolicy="no-referrer">
-<link rel="stylesheet" href="https://cdn.openthc.com/css/www/0.0.1/www.css">
+<link rel="stylesheet" href="/vendor/fontawesome/css/all.min.css" integrity="sha256-Z1K5uhUaJXA7Ll0XrZ/0JhX4lAtZFpT6jkKrEDT0drU=">
+<link rel="stylesheet" href="/css/jquery-ui.min.css" integrity="sha256-VNxxeWv78fBpVZ3cM8LomS7+xUH2IXl6hJ1EKmmCJpY=">
+<link rel="stylesheet" href="/css/bootstrap.min.css" integrity="sha256-wLz3iY/cO4e6vKZ4zRmo4+9XDpMcgKOvv/zEU3OMlRo=">
+<link rel="stylesheet" href="https://cdn.openthc.com/css/www/0.0.1/www.css" crossorigin="anonymous" referrerpolicy="no-referrer">
 <link rel="stylesheet" href="/css/app.css">
 <title><?= h(strip_tags($_ENV['title'])) ?></title>
 </head>
 <body>
-<?= $this->block('menu-navbar') ?>
+
+<?= $this->block('menu-zero') ?>
+
 <?php
 
 if (!empty($_ENV['h1'])) {
