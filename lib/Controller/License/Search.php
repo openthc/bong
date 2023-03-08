@@ -23,4 +23,5 @@ class Search extends \OpenTHC\Bong\Controller\Base\Search
 		return $RES->withJSON($res, 200, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 
 	}
+
 }

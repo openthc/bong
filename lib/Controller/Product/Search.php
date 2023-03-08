@@ -23,6 +23,7 @@ class Search extends \OpenTHC\Bong\Controller\Base\Search
 		$ret['data'] = $this->search($dbc);
 		$ret['meta'] = [];
 
+		// Content Type
 		$want_type = strtolower(trim(strtok($_SERVER['HTTP_ACCEPT'], ';')));
 		switch ($want_type) {
 			case 'application/json':
@@ -35,7 +36,6 @@ class Search extends \OpenTHC\Bong\Controller\Base\Search
 				$data['column_function']['id'] = function($val, $rec) { return sprintf('<td><a href="/product/%s">%s</a></td>', $val, $val); };
 
 				return $this->render('search.php', $data);
-
 
 		}
 

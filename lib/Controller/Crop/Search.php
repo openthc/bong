@@ -23,6 +23,7 @@ class Search extends \OpenTHC\Bong\Controller\Base\Search
 		$ret['data'] = $this->search($dbc);
 		$ret['meta'] = [];
 
+		// Content Type
 		$want_type = strtolower(trim(strtok($_SERVER['HTTP_ACCEPT'], ';')));
 		switch ($want_type) {
 			case 'application/json':

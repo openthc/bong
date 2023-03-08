@@ -16,10 +16,12 @@ class Search extends \OpenTHC\Bong\Controller\Base\Search
 	 */
 	function __invoke($REQ, $RES, $ARG)
 	{
+
 		$dbc = $REQ->getAttribute('dbc');
 
 		$res = $this->search($dbc);
 
+		// Content Type
 		$want_type = strtolower(trim(strtok($_SERVER['HTTP_ACCEPT'], ';')));
 		switch ($want_type) {
 			case 'application/json':

@@ -38,7 +38,7 @@ class Search extends \OpenTHC\Bong\Controller\Base\Search
 		$ret['data'] = $res; // $dbc->fetchAll($sql, $arg);
 		$ret['meta'] = [];
 
-
+		// Content Type
 		$want_type = strtolower(trim(strtok($_SERVER['HTTP_ACCEPT'], ';')));
 		switch ($want_type) {
 			case 'application/json':
@@ -53,7 +53,6 @@ class Search extends \OpenTHC\Bong\Controller\Base\Search
 				return $this->asHTML($data);
 
 		}
-
 
 	}
 
