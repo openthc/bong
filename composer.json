@@ -14,16 +14,15 @@
 	},
 	"require": {
 		"docopt/docopt": "1.0.4",
-		"edoceo/lowline": "2022.0.266",
+		"edoceo/lowline": "2022.0.280",
 		"edoceo/radix": "2021.0.0",
 		"openthc/common": "dev-master",
 		"openthc/cre-adapter": "dev-master",
 		"opis/json-schema": "2.3.0"
 	},
 	"require-dev": {
-		"behat/behat": "3.10.0",
-		"phpstan/phpstan": "1.7.8",
-		"phpunit/phpunit": "9.5.20",
-		"sebastian/phpcpd": "6.0.3"
+		"behat/behat": "3.12.0",
+		"phpstan/phpstan": "1.10.5",
+		"phpunit/phpunit": "9.6.4"
 	}
 }
