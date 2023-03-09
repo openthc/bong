@@ -46,10 +46,9 @@ class Open extends \OpenTHC\Controller\Base
 		$cre = $this->validateCRE();
 
 		if (empty($cre)) {
-			$cre = __h(strtolower(trim($_POST['cre'])));
 			return $RES->withJson([
 				'data' => null,
-				'meta' => [ 'detail' => sprintf('Invalid CRE: "%s" [CAC-017]', $cre) ],
+				'meta' => [ 'note' => sprintf('Invalid CRE: "%s" [CAC-017]', $_POST['cre']) ],
 			], 400);
 		}
 
@@ -129,48 +128,49 @@ class Open extends \OpenTHC\Controller\Base
 
 			$RES = $RES->withJson(array(
 				'status' => 'success',
-				'detail' => 'Session Continues',
-				'result' => session_id(), // $chk,
+				'result' => session_id(),
+				'meta' => [
+					'note' => 'Session Continues',
+				],
 			));
 
 			return $RES;
 		}
 
-		$uid = trim($_POST['username']);
-
-		// Password
-		$pwd = trim($_POST['password']);
-
-		$ext = trim($_POST['company']);
+		$cfg = [
+			'engine' => 'biotrac',
+			'server' => $_SESSION['cre']['server'],
+			'company' => trim($_POST['company']),
+			'username' => trim($_POST['username']),
+			'password' => trim($_POST['password']),
+			'session-id' => '',
+		];
 
 		$cre = \OpenTHC\CRE::factory($_SESSION['cre']);
-		// $cre->setTestMode();
-		$chk = $cre->login($ext, $uid, $pwd);
+		$chk = $cre->ping();
 
 		// @todo Detect a 500 Layer Response from BioTrack
 
-		switch (intval($chk['success'])) {
+		switch (intval($chk['code'])) {
 		case 0:
 
 			return $RES->withJson(array(
 				'data' => $chk,
-				'meta' => [ 'detail' => 'Invalid Username or Password [CAO-184]' ],
+				'meta' => [ 'note' => 'Invalid Username or Password [CAO-155]' ],
 			), 400);
 
 			break;
 
 		case 1:
 
-			$_SESSION['cre-auth']['company'] = $ext;
-			$_SESSION['cre-auth']['username'] = $uid;
-			$_SESSION['cre-auth']['password'] = $pwd;
-			$_SESSION['cre-auth']['session'] = $chk['sessionid'];
+			$cfg['session-id'] = $chk['sessionid'];
 
+			$_SESSION['cre-auth'] = $cfg;
 			$_SESSION['sql-name'] = sprintf('openthc_bong_%s', md5($_SESSION['cre-auth']['company']));
 
 			return $RES->withJson(array(
-				'meta' => [ 'detail' => 'Session Established' ],
 				'data' => session_id(),
+				'meta' => [ 'note' => 'Session Established' ],
 			));
 
 			break;
@@ -185,40 +185,31 @@ class Open extends \OpenTHC\Controller\Base
 	{
 		$_SESSION['cre-auth']['company'] = $_POST['company'];
 		$_SESSION['cre-auth']['license'] = $_POST['license'];
+		$_SESSION['sql-name'] = 'openthc_bong_ccrs';
 
-		$hash = md5($_POST['service-key'] . $_POST['company'] . $_POST['license']);
+		// $hash = md5($_POST['service-key'] . $_POST['company'] . $_POST['license']);
 
-		$sql_file = sprintf('%s/var/%s.sqlite', APP_ROOT, $hash);
-		$_SESSION['sql-conn'] = sprintf('sqlite:%s', $sql_file);
+		$dbc = _dbc();
 
-		if ( ! is_file($sql_file)) {
+		$C = $dbc->fetchRow('SELECT * FROM company WHERE id = :c0', [
+			':c0' => $_SESSION['cre-auth']['company']
+		]);
+		if (empty($C['id'])) {
+			$dbc->insert('company', [
+				'id' => $_SESSION['cre-auth']['company']
+			]);
+		}
 
-			$dbc = new \Edoceo\Radix\DB\SQL($_SESSION['sql-conn']);
-			$dbc->query('CREATE TABLE base_option (key PRIMARY KEY, val)');
-
-			$dbc->query('CREATE TABLE company (id PRIMARY KEY, hash, created_at, updated_at, data)');
-			$dbc->query('CREATE TABLE license (id PRIMARY KEY, hash, created_at, updated_at, data)');
-			$dbc->query('CREATE TABLE product (id PRIMARY KEY, hash, created_at, updated_at, data)');
-			$dbc->query('CREATE TABLE variety (id PRIMARY KEY, hash, created_at, updated_at, data)');
-			$dbc->query('CREATE TABLE section (id PRIMARY KEY, hash, created_at, updated_at, data)');
-			// $dbc->query('CREATE TABLE vehicle (id PRIMARY KEY, hash, created_at, updated_at, data)');
-
-			$dbc->query('CREATE TABLE crop (id PRIMARY KEY, hash, created_at, updated_at, data)');
-			$dbc->query('CREATE TABLE lot (id PRIMARY KEY, hash, created_at, updated_at, data)');
-			$dbc->query('CREATE TABLE lab_result (id PRIMARY KEY, hash, created_at, updated_at, data)');
-
-
-			$dbc->query('CREATE TABLE b2b_incoming (id PRIMARY KEY, hash, created_at, updated_at, data)');
-			$dbc->query('CREATE TABLE b2b_incoming_item (id PRIMARY KEY, b2b_incoming_id, hash, created_at, updated_at, data)');
-
-			$dbc->query('CREATE TABLE b2b_outgoing (id PRIMARY KEY, hash, created_at, updated_at, data)');
-			$dbc->query('CREATE TABLE b2b_outgoing_item (id PRIMARY KEY, b2b_outgoing_id, hash, created_at, updated_at, data)');
-
-			$dbc->query('CREATE TABLE b2c_outgoing (id PRIMARY KEY, hash, created_at, updated_at, data)');
-			$dbc->query('CREATE TABLE b2c_outgoing_item (id PRIMARY KEY, b2c_outgoing_id, hash, created_at, updated_at, data)');
-
-			$dbc->query('CREATE TABLE ccrs_outgoing (id PRIMARY KEY, type, data)');
-
+		$L = $dbc->fetchRow('SELECT * FROM license WHERE id = :l0', [
+			':l0' => $_SESSION['cre-auth']['license']
+		]);
+		if (empty($L['id'])) {
+			$dbc->insert('license', [
+				'id' => $_SESSION['cre-auth']['license'],
+				'stat' => 200,
+				'code' => $_SESSION['cre-auth']['license'],
+				'name' => $_SESSION['cre-auth']['license'],
+			]);
 		}
 
 		return $RES->withJSON([
@@ -240,13 +231,13 @@ class Open extends \OpenTHC\Controller\Base
 
 		if (!preg_match('/^(G|J|L|M|R|T)\w+$/', $lic)) {
 			return $RES->withJSON(array(
-				'meta' => [ 'detail' => 'Invalid License [CAO-209]' ],
+				'meta' => [ 'note' => 'Invalid License [CAO-209]' ],
 			), 400);
 		}
 
 		if (empty($key)) {
 			return $RES->withJSON(array(
-				'meta' => [ 'detail' => 'Invalid API Key [CAO-216]' ],
+				'meta' => [ 'note' => 'Invalid API Key [CAO-216]' ],
 			), 400);
 		}
 
@@ -262,7 +253,7 @@ class Open extends \OpenTHC\Controller\Base
 
 		if (empty($res)) {
 			return $RES->withJSON(array(
-				'meta' => [ 'detail' => 'Invalid License or API Key [CAO-239]' ],
+				'meta' => [ 'note' => 'Invalid License or API Key [CAO-239]' ],
 			), 403);
 		}
 
@@ -309,7 +300,7 @@ class Open extends \OpenTHC\Controller\Base
 		}
 
 		return $RES->withJSON(array(
-			'meta' => [ 'detail' => 'Failed to Connect to METRC' ],
+			'meta' => [ 'note' => 'Failed to Connect to METRC' ],
 		), 500);
 
 	}

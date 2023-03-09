@@ -64,4 +64,55 @@ class Database extends \OpenTHC\Middleware\Base
 
 	}
 
+	/**
+	 * Create a SQLite database for the back-end
+	 */
+	function create()
+	{
+		if (empty($_SESSION['License']['id'])) {
+			throw new \Exception('Invalid Session State [LMD-073]');
+		}
+
+		$sql_file = sprintf('%s/var/%s.sqlite', APP_ROOT, $_SESSION['License']['id']);
+		$sql_good = is_file($sql_file);
+
+		$_SESSION['sql-conn'] = sprintf('sqlite:%s', $sql_file);
+
+		if ( ! $sql_good) {
+
+				$dbc = new \Edoceo\Radix\DB\SQL($_SESSION['sql-conn']);
+
+				$dbc->query('CREATE TABLE base_option (key PRIMARY KEY, val)');
+
+				$dbc->query('CREATE TABLE company (id PRIMARY KEY, hash, created_at, updated_at, data)');
+				$dbc->query('CREATE TABLE license (id PRIMARY KEY, hash, created_at, updated_at, data)');
+				$dbc->query('CREATE TABLE product (id PRIMARY KEY, hash, created_at, updated_at, data)');
+				$dbc->query('CREATE TABLE variety (id PRIMARY KEY, hash, created_at, updated_at, data)');
+				$dbc->query('CREATE TABLE section (id PRIMARY KEY, hash, created_at, updated_at, data)');
+				// $dbc->query('CREATE TABLE vehicle (id PRIMARY KEY, hash, created_at, updated_at, data)');
+
+				$dbc->query('CREATE TABLE crop (id PRIMARY KEY, hash, created_at, updated_at, data)');
+				$dbc->query('CREATE TABLE crop_adjust (id PRIMARY KEY, hash, created_at, updated_at, data)');
+				$dbc->query('CREATE TABLE crop_collect (id PRIMARY KEY, hash, created_at, updated_at, data)');
+
+				$dbc->query('CREATE TABLE inventory (id PRIMARY KEY, hash, created_at, updated_at, data)');
+				$dbc->query('CREATE TABLE inventory_adjust (id PRIMARY KEY, hash, created_at, updated_at, data)');
+
+				$dbc->query('CREATE TABLE lab_result (id PRIMARY KEY, hash, created_at, updated_at, data)');
+
+				$dbc->query('CREATE TABLE b2b_incoming (id PRIMARY KEY, hash, created_at, updated_at, data)');
+				$dbc->query('CREATE TABLE b2b_incoming_item (id PRIMARY KEY, b2b_incoming_id, hash, created_at, updated_at, data)');
+
+				$dbc->query('CREATE TABLE b2b_outgoing (id PRIMARY KEY, hash, created_at, updated_at, data)');
+				$dbc->query('CREATE TABLE b2b_outgoing_item (id PRIMARY KEY, b2b_outgoing_id, hash, created_at, updated_at, data)');
+
+				$dbc->query('CREATE TABLE b2c_outgoing (id PRIMARY KEY, hash, created_at, updated_at, data)');
+				$dbc->query('CREATE TABLE b2c_outgoing_item (id PRIMARY KEY, b2c_outgoing_id, hash, created_at, updated_at, data)');
+
+				$dbc->query('CREATE TABLE log_audit (id PRIMARY KEY, type, data)');
+
+		}
+
+	}
+
 }
