@@ -12,7 +12,8 @@
     "bootstrap": "^5.2.3",
     "htmx.org": "^1.8.6",
     "jquery": "^3.6.4",
-    "jquery-ui": "^1.13.2"
+    "jquery-ui": "^1.13.2",
+    "lodash": "^4.17.21"
   },
   "scripts": {
     "test": "test.js"

@@ -7,8 +7,17 @@
 
 use Edoceo\Radix\Session;
 
+// $page = [];
+// $page = $data['Page'];
+
 if (empty($_ENV['title'])) {
 	$_ENV['title'] = $this->data['Page']['title'];
+}
+if (empty($_ENV['h1'])) {
+	$_ENV['h1'] = $data['h1'];
+}
+if (empty($_ENV['title'])) {
+	$_ENV['title'] =$_ENV['h1'];
 }
 
 ?>
@@ -22,12 +31,12 @@ if (empty($_ENV['title'])) {
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="google" content="notranslate">
-<link rel="stylesheet" href="/vendor/fontawesome/css/all.min.css" integrity="sha256-Z1K5uhUaJXA7Ll0XrZ/0JhX4lAtZFpT6jkKrEDT0drU=">
-<link rel="stylesheet" href="/css/jquery-ui.min.css" integrity="sha256-VNxxeWv78fBpVZ3cM8LomS7+xUH2IXl6hJ1EKmmCJpY=">
-<link rel="stylesheet" href="/css/bootstrap.min.css" integrity="sha256-wLz3iY/cO4e6vKZ4zRmo4+9XDpMcgKOvv/zEU3OMlRo=">
+<link rel="stylesheet" href="/vendor/fontawesome/css/all.min.css" integrity="sha256-/4UQcSmErDzPCMAiuOiWPVVsNN2s3ZY/NsmXNcj0IFc=">
+<link rel="stylesheet" href="/vendor/jquery-ui/jquery-ui.min.css" integrity="sha256-VNxxeWv78fBpVZ3cM8LomS7+xUH2IXl6hJ1EKmmCJpY=">
+<link rel="stylesheet" href="/vendor/bootstrap/bootstrap.min.css" integrity="sha256-wLz3iY/cO4e6vKZ4zRmo4+9XDpMcgKOvv/zEU3OMlRo=">
 <link rel="stylesheet" href="https://cdn.openthc.com/css/www/0.0.1/www.css" crossorigin="anonymous" referrerpolicy="no-referrer">
 <link rel="stylesheet" href="/css/app.css">
-<title><?= h(strip_tags($_ENV['title'])) ?></title>
+<title><?= __h(strip_tags($_ENV['title'])) ?></title>
 </head>
 <body>
 
@@ -65,10 +74,10 @@ echo $this->block('footer');
 
 ?>
 
-<script src="/js/jquery.min.js" integrity="sha256-pvPw+upLPUjgMXY0G+8O0xUf+/Im1MZjXxxgOcBQBXU=" crossorigin="anonymous"></script>
-<script src="/js/jquery-ui.min.js" integrity="sha256-lSjKY0/srUM9BE3dPm+c4fBo1dky2v27Gdjm2uoZaL0=" crossorigin="anonymous"></script>
-<script src="/js/bootstrap.bundle.min.js" integrity="sha256-lSABj6XYH05NydBq+1dvkMu6uiCc/MbLYOFGRkf3iQs=" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="/js/htmx.min.js" integrity="sha256-33LtsUGhZXiUWgNWyKajcjkBUlGWIHFjm5mwGEaR7R0=" crossorigin="anonymous"></script>
+<script src="/vendor/jquery/jquery.min.js" integrity="sha256-oP6HI9z1XaZNBrJURtCoUT5SUnxFr8s3BzRl+cbzUq8=" crossorigin="anonymous"></script>
+<script src="/vendor/jquery-ui/jquery-ui.min.js" integrity="sha256-lSjKY0/srUM9BE3dPm+c4fBo1dky2v27Gdjm2uoZaL0=" crossorigin="anonymous"></script>
+<script src="/vendor/bootstrap/bootstrap.bundle.min.js" integrity="sha256-lSABj6XYH05NydBq+1dvkMu6uiCc/MbLYOFGRkf3iQs=" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="/vendor/htmx/htmx.min.js" integrity="sha256-gwdkw1bFIH90aq/Okd79rwLcv4mko7fGDpohjK15284=" crossorigin="anonymous"></script>
 <?= $this->foot_script ?>
 </body>
 </html>
