@@ -65,7 +65,21 @@ class Single extends \OpenTHC\Controller\Base
 		ksort($d0);
 		$ret['data']['redis-cache'] = $d0;
 
-		return $RES->withJSON($ret, $ret_code, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+		$want_type = strtolower(trim(strtok($_SERVER['HTTP_ACCEPT'], ';')));
+		switch ($want_type) {
+			case 'application/json':
+				return $RES->withJSON($ret, $ret_code, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+			case 'text/html':
+			default:
+
+				$html = $this->render('license/single.php', $ret['data']);
+
+				$RES = $RES->write($html);
+
+				return $RES;
+				// return $RES->withStatus($ret_code);
+
+		}
 
 	}
 }
