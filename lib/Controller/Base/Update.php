@@ -27,10 +27,10 @@ class Update extends \OpenTHC\Controller\Base
 	 */
 	function updateStatus()
 	{
-		$R = \OpenTHC\Service\Redis::factory();
-		$R->hset(sprintf('/license/%s', $_SESSION['License']['id']), sprintf('%s/stat', $this->_tab_name), 100);
-		$R->hset(sprintf('/license/%s', $_SESSION['License']['id']), sprintf('%s/stat/time', $this->_tab_name), time());
-		$R->hset(sprintf('/license/%s', $_SESSION['License']['id']), sprintf('%s/sync', $this->_tab_name), 100);
+		$rdb = \OpenTHC\Service\Redis::factory();
+		$rdb->hset(sprintf('/license/%s', $_SESSION['License']['id']), sprintf('%s/stat', $this->_tab_name), 100);
+		$rdb->hset(sprintf('/license/%s', $_SESSION['License']['id']), sprintf('%s/stat/time', $this->_tab_name), time());
+		$rdb->hset(sprintf('/license/%s', $_SESSION['License']['id']), sprintf('%s/sync', $this->_tab_name), 100);
 	}
 
 	/**
