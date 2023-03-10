@@ -34,7 +34,7 @@ class Search extends \OpenTHC\Bong\Controller\Base\Search
 				$data = $this->getDefaultColumns();
 				$data['h1'] = 'License :: Search';
 				$data['object_list'] = $ret['data'];
-				$data['column_list'] = [ 'id', 'name', 'stat' ];
+				$data['column_list'] = [ 'id', 'code', 'name', 'stat' ];
 				$data['column_function']['id'] = function($val, $rec) { return sprintf('<td><a href="/license/%s">%s</a></td>', $val, $val); };
 
 				return $this->asHTML($data);
