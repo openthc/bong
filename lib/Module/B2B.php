@@ -82,6 +82,10 @@ class B2B extends \OpenTHC\Module\Base
 		// Search Incoming
 		$a->get('/incoming', 'OpenTHC\Bong\Controller\B2B\Incoming\Search');
 
+		// Incoming Status
+		$a->get('/incoming/status', 'OpenTHC\Bong\Controller\B2B\Incoming\Status');
+
+		// Incoming Single
 		$a->get('/incoming/{id}', function($REQ, $RES, $ARG) {
 			return _from_cre_file('b2b/outgoing/single.php', $REQ, $RES, $ARG);
 		});
@@ -92,10 +96,11 @@ class B2B extends \OpenTHC\Module\Base
 
 		// Search Outgoing
 		$a->get('/outgoing', 'OpenTHC\Bong\Controller\B2B\Outgoing\Search');
-		// function($REQ, $RES, $ARG) {
-		// 	return _from_cre_file('b2b/outgoing/search.php', $REQ, $RES, $ARG);
-		// });
 
+		// Outgoing Status
+		$a->get('/outgoing/status', 'OpenTHC\Bong\Controller\B2B\Incoming\Status');
+
+		// Outgoing Single
 		$a->get('/outgoing/{id}', function($REQ, $RES, $ARG) {
 			return _from_cre_file('b2b/outgoing/single.php', $REQ, $RES, $ARG);
 		});
