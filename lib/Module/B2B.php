@@ -98,7 +98,7 @@ class B2B extends \OpenTHC\Module\Base
 		$a->get('/outgoing', 'OpenTHC\Bong\Controller\B2B\Outgoing\Search');
 
 		// Outgoing Status
-		$a->get('/outgoing/status', 'OpenTHC\Bong\Controller\B2B\Incoming\Status');
+		$a->get('/outgoing/status', 'OpenTHC\Bong\Controller\B2B\Outgoing\Status');
 
 		// Outgoing Single
 		$a->get('/outgoing/{id}', function($REQ, $RES, $ARG) {
