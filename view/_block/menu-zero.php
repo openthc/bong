@@ -47,7 +47,7 @@
 
 	<ul class="navbar-nav navbar-nav-two ms-auto">
 		<li class="nav-item">
-			<a class="btn nav-link" href="/auth/shut"><i class="far fa-power-off"></i></a>
+			<a class="btn nav-link" href="/auth/shut"><i class="fas fa-power-off"></i></a>
 		</li>
 	</ul>
 
