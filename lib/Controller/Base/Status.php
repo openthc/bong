@@ -34,7 +34,7 @@ class Status extends \OpenTHC\Controller\Base
 		SQL;
 
 		if ( ! empty($_SESSION['License']['id'])) {
-			$sql_where[] = 'license.id = :l0';
+			$sql_where[] = 'license_id = :l0';
 			$arg[':l0'] = $_SESSION['License']['id'];
 		}
 
