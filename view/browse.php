@@ -39,6 +39,37 @@
 </section>
 
 
+<section class="mb-4">
+
+	<h2>Synchronization</h2>
+	<form method="post">
+	<div>
+		<button class="btn btn-outline-secondary" name="a" value="sync">Sync <i class="fas fa-sync"></i></button>
+	</div>
+	</form>
+
+<pre><?php
+$sync_info = [];
+foreach ($data['cre_sync'] as $x) {
+	$sync_info[ $x['key'] ] = $x['val'];
+}
+$t0 = $sync_info['sync-time-alpha'];
+unset($sync_info['sync-time-alpha']);
+$t1 = $sync_info['sync-time-omega'];
+unset($sync_info['sync-time-omega']);
+
+$fmt = "% -30s == %s\n";
+
+printf($fmt, 'sync-time-alpha', $t0);
+foreach ($sync_info as $k => $v) {
+	printf($fmt, $k, $v);
+}
+printf($fmt, 'sync-time-omega', $t1);
+?></pre>
+
+</section>
+
+
 <div class="mb-4">
 <h2>Auth</h2>
 <ul class="list-group">
@@ -70,37 +101,6 @@
 </li>
 </ul>
 </div>
-
-<section class="mb-4">
-
-	<h2>Synchronization</h2>
-	<form method="post">
-	<div>
-		<button class="btn btn-outline-secondary" name="a" value="sync">Sync <i class="fas fa-sync"></i></button>
-		<a class="btn btn-outline-secondary" href="/log" target="_blank">View Logs <i class="far fa-list-alt"></i></a>
-	</div>
-	</form>
-
-<pre><?php
-$sync_info = [];
-foreach ($data['cre_sync'] as $x) {
-	$sync_info[ $x['key'] ] = $x['val'];
-}
-$t0 = $sync_info['sync-time-alpha'];
-unset($sync_info['sync-time-alpha']);
-$t1 = $sync_info['sync-time-omega'];
-unset($sync_info['sync-time-omega']);
-
-$fmt = "% -30s == %s\n";
-
-printf($fmt, 'sync-time-alpha', $t0);
-foreach ($sync_info as $k => $v) {
-	printf($fmt, $k, $v);
-}
-printf($fmt, 'sync-time-omega', $t1);
-?></pre>
-
-</section>
 
 
 <div class="mb-4">
