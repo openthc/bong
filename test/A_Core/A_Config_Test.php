@@ -25,6 +25,11 @@ class A_Config_Test extends \OpenTHC\Bong\Test\Base_Case
 			'cre/usa/wa/ccrs/password',
 			'cre/usa/wa/ccrs/service-key',
 			'database',
+			// 'google_recaptcha_v2.public', // optional
+			// 'google_recaptcha_v3.public'  // optional
+			// 'google_recaptcha.secret'     // optional
+			'openthc/app/base',
+			'openthc/bong/base',
 			'tz',
 		];
 

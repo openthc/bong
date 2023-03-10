@@ -22,11 +22,12 @@ class B_CRE_Ping_Test extends \OpenTHC\Bong\Test\Base_Case
 		$cre_list = \OpenTHC\CRE::getEngineList();
 
 		foreach ($cre_list as $cre_conf) {
-			// print_r($cre_conf);
-			$cre_conf['service-key'] = getenv('OPENTHC_TEST_SERVICE_KEY');
+
 			$cre_conf['license'] = getenv('OPENTHC_TEST_LICENSE');
 			$cre_conf['license-key'] = getenv('OPENTHC_TEST_LICENSE_SECRET');
+
 			$cre = \OpenTHC\CRE::factory($cre_conf);
+
 			$this->assertNotEmpty($cre);
 			$this->assertTrue($cre instanceof \OpenTHC\CRE\Base);
 		}
@@ -37,14 +38,21 @@ class B_CRE_Ping_Test extends \OpenTHC\Bong\Test\Base_Case
 	 */
 	public function ping_cre()
 	{
+		$_SERVER['SERVER_NAME'] = getenv('OPENTHC_TEST_BASE');
+
 		$cre_list = \OpenTHC\CRE::getEngineList();
 		foreach ($cre_list as $cre_conf) {
 
-			$cre_conf['service-key'] = getenv('OPENTHC_TEST_SERVICE_KEY');
-			$cre_conf['license'] = getenv('OPENTHC_TEST_LICENSE');
+			// $cre_conf['service-sk'] = getenv('OPENTHC_TEST_SERVICE_KEY');
+			// $cre_conf['service-key'] = getenv('OPENTHC_TEST_SERVICE_KEY');
+			$cre_conf['contact'] = getenv('OPENTHC_TEST_CONTACT_ID');
+			$cre_conf['company'] = getenv('OPENTHC_TEST_COMPANY_ID');
+			$cre_conf['license'] = getenv('OPENTHC_TEST_LICENSE_ID');
 			$cre_conf['license-key'] = getenv('OPENTHC_TEST_LICENSE_SECRET');
 
 			$cre = \OpenTHC\CRE::factory($cre_conf);
+			$cre->setLicense($cre_conf['license']);
+
 			$res = $cre->ping();
 
 			$this->assertIsArray($res);
