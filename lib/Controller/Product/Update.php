@@ -12,6 +12,8 @@ use Swaggest\JsonSchema\Schema;
 
 class Update extends \OpenTHC\Bong\Controller\Base\Update
 {
+	use \OpenTHC\Traits\JSONValidator;
+
 	protected $_tab_name = 'product';
 
 	/**
@@ -46,20 +48,6 @@ class Update extends \OpenTHC\Bong\Controller\Base\Update
 		$source_data = $_POST;
 		$source_data['id'] = $ARG['id'];
 
-		// Some kind of CRE Handler?
-		switch ($_SESSION['cre']['id']) {
-			case 'usa/hi':
-			case 'usa/nm':
-				// unset($source_data['id']);
-				break;
-			case 'usa/wa/ccrs':
-				if (empty($source_data['id'])) {
-					$source_data['id'] = substr(_ulid(), 0, 16);
-				}
-				$source_data['id'] = substr($source_data['id'], 0, 16);
-				break;
-		}
-
 		$source_data = \Opis\JsonSchema\Helper::toJSON($source_data);
 		$schema_spec = \OpenTHC\Bong\Product::getJSONSchema();
 		$this->validateJSON($source_data, $schema_spec);
@@ -87,6 +75,11 @@ class Update extends \OpenTHC\Bong\Controller\Base\Update
 		$hit = $cmd->rowCount();
 		$ret = $cmd->fetchAll();
 
+		$ret_code = 200;
+		if ($ret['stat'] >= 200) {
+			$ret_code = $ret['stat'];
+		}
+
 		$this->updateStatus();
 
 		$output_data = $this->getReturnObject($dbc, $source_data->id);
@@ -94,7 +87,7 @@ class Update extends \OpenTHC\Bong\Controller\Base\Update
 		return $RES->withJSON([
 			'data' => $output_data,
 			'meta' => [],
-		], 201);
+		], $ret_code);
 
 	}
 }

@@ -24,19 +24,20 @@ class Update extends \OpenTHC\Bong\Controller\Base\Update
 		// Pre-validation stuff
 		switch ($_SESSION['cre']['id']) {
 			case 'usa/wa/ccrs':
+				// CCRS uses Name as Primary Key, limit of 100 characters
 				$source_data->id = \OpenTHC\CRE\CCRS::sanatize(strtoupper($source_data->name), 100);
 				break;
 		}
 
-		if (empty($source_data->type)) {
+		// if (empty($source_data->type)) {
 			$source_data->type = 'Hybrid';
-		}
+		// }
 
 		$schema_spec = \OpenTHC\Bong\Variety::getJSONSchema();
 
 		$this->validateJSON($source_data, $schema_spec);
 
-		// CCRS uses Name as Primary Key, limit of 100 characters
+		$sql = $this->getUpsertSQL();
 		$arg = [
 			':o0' => $source_data->id,
 			':l0' => $_SESSION['License']['id'],
@@ -47,11 +48,9 @@ class Update extends \OpenTHC\Bong\Controller\Base\Update
 			])
 		];
 		$arg[':h0'] = \OpenTHC\CRE\Base::objHash([
-			'id' => $arg[':v0'],
-			'name' => $arg[':n0'],
+			'id' => $source_data->id,
+			'name' => $source_data->name,
 		]);
-
-		$sql = $this->getUpsertSQL();
 
 		$dbc = $REQ->getAttribute('dbc');
 		$cmd = $dbc->prepare($sql);
