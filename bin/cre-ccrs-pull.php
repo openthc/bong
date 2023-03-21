@@ -10,6 +10,8 @@ use \Edoceo\Radix\DB\SQL;
 
 require_once(__DIR__ . '/../boot.php');
 
+openlog('openthc-bong', LOG_ODELAY | LOG_PERROR | LOG_PID, LOG_LOCAL0);
+
 $dbc = _dbc();
 $tz0 = new DateTimezone(\OpenTHC\Config::get('cre/usa/wa/ccrs/tz'));
 
@@ -118,6 +120,10 @@ foreach ($file_list as $file) {
 
 }
 
+$dt0 = new \DateTime();
+$rdb = \OpenTHC\Service\Redis::factory();
+$rdb->hset('/cre/ccrs', 'pull/time', $dt0->format(\DateTimeInterface::RFC3339));
+
 
 /**
  *
@@ -136,22 +142,81 @@ function _ccrs_pull_failure_data($message_file, $output_file)
 	_csv_file_patch($output_file);
 	_csv_file_incoming($message_file, $output_file);
 
+/*
+	$message_full = file_get_contents($message_file);
+	$message_text = strip_tags($message_body);
+
+	// @note do we need the .csv file extension?
+	// Sale_AF0E72B77C_20230307T170533169.
+	if (preg_match('/Errors have occurred in file: (\w+)_\w+_(\w+)/', $message_body, $m)) {
+		$tab_name = $m[1];
+		$req_ulid = $m[2];
+		// $res_time = $m[3];
+
+		$dt0 = new \DateTime('now', $tz0);
+		try {
+			// Sometimes their time thing is bullshit
+			// https://github.com/openthc/ccrs/issues/44
+			$dt1 = new \DateTime($res_time, $tz0);
+		} catch (\Exception $e) {
+			// Ignore
+			// @todo /mbw 2023-074
+			$dt1 = new \DateTime($message_head['headers']['date'], $tz0);
+		}
+	}
+
+	$sql = <<<SQL
+	UPDATE log_upload SET stat = 400, result_data = coalesce(result_data, '{}'::jsonb) || :d0
+	WHERE id = :r0
+	SQL;
+
+	$res = $dbc->query($sql, [
+		':r0' => $req_ulid,
+		':d0' => json_encode([
+			'type' => '',
+			'data' => '',
+			'@result' => [
+				'type' => 'mail',
+				'data' => $message_full,
+				'created_at' => $dt0->format(\DateTime::RFC3339),
+				'created_at_cre' => $dt1->format(\DateTime::RFC3339)
+			],
+		]),
+	]);
+	if (1 != $res) {
+		throw new \Exception('Cannot find in Upload Log');
+	}
+*/
+
 	$message_file_done = sprintf('%s/var/ccrs-incoming-mail-done/%s', APP_ROOT, basename($message_file));
 	if ( ! rename($message_file, $message_file_done)) {
 		throw new \Exception("Cannot archive incoming email");
 	}
 
+/*
+	_notify_app([
+		'message' => 'b2b-outgoing-failure',
+		'company' => [
+			'id' => $License['company_id'],
+		],
+		'license' => [
+			'id' => $License['id'],
+		],
+		'b2b' => [
+			'id' => $b2b_outgoing['id'],
+			'stat' => $b2b_outgoing['stat'],
+		],
+	]);
+*/
 }
 
 /**
  * Process Full Failure
+ * The CSV "has not been processed"
  */
 function _ccrs_pull_failure_full($message_file, $message_head, $message_body, $output_file)
 {
 	global $dbc, $tz0;
-
-	// var_dump($message_head);
-	// exit;
 
 	$message_full = file_get_contents($message_file);
 	$message_text = strip_tags($message_body);
@@ -175,8 +240,6 @@ function _ccrs_pull_failure_full($message_file, $message_head, $message_body, $o
 			// var_dump($dt1);
 		}
 
-		$chk = $dbc->fetchRow('SELECT id FROM log_upload WHERE id = :r0', [ ':r0' => $req_ulid ]);
-
 		$sql = <<<SQL
 		UPDATE log_upload SET stat = 400, result_data = coalesce(result_data, '{}'::jsonb) || :d0
 		WHERE id = :r0
@@ -198,6 +261,8 @@ function _ccrs_pull_failure_full($message_file, $message_head, $message_body, $o
 		if (1 != $res) {
 			throw new \Exception('Cannot find in Upload Log');
 		}
+
+		$chk = $dbc->fetchRow('SELECT id, license_id, name FROM log_upload WHERE id = :r0', [ ':r0' => $req_ulid ]);
 
 		$message_file_done = sprintf('%s/var/ccrs-incoming-mail-done/%s', APP_ROOT, basename($message_file));
 		if ( ! rename($message_file, $message_file_done)) {
@@ -304,13 +369,55 @@ function _ccrs_pull_manifest_file($message_file, $output_file)
 	$inf = curl_getinfo($req);
 	if (200 != $inf['http_code']) {
 		var_dump($res);
+		throw new \Exception('HTTP Request Failed');
 		exit;
 	}
 
-	// Update b2b_outgoing with Stat 200
+	// Update b2b_outgoing with Stat 200?
+	// Still Need to do the B2B_Outgoing (Sales) Upload
 	$sql = 'UPDATE b2b_outgoing SET stat = 200 WHERE id = :b2b0';
 	$arg = [ ':b2b0' => $b2b_outgoing['id'] ];
 	$dbc->query($sql, $arg);
+
+	// How to Find the CCRS Upload to Re-Map?
+	$message_data = file_get_contents($message_file);
+	if (preg_match('/Manifest_\w+_(\w+)_\d+T\d+\.csv/', $message_data, $m)) {
+
+		$req_ulid = $m[1];
+
+		$dbc->query('UPDATE log_upload SET stat = 202 WHERE id = :pk', [
+			':pk' => $req_ulid,
+		]);
+
+		// $log_data = $dbc->fetchRow('SELECT id, license_id, result_data FROM log_upload WHERE id = :u0', [ ':u0' => $req_ulid ]);
+		// if (empty($log_data)) {
+		// 	throw new \Exception('Lost Log Audit');
+		// 	// echo "!! NO LOG\n";
+		// 	// INSERT RESPONSE THO?
+		// }
+
+
+		// $result_data = json_decode($log_data['result_data'], true);
+		// if (empty($result_data)) {
+		// 	$result_data = [];
+		// }
+
+		// $result_data['@result-file'] = [
+		// 	'name' => basename($output_file),
+		// 	'data' => file_get_contents($output_file),
+		// 	// 'created_at_cre' => $csv_time->format(\DateTimeInterface::RFC3339),
+		// ];
+		// if ( ! empty($message_file)) {
+		// 	$result_data['@result-mail'] = file_get_contents($message_file);
+		// }
+		// $update = [
+		// 	'stat' => 200,
+		// 	'result_data' => json_encode($result_data),
+		// 	'updated_at' => $csv_time->format(\DateTimeInterface::RFC3339),
+		// ];
+		// $dbc->update('log_upload', $update, [ 'id' => $req_ulid ]);
+
+	}
 
 	// Archive File
 	$message_file_done = sprintf('%s/var/ccrs-incoming-mail-done/%s', APP_ROOT, basename($message_file));
@@ -354,26 +461,17 @@ function _csv_file_patch($csv_file)
  */
 function _csv_file_incoming($source_mail, $csv_file)
 {
-	global $dbc;
+	global $cre, $dbc, $tz0;
 
-	echo "_process_csv_file($csv_file)\n";
+	$dt0 = new \DateTime('now', $tz0);
+
+	echo "_csv_file_incoming($csv_file)\n";
 
 	$cre_stat = 200;
 	$lic_code = null;
 	$lic_dead = false;
 
-	// $csv_time = $cre->csv_file_date($csv_file);
-	/**
-	 * error-response-file from the LCB sometimes are missing the
-	 * milliseconds portion of the time in the file name
-	 * So we have to patch it so it parses the same as their "normal"
-	 */
-	$csv_time = preg_match('/(\w+_)?\w+_(\d+T\d+)\.csv/i', $csv_file, $m) ? $m[2] : null;
-	if (strlen($csv_time) == 15) {
-		$csv_time = $csv_time . '000';
-	}
-
-	$csv_time = DateTime::createFromFormat('Ymd\TGisv', $csv_time, new DateTimeZone('America/Los_Angeles'));
+	$csv_time = $cre->csv_file_date($csv_file);
 
 	// Need to keep file name to understand the data-type
 	$csv_pipe = fopen($csv_file, 'r');
@@ -399,6 +497,9 @@ function _csv_file_incoming($source_mail, $csv_file)
 		case 'CreatedBy,CreatedDate,ErrorMessage,LicenseNumber,ExternalIdentifier,UpdatedBy,UpdatedDate,Operation,Area,Strain,Product,InitialQuantity,QuantityOnHand,TotalCost,IsMedical,InventoryIdentifier':
 			$tab_name = 'lot';
 			break;
+		case 'LicenseNumber,InventoryExternalIdentifier,AdjustmentReason,AdjustmentDetail,Quantity,AdjustmentDate,ExternalIdentifier,CreatedBy,CreatedDate,UpdatedBy,UpdatedDate,Operation,ErrorMessage':
+			$tab_name = 'inventory_adjust';
+			break;
 		case 'LicenseNumber,PlantIdentifier,Area,Strain,PlantSource,PlantState,GrowthStage,HarvestCycle,MotherPlantExternalIdentifier,HarvestDate,IsMotherPlant,ExternalIdentifier,CreatedBy,CreatedDate,UpdatedBy,UpdatedDate,Operation,ErrorMessage':
 		case 'LicenseNumber,PlantIdentifier,Area,Strain,PlantSource,PlantState,GrowthStage,MotherPlantExternalIdentifier,HarvestDate,IsMotherPlant,ExternalIdentifier,CreatedBy,CreatedDate,UpdatedBy,UpdatedDate,Operation,ErrorMessage':
 			$tab_name = 'crop';
@@ -408,7 +509,6 @@ function _csv_file_incoming($source_mail, $csv_file)
 			break;
 		case 'Strain,StrainType,CreatedBy,CreatedDate,ErrorMessage': // v0
 			// @todo this one needs special processing ?
-			// return _csv_file_incoming_variety($csv_file, $csv_pipe, $csv_head);
 			$csv_pkid = 'Strain';
 			$tab_name = 'variety';
 			// $lic_code = '018NY6XC00L1CENSE000000000';
@@ -423,7 +523,7 @@ function _csv_file_incoming($source_mail, $csv_file)
 			$tab_name = 'variety';
 			break;
 		case 'LicenseNumber,SoldToLicenseNumber,InventoryExternalIdentifier,PlantExternalIdentifier,SaleType,SaleDate,Quantity,UnitPrice,Discount,SalesTax,OtherTax,SaleExternalIdentifier,SaleDetailExternalIdentifier,CreatedBy,CreatedDate,UpdatedBy,UpdatedDate,Operation,ErrorMessage':
-			$tab_name = 'b2b_outgoing';
+			$tab_name = 'b2b_outgoing_item';
 			break;
 		case 'Submittedby,SubmittedDate,NumberRecords,ExternalManifestIdentifier,HeaderOperation,TransportationType,OriginLicenseNumber,OriginLicenseePhone,OriginLicenseeEmailAddress,TransportationLicenseNumber,DriverName,DepartureDateTime,ArrivalDateTime,VIN#,VehiclePlateNumber,VehicleModel,VehicleMake,VehicleColor,DestinationLicenseNumber,DestinationLicenseePhone,DestinationLicenseeEmailAddress,ErrorMessage':
 			$tab_name = 'b2b_outgoing_manifest';
@@ -458,30 +558,43 @@ function _csv_file_incoming($source_mail, $csv_file)
 	}
 
 	// Stash Result Data
-	$chk = $dbc->fetchRow('SELECT id, result_data FROM log_upload WHERE id = :u0', [ ':u0' => $req_ulid ]);
-	if (empty($chk)) {
+	$log_data = $dbc->fetchRow('SELECT id, license_id, result_data, res_info FROM log_upload WHERE id = :u0', [ ':u0' => $req_ulid ]);
+	if (empty($log_data)) {
 		echo "!! NO LOG\n";
 		// INSERT RESPONSE THO?
 	} else {
 
-		$result_data = json_decode($chk['result_data'], true);
+		$res_info = json_decode($res_info['result_data'], true);
+		$result_data = json_decode($log_data['result_data'], true);
 		if (empty($result_data)) {
 			$result_data = [];
 		}
 
+		$res_info['file'] = basename($csv_file);
+		$res_info['size'] = strlen(file_get_contents($csv_file));
+
 		$result_data['@result-file'] = [
-			'file' => basename($csv_file),
-			'data' => file_get_contents($csv_file)
+			'name' => basename($csv_file),
+			'data' => file_get_contents($csv_file),
+			'meta' => [
+				'created_at' => $dt0->format(\DateTime::RFC3339),
+				'created_at_cre' => $csv_time->format(\DateTimeInterface::RFC3339),
+			]
 		];
 		if ( ! empty($source_mail)) {
 			$result_data['@result-mail'] = file_get_contents($source_mail);
 		}
 		$update = [
+			'res_info' => json_encode($res_info),
 			'result_data' => json_encode($result_data),
 			'updated_at' => $csv_time->format(\DateTimeInterface::RFC3339),
 		];
 		$dbc->update('log_upload', $update, [ 'id' => $req_ulid ]);
 	}
+
+	// Some
+	$b2b_incoming_item_list = [];
+	$b2b_outgoing_item_list = [];
 
 	// Spin the CSV File
 	while ($csv_line = fgetcsv($csv_pipe)) {
@@ -503,22 +616,22 @@ function _csv_file_incoming($source_mail, $csv_file)
 			case 'b2b_incoming_item':
 				$csv_line['LicenseNumber'] = $csv_line['ToLicenseNumber'];
 				break;
-			case 'section':
-				if (empty($csv_line['Name'])) {
-					$csv_line['Name'] = $csv_line['Area'];
-				}
+			case 'b2b_outgoing_item':
+				$csv_line['@id'] = $csv_line['SaleDetailExternalIdentifier'];
+				$csv_line['LicenseNumber'] = $csv_line['FromLicenseNumber'];
 				break;
 			case 'variety':
 				$csv_line['@id'] = strtoupper($csv_line['@id']);
-				if (empty($csv_line['LicenseNumber'])) {
-					$csv_line['LicenseNumber'] = '018NY6XC00L1CENSE000000000';
-				}
 				break;
 		}
 
+		// Work Around for https://github.com/openthc/ccrs/issues/41
 		if (empty($csv_line['LicenseNumber'])) {
-			echo '-';
-			continue;
+			if ( ! empty($log_data['license_id'])) {
+				$csv_line['LicenseNumber'] = $dbc->fetchOne('SELECT code FROM license WHERE id = :l0', [
+					':l0' => $log_data['license_id']
+				]);
+			}
 		}
 
 		// License Map Because CCRS Truncates
@@ -538,23 +651,22 @@ function _csv_file_incoming($source_mail, $csv_file)
 
 		} elseif ($lic_code != $csv_line['LicenseNumber']) {
 
-			// $lic_code = $csv_line['LicenseNumber'];
-			// $lic_data = $dbc->fetchRow('SELECT * FROM license WHERE code = :l0', [ ':l0' => $lic_code ]);
-
 			throw new \Exception('SWITCHING LICENSE [BCC-218]');
 
 		}
 
-		if (empty($lic_data)) {
+		if (empty($lic_data['id'])) {
 			_exit_fail_file_move($csv_file, $csv_line, '!! License Not Found');
 		}
 
 		$err = _process_err_list($csv_line);
 		$err_list = $err['data'];
-		// var_dump($err);
 
 		switch ($err['code']) {
 			case 200: // Awesome
+			case 202: // Only for Variety data
+				// OK
+				break;
 			case 400: // Somekind of Errors
 			case 404: // Not Found (should INSERT)
 				$cre_stat = $err['code'];
@@ -590,12 +702,35 @@ function _csv_file_incoming($source_mail, $csv_file)
 				if (empty($rec_data)) {
 					// Fake It
 					$rec_data = [
+						'@version' => 'ccrs-res/2022',
 						'@source' => $csv_line,
 					];
 				} else {
 					$rec_data = json_decode($rec_data, true);
 				}
+
+				$b2b_incoming_item_list[] = $csv_line['@id'];
+
 				break;
+			case 'b2b_outgoing_item':
+
+				$rec_data = $dbc->fetchOne("SELECT data FROM {$tab_name} WHERE id = :pk", [
+					':pk' => $csv_line['@id']
+				]);
+				if (empty($rec_data)) {
+					// Fake It
+					$rec_data = [
+						'@version' => 'ccrs-res/2022',
+						'@source' => $csv_line,
+					];
+				} else {
+					$rec_data = json_decode($rec_data, true);
+				}
+
+				$b2b_outgoing_item_list[] = $csv_line['@id'];
+
+				break;
+
 			default:
 				$rec_data = $dbc->fetchOne("SELECT data FROM {$tab_name} WHERE license_id = :l0 AND id = :pk", [
 					':l0' => $lic_data['id'],
@@ -621,6 +756,8 @@ function _csv_file_incoming($source_mail, $csv_file)
 		// Special Case Two Table Inserts
 		switch ($tab_name) {
 			case 'b2b_incoming_item':
+			case 'b2b_outgoing_item':
+
 				$sql = <<<SQL
 				UPDATE {$tab_name} SET
 					stat = :s1,
@@ -635,12 +772,22 @@ function _csv_file_incoming($source_mail, $csv_file)
 				];
 				$chk = $dbc->query($sql, $arg);
 				if (1 != $chk) {
+					var_dump($csv_line);
+					var_dump($rec_data);
 					echo "FAIL: $chk != 1; ";
 					echo $dbc->_sql_debug($sql, $arg);
 					echo "\n";
+					exit;
 				}
+
 				break;
+
 			default:
+
+				if (empty($rec_data['@result'])) {
+					unset($rec_data['@result']);
+				}
+
 				$sql = <<<SQL
 				UPDATE {$tab_name} SET
 					stat = :s1,
@@ -656,55 +803,108 @@ function _csv_file_incoming($source_mail, $csv_file)
 				];
 				$chk = $dbc->query($sql, $arg);
 				if (1 != $chk) {
-					echo "FAIL: $chk != 1; ";
-					echo $dbc->_sql_debug($sql, $arg);
-					echo "\n";
+					$out = true;
+					// Ignore Errors For Section 'PING';
+					if ('section' == $tab_name) {
+						if (('Main Section' == $csv_line['Area']) || ('OPENTHC SECTION PING' == $csv_line['Area'])) {
+							if ('DELETE' == $csv_line['Operation']) {
+								$out = false;
+							}
+						}
+					}
+					if ($out) {
+						echo "FAIL: $chk != 1; ";
+						echo $dbc->_sql_debug($sql, $arg);
+						echo "\n";
+					}
 				}
 
 		}
-
-		// echo "UPDATE: {$csv_line['@id']} == $chk\n";
 
 	}
 
 	switch ($tab_name) {
 		case 'b2b_incoming_item':
-			syslog(LOG_WARNING, "upload:$req_ulid b2b-incoming:$lic_code; stat:403");
+
+			// $b2b_incoming_item_list
+			// var_dump($b2b_incoming_item_list);
+			// exit;
+
+			// var_dump($err_list);
+			// var_dump($rec_data);
+			// exit;
+
+			syslog(LOG_WARNING, "upload:$req_ulid b2b-incoming:$lic_code; stat:??? cre_stat=$cre_stat");
+
 			$sql = <<<SQL
 			UPDATE b2b_incoming
-			SET stat = (SELECT max(stat) FROM b2b_incoming_item WHERE b2b_incoming_item.b2b_incoming_id = b2b_incoming.id)
-			WHERE target_license_id = :l0
+			SET stat = (SELECT coalesce(max(stat), 100) FROM b2b_incoming_item WHERE b2b_incoming_item.b2b_incoming_id = b2b_incoming.id)
+			WHERE b2b_incoming.target_license_id = :l0 AND b2b_incoming.stat != 202
 			SQL;
-			$dbc->query($sql, [ ':l0' => $lic_data['id'] ]);
+
+			$ret = $dbc->query($sql, [ ':l0' => $lic_data['id'] ]);
+
+			echo "UPDATED B2B INCOMING: $ret\n";
+
 			break;
+
 		case 'b2b_outgoing_item':
-			$sql = <<<SQL
-			UPDATE b2b_outgoing
-			SET stat = (SELECT max(stat) FROM b2b_outgoing_item WHERE b2b_outgoing_item.b2b_outgoing_id = b2b_outgoing.id)
-			WHERE source_license_id = :l0
-			SQL;
-			$dbc->query($sql, [ ':l0' => $lic_data['id'] ]);
+
+			syslog(LOG_WARNING, "upload:$req_ulid b2b-outgoing:$lic_code; stat:??? cre_stat=$cre_stat");
+
+			// $sql = <<<SQL
+			// UPDATE b2b_outgoing
+			// SET stat = (SELECT max(coalesce(stat, $cre_stat)) FROM b2b_outgoing_item WHERE b2b_outgoing_item.b2b_outgoing_id = b2b_outgoing.id)
+			// WHERE source_license_id = :l0
+			// SQL;
+
+			// $ret = $dbc->query($sql, [ ':l0' => $lic_data['id'] ]);
+
+			// var_dump($ret);
+
 			break;
 	}
 
-	if ($lic_dead) {
-		syslog(LOG_WARNING, "upload:$req_ulid license:$lic_code; stat:403");
-		// $license_stat_list1[ $lic_code ]['flag1'] = ($license_stat_list1[ $lic_code ]['flag'] & ~LICENSE_FLAG_CRE_HAVE);
-		// $license_stat_list1[ $lic_code ]['stat1'] = 403;
-		$sql = 'UPDATE license SET stat = 403 WHERE id = :l0 AND stat != 403';
-		$arg = [
-			':l0' => $lic_data['id']
-		];
-		$dbc->query($sql, $arg);
+	// Only if a License as Set
+	if ( ! empty($lic_data['id']) ) {
 
-	} else {
+		if ($lic_dead) {
 
-		$sql = 'UPDATE license SET stat = 200 WHERE id = :l0 AND stat != 200';
-		$arg = [
-			':l0' => $lic_data['id']
-		];
-		$dbc->query($sql, $arg);
+			syslog(LOG_WARNING, "upload:$req_ulid license:$lic_code; stat:403");
+			// $license_stat_list1[ $lic_code ]['flag1'] = ($license_stat_list1[ $lic_code ]['flag'] & ~LICENSE_FLAG_CRE_HAVE);
+			// $license_stat_list1[ $lic_code ]['stat1'] = 403;
+			$sql = 'UPDATE license SET stat = 403 WHERE id = :l0 AND stat != 403';
+			$arg = [
+				':l0' => $lic_data['id']
+			];
+			$dbc->query($sql, $arg);
 
+			// Update the Other License Records
+			$sql = 'UPDATE variety SET stat = 403 WHERE license_id = :l0 AND stat != 403';
+			$dbc->query($sql, $arg);
+
+			// Update the Other License Records
+			$sql = 'UPDATE section SET stat = 403 WHERE license_id = :l0 AND stat != 403';
+			$dbc->query($sql, $arg);
+
+			// Update the Other License Records
+			$sql = 'UPDATE product SET stat = 403 WHERE license_id = :l0 AND stat != 403';
+			$dbc->query($sql, $arg);
+
+		} else {
+
+			$sql = 'UPDATE license SET stat = 200 WHERE id = :l0 AND stat != 200';
+			$arg = [
+				':l0' => $lic_data['id']
+			];
+			$dbc->query($sql, $arg);
+
+		}
+
+	} elseif ($idx_line > 2) {
+		var_dump($idx_line);
+		var_dump($idx_line);
+		throw new \Exception("Many Lines, No License Detected?!?");
 	}
 
 	syslog(LOG_NOTICE, "upload:$req_ulid stat:$cre_stat");
@@ -859,31 +1059,15 @@ function _process_csv_file_b2b_outgoing_manifest($csv_file, $csv_pipe, $csv_head
 
 
 		$err = _process_err_list($csv_line);
-		// var_dump($err);
 		$err_list = $err['data'];
 
 		switch ($err['code']) {
 			case 200:
-				// Awesome
-				// Find this mainfest and mark something?
-				$res = $dbc->query('UPDATE b2b_outgoing SET updated_at = now(), stat = 200, data = (data || :d1) WHERE id = :b0', [
-					':b0' => $csv_line['@id'],
-					':d1' => json_encode([
-						'@result' => $csv_line
-					])
-				]);
-				var_dump($res);
-
-				// How to Find This?
-				// $dbc->update('log_upload', [
-				// 	'stat' => $cre_stat,
-				// ], [ 'id' => $req_ulid ]);
-
-				break;
-
 			case 400:
+			case 403:
 			case 404:
 
+				// Awesome
 				$cre_stat = $err['code'];
 
 				// Somekind of Errors
@@ -901,13 +1085,6 @@ function _process_csv_file_b2b_outgoing_manifest($csv_file, $csv_pipe, $csv_head
 
 				break;
 
-			// case 403:
-			// 	// Not Authorized on this License
-			// 	$lic_dead = true;
-			// 	break;
-			// case 404:
-			// 	// UPDATE fails, needs INSERT
-			// 	break;
 			default:
 				var_dump($csv_line);
 				var_dump($err);
@@ -958,10 +1135,8 @@ function _process_csv_file_b2b_outgoing_manifest_item($csv_file, $csv_pipe, $csv
 
 		$csv_line = array_combine($csv_head, $csv_line);
 		$csv_line['@id'] = $csv_line['ExternalIdentifier'];
-		// var_dump($csv_line);
 
 		$err = _process_err_list($csv_line);
-		// var_dump($err);
 		$err_list = $err['data'];
 
 		switch ($err['code']) {
@@ -1000,7 +1175,6 @@ function _process_csv_file_b2b_outgoing_manifest_item($csv_file, $csv_pipe, $csv
 					throw new \Exception(sprintf('Failed to Update B2B Outgoing "%s"', $b2b_item['b2b_outgoing_id']));
 				}
 
-
 				break;
 
 			// case 403:
@@ -1025,75 +1199,13 @@ function _process_csv_file_b2b_outgoing_manifest_item($csv_file, $csv_pipe, $csv
 
 	}
 
+	// exit(0);
+
 	// Archive
 	$csv_name = basename($csv_file);
 	rename($csv_file, sprintf('%s/var/ccrs-incoming-done/%s', APP_ROOT, $csv_name));
 
 
-
-}
-
-/**
- * Special Case for Variety
- */
-function _csv_file_incoming_variety($csv_file, $csv_pipe, $csv_head)
-{
-	global $dbc;
-
-	$csv_pkid = 'Strain';
-	$tab_name = 'variety';
-
-	$idx_line = 1;
-
-	// Canary Line
-	$csv_line = fgetcsv($csv_pipe);
-	$idx_line++;
-
-	// It's our canary line
-	$req_ulid = '';
-	$csv_line_text = implode(',', $csv_line);
-	if (preg_match('/(\w+ UPLOAD.+(01\w{24})).+\-canary\-/', $csv_line_text, $m)) {
-		$req_ulid = $m[2];
-	} elseif (preg_match('/(\w+ UPLOAD.+(01\w{24}))/', $csv_line_text, $m)) {
-		$req_ulid = $m[2];
-	} else {
-		echo "Canary??:  $csv_line_text\n";
-		echo "Need to Parse This One\n";
-		exit(1);
-	}
-
-	while ($csv_line = fgetcsv($csv_pipe)) {
-
-		$idx_line++;
-
-		switch ($csv_line[4]) {
-			case 'CheckSum and number of records don\'t match':
-				throw new \Exception('Bad File');
-				break;
-			// case 'Name is required':
-				// break;
-			case 'Duplicate Strain/StrainType':
-			case 'Duplicate Strain. The Strain must be unique for the LicenseNumber':
-				// Ignore
-				// $dbc->query
-				break;
-			default:
-				echo sprintf("Error Line: %04d:%s\n", $idx_line, implode(', ', $csv_line));
-				exit(1);
-		}
-
-	}
-
-	$dbc->update('log_upload', [
-		'stat' => 200, // $cre_stat,
-	], [ 'id' => $req_ulid ]);
-
-	// Unlink, not Archive
-	$csv_name = basename($csv_file);
-	rename($csv_file, sprintf('%s/var/ccrs-incoming-done/%s', APP_ROOT, $csv_name));
-
-
-	return(0);
 
 }
 
@@ -1158,35 +1270,6 @@ function _process_err_list($csv_line)
 	foreach ($err_source_list as $err_text) {
 		$err_text = trim($err_text);
 		switch ($err_text) {
-			case 'Invalid Area':
-				// Try to Patch Realtime?
-				// echo '^^ SECTION:';
-				// echo implode(',', [
-				// 	$License['code']
-				// 	, 'Main Section'
-				// 	, 'FALSE'
-				// 	, sprintf('%s-%s', $License['code'], '018NY6XC00SECT10N000000000')
-				// 	, '-system-'
-				// 	, date('m/d/Y')
-				// 	, '-system-'
-				// 	, date('m/d/Y')
-				// 	, 'UPDATE'
-				// ]);
-				// echo "\n";
-				// exit(1);
-				// break;
-			case 'Invalid Strain':
-				// var_dump($csv_line);
-				// echo '^^ VARIETY:';
-				// echo implode(',', [
-				// 	$s
-				// 	, 'Hybrid'
-				// 	, '-system-'
-				// 	, date('m/d/Y')
-				// ]);
-				// echo "\n";
-				// exit(1);
-				// break;
 			case 'Area is required':
 			case 'Area name is over 75 characters':
 			case 'CreatedDate must be a date':
@@ -1194,28 +1277,39 @@ function _process_err_list($csv_line)
 			case 'DestinationLicenseePhone is required':
 			case 'DestinationLicenseePhone must not exceed 14 characters':
 			case 'DestinationLicenseNumber must be numeric':
+			case 'DriverName is required':
 			case 'ExternalIdentifier is required':
 			case 'FromInventoryExternalIdentifier is required':
+			case 'FromLicenseNumber is required':
+			case 'FromLicenseNumber must be numeric':
+			case 'HarvestDate must be a date':
 			case 'InitialQuantity is required':
 			case 'InitialQuantity must be numeric':
+			case 'Invalid Adjustment Reason':
 			case 'Invalid Area':
 			case 'Invalid DestinationLicenseeEmailAddress':
 			case 'Invalid DestinationLicenseNumber':
 			case 'Invalid Details Operation':
+			case 'Invalid From LicenseNumber':
 			case 'Invalid FromInventoryExternalIdentifier':
 			case 'Invalid InventoryCategory/InventoryType combination':
 			case 'Invalid InventoryExternalIdentifier':
 			case 'Invalid LicenseeID':
 			case 'Invalid NumberRecords':
+			case 'Invalid OriginLicenseNumber':
 			case 'Invalid Product':
+			case 'Invalid Sale':
 			case 'Invalid Strain Type':
 			case 'Invalid Strain':
 			case 'Invalid To InventoryExternalIdentifier':
+			case 'Invalid To LicenseNumber':
 			case 'Invalid ToInventoryExternalIdentifier':
 			case 'Invalid UOM':
 			case 'Invalid VehicleColor':
+			case 'Invalid VehicleMake':
 			case 'Invalid VehiclePlateNumber':
 			case 'InventoryCategory is required':
+			case 'InventoryExternalIdentifier or PlantExternalIdentifier is required':
 			case 'InventoryType is required':
 			case 'IsMedical must be True or False':
 			case 'LicenseNumber is required':
@@ -1224,19 +1318,30 @@ function _process_err_list($csv_line)
 			case 'Name is over 75 characters':
 			case 'Name is required':
 			case 'Operation is invalid must be INSERT UPDATE or DELETE':
+			case 'OriginLicenseePhone is required':
 			case 'OriginLicenseePhone must not exceed 14 characters':
-			case 'OriginLicenseNumber is not assigned to Integrator':
+			case 'OriginLicenseNumber must be numeric':
 			case 'Product is required':
 			case 'Quantity is required':
 			case 'Quantity must be numeric':
 			case 'QuantityOnHand must be numeric':
+			case 'SaleDetailExternalIdentifier is required':
+			case 'SaleExternalIdentifier is required':
+			case 'SoldToLicenseNumber required for wholesale':
 			case 'Strain is required':
 			case 'Strain Name reported is not linked to the license number. Please ensure the strain being reported belongs to the licensee':
+			case 'ToInventoryExternalIdentifier is required':
+			case 'ToLicenseNumber is required':
+			case 'ToLicenseNumber must be numeric':
 			case 'TotalCost must be numeric':
+			case 'UnitPrice is required':
+			case 'UnitPrice must be numeric':
 			case 'UpdatedDate is required for Update or Delete Operations':
 			case 'VehicleColor is required':
+			case 'VehicleMake is required':
+			case 'VehicleModel is required':
+			case 'VehiclePlateNumber is required':
 			case 'VINNumber is required':
-				// Need to Tag this Object as NOT_SYNC
 				$err_return_list[] = $err_text;
 				break;
 			case 'CheckSum and number of records don\'t match':
@@ -1247,7 +1352,6 @@ function _process_err_list($csv_line)
 			case 'Duplicate External Identifier':
 			case 'Duplicate ExternalManifestIdentifier':
 			case 'Duplicate Sale for Licensee':
-			case 'Duplicate Strain. The Strain must be unique for the LicenseNumber':
 			case 'Duplicate Strain/StrainType':
 				// Cool, this generally means everything is OK
 				// BUT!! It could mean a conflict of IDs -- like if the object wasn't for the same license?
@@ -1255,15 +1359,21 @@ function _process_err_list($csv_line)
 				// 	$cre_stat = 200;
 				// }
 				break;
+			case 'Duplicate Strain. The Strain must be unique for the LicenseNumber':
+				// Special Case on Variety -- Give a 202, not 200
+				return [
+					'code' => 202,
+					'data' => [],
+				];
+				break;
 			case 'Integrator is not authoritzed to update licensee':
 			case 'Integrator is not authorized to update licensee':
+			case 'OriginLicenseNumber is not assigned to Integrator':
 			case 'License Number is not assigned to Integrator':
 			case 'LicenseNumber is not assigned to Integrator':
 				return [
 					'code' => 403,
-					'data' => [
-						$err_text
-					],
+					'data' => [ $err_text ],
 				];
 				break;
 			case 'ExternalIdentifier not found':
@@ -1273,9 +1383,7 @@ function _process_err_list($csv_line)
 			case 'SaleExternalIdentifier not found':
 				return [
 					'code' => 404,
-					'data' => [
-						$err_text
-					],
+					'data' => [ $err_text ],
 				];
 				break;
 			default:
@@ -1285,9 +1393,31 @@ function _process_err_list($csv_line)
 		}
 	}
 
+	if (count($err_return_list)) {
+		return [
+			'code' => 400,
+			'data' => $err_return_list
+		];
+	}
+
 	return [
-		'code' => (count($err_return_list) > 0 ? 400 : 200),
-		'data' => $err_return_list
+		'code' => 200,
+		'data' => [],
 	];
 
+}
+
+function _notify_app(array $arg)
+{
+	// Notify the Primary Application
+	$url = \OpenTHC\Config::get('openthc/app/base');
+	$url = 'https://app.djb.openthc.dev/';
+	$url = rtrim($url, '/');
+	$url = sprintf('%s/api/v2017/notify', $url);
+	$req = _curl_init($url);
+	curl_setopt($req, CURLOPT_POST, true);
+	curl_setopt($req, CURLOPT_POSTFIELDS, http_build_query($arg));
+
+	$res = curl_exec($req);
+	return $res;
 }
