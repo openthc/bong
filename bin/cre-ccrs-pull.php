@@ -128,7 +128,7 @@ $rdb->hset('/cre/ccrs', 'pull/time', $dt0->format(\DateTimeInterface::RFC3339));
 /**
  *
  */
-function _ccrs_pull_failure_data(string $message_file, string $output_file) : integer
+function _ccrs_pull_failure_data(string $message_file, string $output_file) : int
 {
 	if (empty($output_file)) {
 		// Failed to Parse Output File
@@ -216,7 +216,7 @@ function _ccrs_pull_failure_data(string $message_file, string $output_file) : in
  * Process Full Failure
  * The CSV "has not been processed"
  */
-function _ccrs_pull_failure_full(string $message_file, array $message_head, string $message_body, string $output_file) : integer
+function _ccrs_pull_failure_full(string $message_file, array $message_head, string $message_body, string $output_file) : int
 {
 	global $dbc, $tz0;
 
@@ -296,7 +296,7 @@ function _ccrs_pull_failure_full(string $message_file, array $message_head, stri
 /**
  * Pull the Manifest PDF File into BONG
  */
-function _ccrs_pull_manifest_file(string $message_file, string $output_file) : integer
+function _ccrs_pull_manifest_file(string $message_file, string $output_file) : int
 {
 	global $dbc;
 
@@ -464,7 +464,7 @@ function _csv_file_patch(string $csv_file) : void
 /**
  *
  */
-function _csv_file_incoming(string $source_mail, string $csv_file) : bool
+function _csv_file_incoming(?string $source_mail, string $csv_file) : bool
 {
 	global $cre, $dbc, $tz0;
 
@@ -474,6 +474,7 @@ function _csv_file_incoming(string $source_mail, string $csv_file) : bool
 
 	$cre_stat = 200;
 	$lic_code = null;
+	$lic_data = [];
 	$lic_dead = false;
 
 	$csv_time = $cre->csv_file_date($csv_file);
@@ -569,7 +570,7 @@ function _csv_file_incoming(string $source_mail, string $csv_file) : bool
 		// INSERT RESPONSE THO?
 	} else {
 
-		$res_info = json_decode($res_info['result_data'], true);
+		$res_info = json_decode($log_data['res_info'], true);
 		$result_data = json_decode($log_data['result_data'], true);
 		if (empty($result_data)) {
 			$result_data = [];
@@ -934,6 +935,7 @@ function _process_csv_file_b2b_incoming(string $csv_file, string $req_ulid, $csv
 	global $dbc;
 
 	$cre_stat = 200;
+	$idx_line = 0;
 	$lic_data = [];
 	$update_count = 0;
 
