@@ -51,7 +51,7 @@ class Update extends \OpenTHC\Controller\Base
 	/**
 	 *
 	 */
-	function getReturnObject(string $oid) : object
+	function getReturnObject($dbc, string $oid) : object
 	{
 		$sql = <<<SQL
 		SELECT * FROM {$this->_tab_name}

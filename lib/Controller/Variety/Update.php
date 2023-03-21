@@ -66,7 +66,7 @@ class Update extends \OpenTHC\Bong\Controller\Base\Update
 
 		$this->updateStatus();
 
-		$output_data = $this->getReturnObject($source_data->id);
+		$output_data = $this->getReturnObject($dbc, $source_data->id);
 
 		// Rewrite on Output
 		switch ($_SESSION['cre']['id']) {

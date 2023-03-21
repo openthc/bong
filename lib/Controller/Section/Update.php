@@ -41,10 +41,7 @@ class Update extends \OpenTHC\Bong\Controller\Base\Update
 		$schema_spec = \OpenTHC\Bong\Section::getJSONSchema();
 		$this->validateJSON($source_data, $schema_spec);
 
-		$dbc = $REQ->getAttribute('dbc');
-
 		$sql = $this->getUpsertSQL();
-
 		$arg = [
 			':o0' => $source_data->id,
 			':l0' => $_SESSION['License']['id'],
@@ -70,7 +67,7 @@ class Update extends \OpenTHC\Bong\Controller\Base\Update
 
 		$this->updateStatus();
 
-		$output_data = $this->getReturnObject($source_data->id);
+		$output_data = $this->getReturnObject($dbc, $source_data->id);
 
 		return $RES->withJSON([
 			'data' => $output_data,

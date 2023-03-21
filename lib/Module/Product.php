@@ -1,6 +1,6 @@
 <?php
 /**
- * Product Related Modules
+ * Product Routes
  *
  * SPDX-License-Identifier: MIT
  */
@@ -18,28 +18,25 @@ class Product extends \OpenTHC\Module\Base
 		$a->get('', 'OpenTHC\Bong\Controller\Product\Search');
 
 		// Create
-		$a->post('', '\OpenTHC\Bong\Controller\Product\Create');
+		$a->post('', 'OpenTHC\Bong\Controller\Product\Create');
 
 		// Status
-		$a->get('/status', '\OpenTHC\Bong\Controller\Product\Status');
+		$a->get('/status', 'OpenTHC\Bong\Controller\Product\Status');
 
+		// Single
+		$c = new \OpenTHC\Bong\Controller\Single($this->_container);
+		$c->tab = 'product';
+		$a->get('/{id}', $c);
 
 		// $a->get('/{id}', function($REQ, $RES, $ARG) {
 		// 	return _from_cre_file('product/single.php', $RES, $ARG);
 		// });
 
-		$c = new \OpenTHC\Bong\Controller\Single($this->_container);
-		$c->tab = 'product';
-		$a->get('/{id}', $c);
+		// Update
+		$a->post('/{id}', 'OpenTHC\Bong\Controller\Product\Update');
 
-
-		$a->post('/{id}', function($REQ, $RES, $ARG) {
-			return _from_cre_file('product/update.php', $REQ, $RES, $ARG);
-		});
-
-		$a->delete('/{id}', function($REQ, $RES, $ARG) {
-			return _from_cre_file('product/delete.php', $REQ, $RES, $ARG);
-		});
+		// Delete
+		$a->delete('/{id}', 'OpenTHC\Bong\Controller\Product\Update');
 
 	}
 }

@@ -11,7 +11,7 @@ class Create extends \OpenTHC\Bong\Controller\Base\Create
 {
 	use \OpenTHC\Traits\JSONValidator;
 
-	protected $_tab_name = 'variety';
+	protected $_tab_name = 'product';
 
 	/**
 	 *
@@ -23,7 +23,7 @@ class Create extends \OpenTHC\Bong\Controller\Base\Create
 
 		// pre-validation stuff
 		if (empty($source_data->id)) {
-			$source_data->id = \OpenTHC\CRE\CCRS::sanatize(strtoupper($source_data->name), 100);
+			$source_data->id = substr(_ulid(), 0, 16);
 		}
 
 		$schema_spec = \OpenTHC\Bong\Product::getJSONSchema();
