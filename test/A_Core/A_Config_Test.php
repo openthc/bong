@@ -10,8 +10,25 @@ class A_Config_Test extends \OpenTHC\Bong\Test\Base_Case
 {
 	function test_env()
 	{
-		$x = getenv('OPENTHC_TEST_BASE');
-		$this->assertNotEmpty($x);
+		$env_list = [
+			'OPENTHC_TEST_BASE',
+			'OPENTHC_TEST_BASE_SERVICE_ID',
+			'OPENTHC_TEST_BASE_SERVICE_KEY',
+			'OPENTHC_TEST_BIOTRACK_COMPANY',
+			'OPENTHC_TEST_BIOTRACK_PASSWORD',
+			'OPENTHC_TEST_BIOTRACK_USERNAME',
+			'OPENTHC_TEST_CCRS_COMPANY_ID',
+			'OPENTHC_TEST_CCRS_LICENSE_ID',
+			'OPENTHC_TEST_LICENSE_KEY',
+			'OPENTHC_TEST_METRC_LICENSE_KEY',
+			'OPENTHC_TEST_METRC_SERVICE_KEY',
+		];
+
+		foreach ($env_list as $env) {
+			$val = getenv($env);
+			$this->assertNotEmpty($val, "$env is empty");
+		}
+
 	}
 
 	/**

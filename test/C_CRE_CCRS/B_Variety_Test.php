@@ -11,8 +11,21 @@ class B_Variety_Test extends \OpenTHC\Bong\Test\Base_Case
 {
 	function test_create()
 	{
-		$x = getenv('OPENTHC_TEST_BASE');
-		$this->assertNotEmpty($x);
+		$cre = $this->getBONGtoCCRS();
+
+		$res = $cre->variety()->create([
+			'id' => _ulid(),
+			'name' => sprintf('Test Variety %s', $this->_pid),
+		]);
+
+		$this->assertNotEmpty($res);
+		$this->assertIsArray($res);
+		$this->assertArrayHasKey('code', $res);
+		$this->assertArrayHasKey('data', $res);
+		$this->assertArrayHasKey('meta', $res);
+
+		$this->assertEquals(201, $res['code']);
+
 	}
 
 	function test_create_duplicate()

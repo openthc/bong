@@ -11,4 +11,6 @@ parameters:
 		- ../lib
 		- ../test
 		- ../view
+	ignoreErrors:
+		- '#Parameter.+callbackfunc of function mailparse_msg_extract_part_file expects callable.+null given#'
 	tipsOfTheDay: false

@@ -43,8 +43,8 @@ class B_CRE_Ping_Test extends \OpenTHC\Bong\Test\Base_Case
 		$cre_list = \OpenTHC\CRE::getEngineList();
 		foreach ($cre_list as $cre_conf) {
 
-			// $cre_conf['service-sk'] = getenv('OPENTHC_TEST_SERVICE_KEY');
-			// $cre_conf['service-key'] = getenv('OPENTHC_TEST_SERVICE_KEY');
+			// $cre_conf['service-sk'] = getenv('OPENTHC_TEST_BASE_SERVICE_KEY');
+			// $cre_conf['service-key'] = getenv('OPENTHC_TEST_BASE_SERVICE_KEY');
 			$cre_conf['contact'] = getenv('OPENTHC_TEST_CONTACT_ID');
 			$cre_conf['company'] = getenv('OPENTHC_TEST_COMPANY_ID');
 			$cre_conf['license'] = getenv('OPENTHC_TEST_LICENSE_ID');
