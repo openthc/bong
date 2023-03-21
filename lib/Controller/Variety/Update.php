@@ -59,19 +59,31 @@ class Update extends \OpenTHC\Bong\Controller\Base\Update
 		$hit = $cmd->rowCount();
 		$ret = $cmd->fetchAll();
 
+		$ret_code = 200;
+		if ($ret['stat'] >= 200) {
+			$ret_code = $ret['stat'];
+		}
+
 		$this->updateStatus();
+
+		$output_data = $dbc->fetchRow('SELECT * FROM section WHERE license_id = :l0 AND id = :s0', [
+			':l0' => $_SESSION['License']['id'],
+			':s0' => $source_data->id,
+		]);
+
+		$output_data['data'] = json_decode($output_data['data']);
 
 		// Rewrite on Output
 		switch ($_SESSION['cre']['id']) {
 			case 'usa/wa/ccrs':
-				$source_data->id = $ARG['id'];
+				$output_data->id = $ARG['id'];
 				break;
 		}
 
 		return $RES->withJSON([
-			'data' => $source_data,
+			'data' => $output_data,
 			'meta' => [],
-		], 201);
+		], $ret_code);
 
 	}
 }
