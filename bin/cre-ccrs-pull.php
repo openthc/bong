@@ -128,7 +128,7 @@ $rdb->hset('/cre/ccrs', 'pull/time', $dt0->format(\DateTimeInterface::RFC3339));
 /**
  *
  */
-function _ccrs_pull_failure_data($message_file, $output_file)
+function _ccrs_pull_failure_data(string $message_file, string $output_file) : integer
 {
 	if (empty($output_file)) {
 		// Failed to Parse Output File
@@ -136,7 +136,7 @@ function _ccrs_pull_failure_data($message_file, $output_file)
 		exit(1);
 		$message_file_fail = sprintf('%s/var/ccrs-incoming-fail/%s', APP_ROOT, basename($message_file));
 		rename($message_file, $message_file_fail);
-		return(0);
+		return 0;
 	}
 
 	_csv_file_patch($output_file);
@@ -208,13 +208,15 @@ function _ccrs_pull_failure_data($message_file, $output_file)
 		],
 	]);
 */
+
+	return 1;
 }
 
 /**
  * Process Full Failure
  * The CSV "has not been processed"
  */
-function _ccrs_pull_failure_full($message_file, $message_head, $message_body, $output_file)
+function _ccrs_pull_failure_full(string $message_file, array $message_head, string $message_body, string $output_file) : integer
 {
 	global $dbc, $tz0;
 
@@ -269,7 +271,7 @@ function _ccrs_pull_failure_full($message_file, $message_head, $message_body, $o
 			throw new \Exception("Cannot archive incoming email");
 		}
 
-		return(0);
+		return 0;
 	}
 
 	var_dump($message_head);
@@ -287,13 +289,14 @@ function _ccrs_pull_failure_full($message_file, $message_head, $message_body, $o
 
 	echo "FAIL $message_file => $message_file_fail\n";
 
+	return 1;
 
 }
 
 /**
  * Pull the Manifest PDF File into BONG
  */
-function _ccrs_pull_manifest_file($message_file, $output_file)
+function _ccrs_pull_manifest_file(string $message_file, string $output_file) : integer
 {
 	global $dbc;
 
@@ -427,13 +430,15 @@ function _ccrs_pull_manifest_file($message_file, $output_file)
 
 	unlink($output_file);
 
+	return 1;
+
 }
 
 
 /**
  * Patch bullshit we find in these files
  */
-function _csv_file_patch($csv_file)
+function _csv_file_patch(string $csv_file) : void
 {
 	// Patch the WHOLE BLOB
 	$csv_data = file_get_contents($csv_file);
@@ -459,7 +464,7 @@ function _csv_file_patch($csv_file)
 /**
  *
  */
-function _csv_file_incoming($source_mail, $csv_file)
+function _csv_file_incoming(string $source_mail, string $csv_file) : bool
 {
 	global $cre, $dbc, $tz0;
 
@@ -917,6 +922,7 @@ function _csv_file_incoming($source_mail, $csv_file)
 	$csv_name = basename($csv_file);
 	rename($csv_file, sprintf('%s/var/ccrs-incoming-done/%s', APP_ROOT, $csv_name));
 
+	return true;
 }
 
 
