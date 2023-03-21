@@ -23,6 +23,32 @@ class Update extends \OpenTHC\Controller\Base
 	}
 
 	/**
+	 * Upsert the Record
+	 */
+	function getUpsertSQL() : string
+	{
+		// UPSERT
+		$sql = <<<SQL
+		INSERT INTO {table_name} (id, license_id, name, hash, data)
+		VALUES (:o0, :l0, :n0, :h0, :d0)
+		ON CONFLICT (id, license_id) DO
+		UPDATE SET
+			name = :n0
+			, hash = :h0
+			, stat = 100
+			, updated_at = now()
+			, data = coalesce({table_name}.data, '{}'::jsonb) || :d0
+		WHERE {table_name}.hash != :h0
+		RETURNING id, name, updated_at, (hash = :h0) AS hash_match
+		SQL;
+
+		$sql = str_replace('{table_name}', $this->_tab_name, $sql);
+
+		return $sql;
+
+	}
+
+	/**
 	 * Updates the Redis Status
 	 */
 	function updateStatus()

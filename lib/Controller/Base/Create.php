@@ -32,4 +32,5 @@ class Create extends \OpenTHC\Controller\Base
 		$R->hset(sprintf('/license/%s', $_SESSION['License']['id']), sprintf('%s/stat/time', $this->_tab_name), time());
 		$R->hset(sprintf('/license/%s', $_SESSION['License']['id']), sprintf('%s/sync', $this->_tab_name), 100);
 	}
+
 }
