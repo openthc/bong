@@ -66,12 +66,7 @@ class Update extends \OpenTHC\Bong\Controller\Base\Update
 
 		$this->updateStatus();
 
-		$output_data = $dbc->fetchRow('SELECT * FROM section WHERE license_id = :l0 AND id = :s0', [
-			':l0' => $_SESSION['License']['id'],
-			':s0' => $source_data->id,
-		]);
-
-		$output_data['data'] = json_decode($output_data['data']);
+		$output_data = $this->getReturnObject($source_data->id);
 
 		// Rewrite on Output
 		switch ($_SESSION['cre']['id']) {
@@ -82,7 +77,9 @@ class Update extends \OpenTHC\Bong\Controller\Base\Update
 
 		return $RES->withJSON([
 			'data' => $output_data,
-			'meta' => [],
+			'meta' => [
+				'_ret' => $ret,
+			],
 		], $ret_code);
 
 	}
