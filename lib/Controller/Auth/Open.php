@@ -8,6 +8,7 @@
 namespace OpenTHC\Bong\Controller\Auth;
 
 use OpenTHC\Bong\CRE;
+use OpenTHC\JWT;
 
 class Open extends \OpenTHC\Controller\Base
 {
@@ -18,11 +19,19 @@ class Open extends \OpenTHC\Controller\Base
 	{
 		switch ($REQ->getMethod()) {
 		case 'GET':
+
+			if ( ! empty($_GET['jwt'])) {
+				return $this->openJWT($RES, $_GET['jwt']);
+			}
+
 			$RES = $this->renderForm($REQ, $RES, $ARG);
+
 			break;
+
 		case 'POST':
 			switch ($_POST['a']) {
 			case 'set-license':
+				$_SESSION['License']['id'] = $_POST['license'];
 				$_SESSION['cre-auth']['license'] = $_POST['license'];
 				return $RES->withRedirect('/browse');
 				break;
@@ -85,6 +94,44 @@ class Open extends \OpenTHC\Controller\Base
 	}
 
 	/**
+	 *
+	 */
+	private function openJWT($RES, $jwt)
+	{
+		try {
+			$chk = JWT::decode($jwt);
+
+			// Mostly Real Now
+			$_SESSION['Company'] = [
+				'id' => $chk['company'],
+			];
+			$_SESSION['Contact'] = [
+				'id' => $chk['sub'],
+			];
+			$_SESSION['License'] = [
+				'id' => $chk['license'],
+			];
+
+			if (empty($_SESSION['Company']['id'])) {
+				return $RES->withJSON(['meta' => [ 'note' => 'Invalid Company' ]], 400);
+			}
+			if (empty($_SESSION['Contact']['id'])) {
+				return $RES->withJSON(['meta' => [ 'note' => 'Invalid Contact' ]], 400);
+			}
+			if (empty($_SESSION['License']['id'])) {
+				return $RES->withJSON(['meta' => [ 'note' => 'Invalid License' ]], 400);
+			}
+
+		} catch (\Exception $e) {
+			// Ignore
+			__exit_text($e->getMessage(), 500);
+		}
+
+		return $RES;
+
+	}
+
+	/**
 	 * Render the Connection Form
 	 */
 	function renderForm($REQ, $RES, $ARG)
@@ -137,33 +184,34 @@ class Open extends \OpenTHC\Controller\Base
 			return $RES;
 		}
 
-		$cfg = [
-			'engine' => 'biotrac',
-			'server' => $_SESSION['cre']['server'],
-			'company' => trim($_POST['company']),
-			'username' => trim($_POST['username']),
-			'password' => trim($_POST['password']),
-			'session-id' => '',
-		];
+		$cfg = $_SESSION['cre'];
+		$cfg['company'] = trim($_POST['company']);
+		$cfg['username'] = trim($_POST['username']);
+		$cfg['password'] = trim($_POST['password']);
+		$cfg['session-id'] = '';
 
-		$cre = \OpenTHC\CRE::factory($_SESSION['cre']);
-		$chk = $cre->ping();
+		$cre = \OpenTHC\CRE::factory($cfg);
+		$res = $cre->auth();
+		// $res = $cre->ping();
 
 		// @todo Detect a 500 Layer Response from BioTrack
 
-		switch (intval($chk['code'])) {
+		switch ($res['code']) {
 		case 0:
+		case 403:
 
 			return $RES->withJson(array(
-				'data' => $chk,
+				'data' => $res,
 				'meta' => [ 'note' => 'Invalid Username or Password [CAO-155]' ],
 			), 400);
 
 			break;
 
+		case 200:
+		case 201:
 		case 1:
 
-			$cfg['session-id'] = $chk['sessionid'];
+			$cfg['session-id'] = $res['data']['sessionid'];
 
 			$_SESSION['cre-auth'] = $cfg;
 			$_SESSION['sql-name'] = sprintf('openthc_bong_%s', md5($_SESSION['cre-auth']['company']));
@@ -174,7 +222,12 @@ class Open extends \OpenTHC\Controller\Base
 			));
 
 			break;
+
+		default:
+			throw new \Exception('Invalid Response from BioTrack');
 		}
+
+		return $RES;
 
 	}
 
