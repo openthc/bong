@@ -21,7 +21,9 @@ class Open extends \OpenTHC\Controller\Base
 		case 'GET':
 
 			if ( ! empty($_GET['jwt'])) {
-				return $this->openJWT($RES, $_GET['jwt']);
+				return $this->openJWT($RES, $_GET['jwt'])
+					->withRedirect('/browse')
+				;
 			}
 
 			$RES = $this->renderForm($REQ, $RES, $ARG);
