@@ -33,7 +33,7 @@ class Update extends \OpenTHC\Bong\Controller\Base\Update
 		$dbc = $REQ->getAttribute('dbc');
 		$res = $dbc->fetchRow('SELECT * FROM license WHERE id = :l0', [ ':l0' => $ARG['id'] ]);
 		if (empty($res['id'])) {
-			$ret['meta']['detail'] = 'License Not Found';
+			$ret['meta']['note'] = 'License Not Found';
 			$ret_code = 404;
 		} else {
 			$res = $dbc->query('UPDATE license SET code = :c0, name = :n0, company_id = :company_id WHERE id = :l0', [
