@@ -17,7 +17,7 @@ case "$action" in
 install|update)
 
 	composer update --no-dev -a
-	npm update
+	npm install
 
 	./make.sh vendor-web
 
