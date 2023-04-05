@@ -18,14 +18,7 @@ class Crop extends \OpenTHC\Module\Base
 		$a->get('/status','\OpenTHC\Bong\Controller\Crop\Status');
 
 		// Single
-		$c = new \OpenTHC\Bong\Controller\Single($this->_container);
-		$c->tab = 'crop';
-		$a->get('/{id}', $c);
-
-		// Search
-		// $a->get('', function($REQ, $RES, $ARG) {
-		// 	return _from_cre_file('crop/search.php', $REQ, $RES, $ARG);
-		// });
+		$a->get('/{id}','\OpenTHC\Bong\Controller\Crop\Single');
 
 		// Create
 		$a->post('', function($REQ, $RES, $ARG) {
@@ -34,11 +27,6 @@ class Crop extends \OpenTHC\Module\Base
 				'detail' => 'Not Implemented [LMP#024]'
 			), 501);
 		});
-
-		// Single
-		// $a->get('/{id}', function($REQ, $RES, $ARG) {
-		// 	return _from_cre_file('plant/single.php', $REQ, $RES, $ARG);
-		// });
 
 		// Update
 		$a->post('/{id}', function($REQ, $RES, $ARG) {
@@ -51,9 +39,9 @@ class Crop extends \OpenTHC\Module\Base
 		});
 
 		// Convenience Functions
-		$a->post('/{id}/move', function($REQ, $RES, $ARG) {
-			return _from_cre_file('crop/update.php', $REQ, $RES, $ARG);
-		});
+		// $a->post('/{id}/move', function($REQ, $RES, $ARG) {
+		// 	return _from_cre_file('crop/update.php', $REQ, $RES, $ARG);
+		// });
 
 		//$a->post('/{id}/collect', function($REQ, $RES, $ARG) {
 		//	return _from_cre_file('crop/collect.php', $REQ, $RES, $ARG);

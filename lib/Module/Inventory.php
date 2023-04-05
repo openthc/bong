@@ -24,12 +24,7 @@ class Inventory extends \OpenTHC\Module\Base
 		$a->get('/status', '\OpenTHC\Bong\Controller\Inventory\Status');
 
 		// Single
-		$c = new \OpenTHC\Bong\Controller\Single($this->_container);
-		$c->tab = 'lot';
-		$a->get('/{id}', $c);
-		// $a->get('/{id}', function($REQ, $RES, $ARG) {
-		// 	return _from_cre_file('lot/single.php', $REQ, $RES, $ARG);
-		// });
+		$a->get('/{id}', '\OpenTHC\Bong\Controller\Inventory\Single');
 
 		// Update
 		$a->post('/{id}', '\OpenTHC\Bong\Controller\Inventory\Update');
@@ -42,10 +37,6 @@ class Inventory extends \OpenTHC\Module\Base
 		// Adjust
 		$a->post('/{id}/adjust', 'OpenTHC\Bong\Controller\Inventory\Adjust');
 
-		//	$a->post('/', function($REQ, $RES, $ARG) {
-		//		die('Create Inventory');
-		//	});
-		//
 		//	// Combine Inventory to a new Type
 		//	$a->post('/combine', function($REQ, $RES, $ARG) {
 		//		return $RES->withJson(array(

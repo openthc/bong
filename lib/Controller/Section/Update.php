@@ -7,9 +7,6 @@
 
 namespace OpenTHC\Bong\Controller\Section;
 
-use Opis\JsonSchema\Validator;
-use Swaggest\JsonSchema\Schema;
-
 class Update extends \OpenTHC\Bong\Controller\Base\Update
 {
 	use \OpenTHC\Traits\JSONValidator;
@@ -38,18 +35,19 @@ class Update extends \OpenTHC\Bong\Controller\Base\Update
 		// }
 
 		$source_data = \Opis\JsonSchema\Helper::toJSON($source_data);
+
 		$schema_spec = \OpenTHC\Bong\Section::getJSONSchema();
 		$this->validateJSON($source_data, $schema_spec);
 
+		// UPSERT
 		$sql = $this->getUpsertSQL();
 		$arg = [
 			':o0' => $source_data->id,
 			':l0' => $_SESSION['License']['id'],
 			':n0' => $source_data->name,
-			':h0' => '-',
 			':d0' => json_encode([
 				'@version' => 'openthc/2015',
-				'@source' => $source_data,
+				'@source' => $source_data
 			]),
 		];
 		$arg[':h0'] = \OpenTHC\CRE\Base::objHash($source_data);
@@ -58,7 +56,7 @@ class Update extends \OpenTHC\Bong\Controller\Base\Update
 		$cmd = $dbc->prepare($sql);
 		$res = $cmd->execute($arg);
 		$hit = $cmd->rowCount();
-		$ret = $cmd->fetchAll();
+		// $ret = $cmd->fetchAll();
 
 		$ret_code = 200;
 		if ($ret['stat'] >= 200) {
