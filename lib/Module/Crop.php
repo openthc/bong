@@ -14,12 +14,6 @@ class Crop extends \OpenTHC\Module\Base
 		// Search
 		$a->get('', 'OpenTHC\Bong\Controller\Crop\Search');
 
-		// Status
-		$a->get('/status','\OpenTHC\Bong\Controller\Crop\Status');
-
-		// Single
-		$a->get('/{id}','\OpenTHC\Bong\Controller\Crop\Single');
-
 		// Create
 		$a->post('', function($REQ, $RES, $ARG) {
 			return $RES->withJSON(array(
@@ -28,15 +22,17 @@ class Crop extends \OpenTHC\Module\Base
 			), 501);
 		});
 
+		// Status
+		$a->get('/status', 'OpenTHC\Bong\Controller\Crop\Status');
+
+		// Single
+		$a->get('/{id}', 'OpenTHC\Bong\Controller\Crop\Single');
+
 		// Update
-		$a->post('/{id}', function($REQ, $RES, $ARG) {
-			return _from_cre_file('crop/update.php', $REQ, $RES, $ARG);
-		});
+		$a->post('/{id}', 'OpenTHC\Bong\Controller\Crop\Update');
 
 		// Delete
-		$a->delete('/{id}', function($REQ, $RES, $ARG) {
-			return _from_cre_file('crop/delete.php', $REQ, $RES, $ARG);
-		});
+		$a->delete('/{id}', 'OpenTHC\Bong\Controller\Crop\Delete');
 
 		// Convenience Functions
 		// $a->post('/{id}/move', function($REQ, $RES, $ARG) {
