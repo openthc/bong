@@ -10,9 +10,7 @@ use OpenTHC\Bong\CRE;
 
 require_once(__DIR__ . '/../boot.php');
 
-define('COOKIE_FILE', sprintf('%s/var/ccrs-cookies.json', APP_ROOT));
-define('COOKIE_FILE_NEXT', sprintf('%s/var/ccrs-cookies-%s.json', APP_ROOT, _ulid()));
-
+openlog('openthc-bong', LOG_ODELAY | LOG_PERROR | LOG_PID, LOG_LOCAL0);
 
 $doc = <<<DOC
 BONG CRE CCRS Upload Tool
@@ -20,22 +18,23 @@ Usage:
 	cre-ccrs <command> [<command-options>...]
 
 Commands:
-	auth
-	push
-	single
-	upload
-	verify
+	auth                  Authenticate to CCRS
+	csv-upload-create     from source data create the csv files in the upload queue
+	push                  Does upload-single for all the stuff in the queue
+	push-b2b-old          Push (or check-up on) the old B2B Laggards
+	object-status-update  Update the Redis Status for Each License
+	upload-single         Uploads a Single Job
+	upload-queue          not sure what this does?
+	upload-script-create  create an upload-builder shell script
+	upload-status         ??  What DO?
+	license-status        Show License Status
+	license-verify        Re-Init a License and try to Verify via magic Section
+	verify                Re-Init a License and try to Verify via magic Section
+
+Options:
+	--license=<LIST>
+	--object=<LIST>
 DOC;
-
-// cre-ccrs auth [ --ping | --refresh ]
-// cre-ccrs push
-// cre-ccrs sync
-// cre-ccrs upload-single --upload-id=ULID
-// cre-ccrs [options] <command> [<command-options>...]
-
-// Options:
-// --license=LICENSE
-
 
 $res = Docopt::handle($doc, [
 	'help' => true,
@@ -47,6 +46,17 @@ $cli_args = $res->args;
 switch ($cli_args['<command>']) {
 	case 'auth':
 		_cre_ccrs_auth(array_merge([ 'auth' ], $cli_args['<command-options>']));
+		break;
+	case 'csv-upload-create':
+		// require_once(APP_ROOT . '/lib/CRE/CCRS/CSV/Create.php');
+		$arg = array_merge([ $cli_args['<command>'] ], $cli_args['<command-options>']);
+		_cre_ccrs_csv_upload_create($arg);
+		break;
+	case 'license-status':
+		_cre_ccrs_license_status(array_merge([ 'license-status' ], $cli_args['<command-options>']));
+		break;
+	case 'license-verify':
+		_cre_ccrs_upload_verify(array_merge([ 'license-verify' ], $cli_args['<command-options>']));
 		break;
 	case 'push':
 		_cre_ccrs_push(array_merge([ 'push' ], $cli_args['<command-options>']));
@@ -116,13 +126,22 @@ switch ($cli_args['<command>']) {
 	case 'upload-create':
 		_cre_ccrs_upload_create(array_merge([ 'upload-create' ], $cli_args['<command-options>']));
 		break;
+	case 'object-status-update':
+		_cre_ccrs_object_status_update(array_merge([ 'object-status-update' ], $cli_args['<command-options>']));
+		break;
+	case 'upload-script-create':
+		_cre_ccrs_upload_script_create(array_merge([ 'upload-script-create' ], $cli_args['<command-options>']));
 	case 'upload-single':
 		_cre_ccrs_upload_single(array_merge([ 'upload-single' ], $cli_args['<command-options>']));
 		break;
 	case 'verify':
 		_cre_ccrs_upload_verify(array_merge([ 'verify' ], $cli_args['<command-options>']));
 		break;
+	default:
+		var_dump($cli_args);
+		exit(1);
 }
+
 
 /**
  *
@@ -237,6 +256,60 @@ function _cre_ccrs_auth_cookies()
 	return $cookie_list;
 
 }
+
+
+/**
+ * Generate CSV Files for the Pending Objects
+ *
+ * ./bin/cre-ccrs-upload.php upload --license=01CAV11D7R24EZQA630CCKEJ84 --object=section,variety,product
+ */
+function _cre_ccrs_csv_upload_create($cli_args)
+{
+	$doc = <<<DOC
+	BONG CRE CCRS Upload Script Creator
+
+	Create a shell script to upload data for each license
+
+	Usage:
+		cre-ccrs csv-upload-create [--license=<LIST>] [--object=<LIST>]
+
+	Options:
+		--license=<LIST>      comma-list of license [default: ALL]
+		--object=<LIST>       comma-list of objects [default: section,variety,product,crop,inventory,inventory-adjust,b2b-incoming,b2b-outgoing]
+	DOC;
+
+	$res = Docopt::handle($doc, [
+		'argv' => $cli_args,
+	]);
+	$cli_args = $res->args;
+	// var_dump($cli_args);
+
+	$dbc = _dbc();
+
+	$license_list = [];
+	if ('ALL' == $cli_args['--license']) {
+		$license_list = $dbc->fetchAll('SELECT id, code, name FROM license WHERE stat IN (100, 102, 200, 202)');
+	} else {
+		// @todo Allow for a LIST of License IDs
+		$sql = 'SELECT id, code, name FROM license WHERE id = :l0';
+		$arg = [ ':l0' => $cli_args['--license'] ];
+		$license_list = $dbc->fetchAll($sql, $arg);
+	}
+
+	foreach ($license_list as $license0) {
+		syslog(LOG_NOTICE, "cre-ccrs-upload-create for {$license0['id']} / {$license0['name']}");
+		$cmd = [];
+		$cmd[] = sprintf('%s/bin/cre-ccrs-upload.php', APP_ROOT);
+		$cmd[] = 'upload';
+		$cmd[] = sprintf('--license=%s', $license0['id']);
+		$cmd[] = sprintf('--object=%s', $cli_args['--object']);
+		$cmd[] = '2>&1';
+		$cmd = implode(' ', $cmd);
+		passthru($cmd);
+	}
+
+}
+
 
 /**
  * Push Queue from log_upload to CCRS

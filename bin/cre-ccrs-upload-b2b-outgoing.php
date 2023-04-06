@@ -38,6 +38,7 @@ function _cre_ccrs_upload_b2b_outgoing($cli_args)
 		, b2b_outgoing.data AS b2b_outgoing_data
 		, b2b_outgoing_item.id AS b2b_outgoing_item_id
 		, b2b_outgoing_item.data AS b2b_outgoing_item_data
+		, b2b_outgoing_item.stat
 	FROM b2b_outgoing
 	JOIN b2b_outgoing_item ON b2b_outgoing.id = b2b_outgoing_item.b2b_outgoing_id
 	JOIN license AS source_license ON b2b_outgoing.source_license_id = source_license.id
@@ -73,6 +74,10 @@ function _cre_ccrs_upload_b2b_outgoing($cli_args)
 			case 200:
 				$cmd = 'UPDATE';
 				break;
+		}
+
+		if (empty($cmd)) {
+			continue;
 		}
 
 		$rec = [
@@ -128,6 +133,10 @@ function _cre_ccrs_upload_b2b_outgoing($cli_args)
 
 	unset($csv_temp);
 
-	$rdb->set(sprintf('/license/%s/b2b-outgoing', $License['id']), 200);
+	$rdb->hset(sprintf('/license/%s', $License['id']), 'b2b/outgoing/stat', 102);
+	$rdb->hset(sprintf('/license/%s', $License['id']), 'b2b/outgoing/stat/time', time());
+	$rdb->hset(sprintf('/license/%s', $License['id']), 'b2b/outgoing/sync', 0);
+	$rdb->hset(sprintf('/license/%s', $License['id']), 'b2b/outgoing/sync/time', 0);
+
 
 }

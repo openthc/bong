@@ -32,10 +32,8 @@ function _cre_ccrs_upload_b2b_incoming($cli_args)
 
 	$License = _load_license($dbc, $cli_args['--license']);
 
-	$req_ulid = _ulid();
+	// Get Data
 	$csv_data = [];
-	$csv_data[] = [ '-canary-', '-canary-', "B2B_INCOMING UPLOAD $req_ulid", '-canary-', 0, date('m/d/Y'), '-canary-', '-system-', date('m/d/Y'), '', '', 'UPDATE' ];
-
 
 	$sql = <<<SQL
 	SELECT b2b_incoming.*,
@@ -115,17 +113,23 @@ function _cre_ccrs_upload_b2b_incoming($cli_args)
 			, $dtC->format('m/d/Y')
 			, '-system-'
 			, $dtU->format('m/d/Y')
-			, 'INSERT'
+			, $cmd
 		];
 
 		$csv_data[] = $rec;
 	}
 
-	$row_size = count($csv_data);
-	if ($row_size <= 1) {
-		echo "No Data to Upload\n";
-		return(0);
+	// No Data, In Sync
+	if (empty($csv_data)) {
+		$rdb->hset(sprintf('/license/%s', $License['id']), 'b2b/incoming/stat', 200);
+		$rdb->hset(sprintf('/license/%s', $License['id']), 'b2b/incoming/stat/time', time());
+		$rdb->hset(sprintf('/license/%s', $License['id']), 'b2b/incoming/sync', 200);
+		return;
 	}
+
+	$req_ulid = _ulid();
+	$req_data = [ '-canary-', '-canary-', "B2B_INCOMING UPLOAD $req_ulid", '-canary-', 0, date('m/d/Y'), '-canary-', '-system-', date('m/d/Y'), '', '', 'UPDATE' ];
+	array_unshift($csv_data, $req_data);
 
 	$csv_head = explode(',', 'FromLicenseNumber,ToLicenseNumber,FromInventoryExternalIdentifier,ToInventoryExternalIdentifier,Quantity,TransferDate,ExternalIdentifier,CreatedBy,CreatedDate,UpdatedBy,UpdatedDate,Operation');
 	$csv_name = sprintf('InventoryTransfer_%s_%s.csv', $cre_service_key, $req_ulid);
@@ -144,7 +148,5 @@ function _cre_ccrs_upload_b2b_incoming($cli_args)
 	fseek($csv_temp, 0);
 
 	_upload_to_queue_only($License, $csv_name, $csv_temp);
-
-	unset($csv_temp);
 
 }
