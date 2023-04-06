@@ -12,6 +12,7 @@ function _cre_ccrs_upload_variety($cli_args)
 {
 	$lic = $cli_args['--license'];
 
+	// Check Cache
 	$rdb = \OpenTHC\Service\Redis::factory();
 	$chk = $rdb->hget(sprintf('/license/%s', $lic), 'variety/stat');
 	switch ($chk) {

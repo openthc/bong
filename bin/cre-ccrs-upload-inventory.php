@@ -10,6 +10,19 @@ use OpenTHC\Bong\CRE;
 
 function _cre_ccrs_upload_inventory($cli_args)
 {
+	$lic = $cli_args['--license'];
+
+	// Check Cache
+	$rdb = \OpenTHC\Service\Redis::factory();
+	$chk = $rdb->hget(sprintf('/license/%s', $lic), 'inventory/stat');
+	switch ($chk) {
+		case 102:
+		case 200:
+			return(0);
+			break;
+		default:
+			syslog(LOG_DEBUG, "license:{$lic}; inventory-stat={$chk}");
+	}
 
 	$dbc = _dbc();
 

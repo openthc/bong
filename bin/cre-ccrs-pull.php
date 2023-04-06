@@ -1304,6 +1304,7 @@ function _process_err_list($csv_line)
 			case 'Invalid InventoryExternalIdentifier':
 			case 'Invalid LicenseeID':
 			case 'Invalid NumberRecords':
+			case 'Invalid OriginLicenseeEmailAddress':
 			case 'Invalid OriginLicenseNumber':
 			case 'Invalid Product':
 			case 'Invalid Sale':

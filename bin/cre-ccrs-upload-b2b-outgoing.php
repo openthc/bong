@@ -11,8 +11,8 @@ use OpenTHC\Bong\CRE;
 function _cre_ccrs_upload_b2b_outgoing($cli_args)
 {
 
-	$R = \OpenTHC\Service\Redis::factory();
-	$chk = $R->get(sprintf('/license/%s/b2b-outgoing', $License['id']));
+	$rdb = \OpenTHC\Service\Redis::factory();
+	$chk = $rdb->get(sprintf('/license/%s/b2b-outgoing', $License['id']));
 	syslog(LOG_DEBUG, "license:{$License['id']}; b2b-outgoing-stat={$chk}");
 
 	$dbc = _dbc();
@@ -128,6 +128,6 @@ function _cre_ccrs_upload_b2b_outgoing($cli_args)
 
 	unset($csv_temp);
 
-	$R->set(sprintf('/license/%s/b2b-outgoing', $License['id']), 200);
+	$rdb->set(sprintf('/license/%s/b2b-outgoing', $License['id']), 200);
 
 }
