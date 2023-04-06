@@ -28,26 +28,17 @@ function _cre_ccrs_upload_section($cli_args)
 	$License = _load_license($dbc, $lic);
 
 	$tz0 = new DateTimezone(\OpenTHC\Config::get('cre/usa/wa/ccrs/tz'));
-	$cre_service_key = \OpenTHC\Config::get('cre/usa/wa/ccrs/service-key');
 
-
-	$req_ulid = _ulid();
+	// Get Data
 	$csv_data = [];
-	$csv_data[] = [ '-canary-', "SECTION UPLOAD $req_ulid", 'FALSE', '-canary-', '-canary-', date('m/d/Y'), '-canary-', date('m/d/Y'), 'UPDATE' ];
 
-	$csv_name = sprintf('Area_%s_%s.csv', $cre_service_key, $req_ulid);
-	$csv_head = explode(',', 'LicenseNumber,Area,IsQuarantine,ExternalIdentifier,CreatedBy,CreatedDate,UpdatedBy,UpdatedDate,Operation');
-	$col_size = count($csv_head);
-	$csv_temp = fopen('php://temp', 'w');
-
-	// Sections
-	$arg = [ ':l0' => $License['id'] ];
 	$sql = <<<SQL
 	SELECT section.*, license.code AS license_code
 	FROM section
 	JOIN license ON section.license_id = license.id
 	AND license.id = :l0
 	SQL;
+	$arg = [ ':l0' => $License['id'] ];
 
 	if ( ! empty($cli_args['--object-id'])) {
 		$sql.= ' AND section.id = :pk';
@@ -116,28 +107,39 @@ function _cre_ccrs_upload_section($cli_args)
 
 	}
 
-	$row_size = count($csv_data);
-	if ($row_size > 1) {
-
-		// Output
-		\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'SubmittedBy',   'OpenTHC' ], $col_size, '')));
-		\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'SubmittedDate', date('m/d/Y') ], $col_size, '')));
-		\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'NumberRecords', $row_size ], $col_size, '')));
-		\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values($csv_head));
-		foreach ($csv_data as $row) {
-			\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, $row);
-		}
-
-		// Upload
-		fseek($csv_temp, 0);
-
-		_upload_to_queue_only($License, $csv_name, $csv_temp);
-
+	// No Data, In Sync
+	if (empty($csv_data)) {
+		$rdb->hset(sprintf('/license/%s', $License['id']), 'section/stat', 200);
+		$rdb->hset(sprintf('/license/%s', $License['id']), 'section/stat/time', time());
+		$rdb->hset(sprintf('/license/%s', $License['id']), 'section/sync', 200);
+		return;
 	}
 
-	unset($csv_temp);
+	$req_ulid = _ulid();
 
-	$rdb->del(sprintf('/license/%s/section', $License['id']));
+	$api_code = \OpenTHC\Config::get('cre/usa/wa/ccrs/service-key');
+	$csv_name = sprintf('Area_%s_%s.csv', $api_code, $req_ulid);
+	$csv_head = explode(',', 'LicenseNumber,Area,IsQuarantine,ExternalIdentifier,CreatedBy,CreatedDate,UpdatedBy,UpdatedDate,Operation');
+	$col_size = count($csv_head);
+
+	$csv_data[] = [ '-canary-', "SECTION UPLOAD $req_ulid", 'FALSE', '-canary-', '-canary-', date('m/d/Y'), '-canary-', date('m/d/Y'), 'UPDATE' ];
+	$row_size = count($csv_data);
+
+	$csv_temp = fopen('php://temp', 'w');
+
+	// Output
+	\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'SubmittedBy',   'OpenTHC' ], $col_size, '')));
+	\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'SubmittedDate', date('m/d/Y') ], $col_size, '')));
+	\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'NumberRecords', $row_size ], $col_size, '')));
+	\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values($csv_head));
+	foreach ($csv_data as $row) {
+		\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, $row);
+	}
+
+	// Upload
+	fseek($csv_temp, 0);
+
+	_upload_to_queue_only($License, $csv_name, $csv_temp);
 
 	$rdb->hset(sprintf('/license/%s', $License['id']), 'section/stat', 102);
 	$rdb->hset(sprintf('/license/%s', $License['id']), 'section/stat/time', time());

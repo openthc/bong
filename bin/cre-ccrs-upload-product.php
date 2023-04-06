@@ -27,12 +27,10 @@ function _cre_ccrs_upload_product($cli_args)
 	$dbc = _dbc();
 	$License = _load_license($dbc, $lic);
 
-
 	$tz0 = new DateTimezone(\OpenTHC\Config::get('cre/usa/wa/ccrs/tz'));
 
-	$req_ulid = _ulid();
+	// Get Data
 	$csv_data = [];
-	$csv_data[] = [ '-canary-', '-canary-', '-canary-', "PRODUCT UPLOAD $req_ulid", '', '0', '-canary-', '-canary-', date('m/d/Y'), '-canary-', date('m/d/Y'), 'UPDATE' ];
 
 	$sql = <<<SQL
 	SELECT *
@@ -161,33 +159,37 @@ function _cre_ccrs_upload_product($cli_args)
 
 	}
 
-	// CSV Data
+	// No Data, In Sync
+	if (empty($csv_data)) {
+		$rdb->hset(sprintf('/license/%s', $License['id']), 'product/stat', 200);
+		$rdb->hset(sprintf('/license/%s', $License['id']), 'product/stat/time', time());
+		$rdb->hset(sprintf('/license/%s', $License['id']), 'product/sync', 200);
+		return;
+	}
+
+	$req_ulid = _ulid();
+
+	$csv_data[] = [ '-canary-', '-canary-', '-canary-', "PRODUCT UPLOAD $req_ulid", '', '0', '-canary-', '-canary-', date('m/d/Y'), '-canary-', date('m/d/Y'), 'UPDATE' ];
+
+	$api_code = \OpenTHC\Config::get('cre/usa/wa/ccrs/service-key');
+	$csv_name = sprintf('Product_%s_%s.csv', $api_code, $req_ulid);
 	$csv_head = explode(',', 'LicenseNumber,InventoryCategory,InventoryType,Name,Description,UnitWeightGrams,ExternalIdentifier,CreatedBy,CreatedDate,UpdatedBy,UpdatedDate,Operation');
 	$col_size = count($csv_head);
 
+	$csv_temp = fopen('php://temp', 'w');
 	$row_size = count($csv_data);
-	if ($row_size > 1) {
 
-		$csv_temp = fopen('php://temp', 'w');
-		\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'SubmittedBy',   'OpenTHC' ], $col_size, '')));
-		\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'SubmittedDate', date('m/d/Y') ], $col_size, '')));
-		\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'NumberRecords', $row_size ], $col_size, '')));
-		\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values($csv_head));
-		foreach ($csv_data as $row) {
-			\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, $row);
-		}
-		fseek($csv_temp, 0);
-
-		// Upload
-		$cre_service_key = \OpenTHC\Config::get('cre/usa/wa/ccrs/service-key');
-		$csv_name = sprintf('Product_%s_%s.csv', $cre_service_key, $req_ulid);
-		_upload_to_queue_only($License, $csv_name, $csv_temp);
-
-		unset($csv_temp);
-
+	\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'SubmittedBy',   'OpenTHC' ], $col_size, '')));
+	\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'SubmittedDate', date('m/d/Y') ], $col_size, '')));
+	\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'NumberRecords', $row_size ], $col_size, '')));
+	\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values($csv_head));
+	foreach ($csv_data as $row) {
+		\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, $row);
 	}
+	fseek($csv_temp, 0);
 
-	$rdb->del(sprintf('/license/%s/product', $License['id']));
+	// Upload
+	_upload_to_queue_only($License, $csv_name, $csv_temp);
 
 	$rdb->hset(sprintf('/license/%s', $License['id']), 'product/stat', 102);
 	$rdb->hset(sprintf('/license/%s', $License['id']), 'product/stat/time', time());
