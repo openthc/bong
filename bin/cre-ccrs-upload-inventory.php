@@ -29,7 +29,7 @@ function _cre_ccrs_upload_inventory($cli_args)
 
 	$sql = <<<SQL
 	SELECT *
-	FROM lot
+	FROM inventory
 	WHERE license_id = :l0
 	  AND stat IN (100, 102, 200)
 	ORDER BY stat ASC, updated_at ASC
@@ -70,7 +70,7 @@ function _cre_ccrs_upload_inventory($cli_args)
 			case 100:
 			case 404:
 				$cmd = 'INSERT';
-				$dbc->query('UPDATE lot SET stat = 102, data = data #- \'{ "@result" }\' WHERE id = :s0', [
+				$dbc->query('UPDATE inventory SET stat = 102, data = data #- \'{ "@result" }\' WHERE id = :s0', [
 					':s0' => $inv['id'],
 				]);
 				break;
@@ -79,7 +79,7 @@ function _cre_ccrs_upload_inventory($cli_args)
 				break;
 			case 200:
 				// $cmd = 'UPDATE';
-				// $dbc->query('UPDATE lot SET stat = 202 WHERE id = :s0', [
+				// $dbc->query('UPDATE inventory SET stat = 202 WHERE id = :s0', [
 				// 	':s0' => $inv['id'],
 				// ]);
 				break;

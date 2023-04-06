@@ -50,7 +50,7 @@ class Create extends \OpenTHC\Bong\Controller\Base\Create
 		];
 
 		$dbc = $REQ->getAttribute('dbc');
-		$ret = $dbc->insert('lot', $rec);
+		$ret = $dbc->insert($this->_tab_name, $rec);
 
 		$rec['data'] = json_decode($rec['data'], true);
 

@@ -46,7 +46,7 @@ class Single extends \OpenTHC\Controller\Base
 				$stat['product'] = $dbc->fetchAll('SELECT count(id) AS c, stat FROM product WHERE license_id = :l0 GROUP BY stat ORDER BY stat', $arg);
 
 				$stat['crop'] = $dbc->fetchAll('SELECT count(id) AS c, stat FROM crop WHERE license_id = :l0 GROUP BY stat ORDER BY stat', $arg);
-				$stat['inventory'] = $dbc->fetchAll('SELECT count(id) AS c, stat FROM lot WHERE license_id = :l0 GROUP BY stat ORDER BY stat', $arg);
+				$stat['inventory'] = $dbc->fetchAll('SELECT count(id) AS c, stat FROM inventory WHERE license_id = :l0 GROUP BY stat ORDER BY stat', $arg);
 				// $stat['inventory_adjust'] = $dbc->fetchAll('SELECT count(id) AS c, stat FROM inventory_adjust WHERE license_id = :l0 GROUP BY stat ORDER BY stat', $arg);
 
 				$stat['b2b-incoming'] = $dbc->fetchAll('SELECT count(id) AS c, stat FROM b2b_incoming WHERE target_license_id = :l0 GROUP BY stat ORDER BY stat', $arg);

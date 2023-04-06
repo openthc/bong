@@ -7,7 +7,7 @@
 
 $dbc = $REQ->getAttribute('dbc');
 
-$sql = 'SELECT * FROM lot WHERE license_id = :l0 AND id = :i0';
+$sql = 'SELECT * FROM inventory WHERE license_id = :l0 AND id = :i0';
 $arg = [
 	':l0' => $_SESSION['License']['id'],
 	':i0' => $ARG['id'],

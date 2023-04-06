@@ -501,7 +501,7 @@ function _csv_file_incoming(?string $source_mail, string $csv_file) : bool
 			$tab_name = 'section';
 			break;
 		case 'CreatedBy,CreatedDate,ErrorMessage,LicenseNumber,ExternalIdentifier,UpdatedBy,UpdatedDate,Operation,Area,Strain,Product,InitialQuantity,QuantityOnHand,TotalCost,IsMedical,InventoryIdentifier':
-			$tab_name = 'lot';
+			$tab_name = 'inventory';
 			break;
 		case 'LicenseNumber,InventoryExternalIdentifier,AdjustmentReason,AdjustmentDetail,Quantity,AdjustmentDate,ExternalIdentifier,CreatedBy,CreatedDate,UpdatedBy,UpdatedDate,Operation,ErrorMessage':
 			$tab_name = 'inventory_adjust';

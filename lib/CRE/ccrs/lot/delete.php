@@ -33,7 +33,7 @@ if (empty($chk['license_id']) != $_SESSION['License']['id']) {
 }
 
 // Delete
-$sql = 'UPDATE lot SET stat = 410 WHERE license_id = :l0 AND id = :p0';
+$sql = 'UPDATE inventory SET stat = 410 WHERE license_id = :l0 AND id = :p0';
 $arg = [
 	':l0' => $_SESSION['License']['id'],
 	':p0' => $ARG['id'],

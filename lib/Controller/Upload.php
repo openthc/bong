@@ -32,7 +32,14 @@ class Upload extends \OpenTHC\Controller\Base
 
 						$output_size = file_put_contents($output_file, $output_data);
 
-						__exit_text("Uploaded $output_file is $output_size bytes\n");
+						return $RES->withJSON([
+							'data' => [
+								'file' => $output_file,
+								'size' => $output_size,
+								'hash' => sha1_file($output_file),
+							],
+							'meta' => []
+						]);
 
 						break;
 
@@ -52,7 +59,10 @@ class Upload extends \OpenTHC\Controller\Base
 
 		}
 
-		__exit_text('Not Implemented', 501);
+		return $RES->withJSON([
+			'data' => null,
+			'meta' => [ 'note' => 'Not Implemented' ],
+		], 501);
 
 	}
 
@@ -101,18 +111,18 @@ class Upload extends \OpenTHC\Controller\Base
 
 
 		// Update License Map
-		$sql = <<<SQL
-		INSERT INTO license (id, company_id, code, name)
-		VALUES (:l0, :c0, :lc, :ln)
-		ON CONFLICT (id) DO
-		UPDATE SET company_id = :c0, code = :lc, name = :ln
-		SQL;
-		$dbc_bong->query($sql, [
-			':l0' => $License['id'],
-			':c0' => $_SERVER['HTTP_OPENTHC_COMPANY'],
-			':lc' => $License['code'],
-			':ln' => $License['name'],
-		]);
+		// $sql = <<<SQL
+		// INSERT INTO license (id, company_id, code, name)
+		// VALUES (:l0, :c0, :lc, :ln)
+		// ON CONFLICT (id) DO
+		// UPDATE SET company_id = :c0, code = :lc, name = :ln
+		// SQL;
+		// $dbc_bong->query($sql, [
+		// 	':l0' => $License['id'],
+		// 	':c0' => $_SESSION['Company']['id'],
+		// 	':lc' => $License['code'],
+		// 	':ln' => $License['name'],
+		// ]);
 
 		if (empty($output_data)) {
 			return $RES->withJSON([
@@ -128,6 +138,22 @@ class Upload extends \OpenTHC\Controller\Base
 			if (preg_match('/(\w+ UPLOAD (01\w+)).+-canary-/', $output_data, $m)) {
 
 				$req_code = $m[1];
+				$req_ulid = $m[2];
+
+				$rec = [];
+				$rec['id'] = $req_ulid;
+				$rec['license_id'] = $License['id'];
+				$rec['name'] = $req_code;
+				$rec['source_data'] = json_encode([
+					'name' => $source_name,
+					'data' => $output_data
+				]);
+
+				$dbc_bong->insert('log_upload', $rec);
+
+			} elseif (preg_match('/^(\w+)_\w+_(\w+)\.csv/i', $source_name, $m)) {
+
+				$req_code = sprintf('%s UPLOAD %s', $m[1], $m[2]);
 				$req_ulid = $m[2];
 
 				$rec = [];
@@ -169,10 +195,9 @@ class Upload extends \OpenTHC\Controller\Base
 				case 'strain':
 					$csv_pkid = 'Strain';
 					$csv_type = 'variety';
-					$License['id'] = '018NY6XC00L1CENSE000000000';
 					break;
 				case 'inventory':
-					$csv_type = 'lot';
+					$csv_type = 'inventory';
 					break;
 				case 'inventorytransfer':
 					$csv_type = 'b2b_sale_item';
@@ -208,7 +233,7 @@ class Upload extends \OpenTHC\Controller\Base
 						$csv_head = $rec;
 						$skip = true;
 						break;
-					case '226279':
+					case '-canary-':
 						// My Canary Record
 						$skip = true;
 						break;

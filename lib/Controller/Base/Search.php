@@ -124,7 +124,7 @@ class Search extends \OpenTHC\Controller\Base
 
 				$sql = <<<SQL
 				SELECT id, name, code, stat FROM license
-				WHERE id IN (SELECT license_id FROM lot where data::text LIKE '%Invalid Area%')
+				WHERE id IN (SELECT license_id FROM {$this->_tab_name} where data::text LIKE '%Invalid Area%')
 				ORDER BY id
 				SQL;
 				$res = $dbc->fetchAll($sql);
