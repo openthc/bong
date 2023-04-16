@@ -16,7 +16,7 @@ case "$action" in
 # Install or Update the System
 install|update)
 
-	composer update --no-dev -a
+	composer update --no-ansi --no-dev --no-progress --quiet --classmap-authoritative
 	npm install
 
 	./make.sh vendor-web
