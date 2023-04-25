@@ -8,7 +8,7 @@
     "test": "test"
   },
   "dependencies": {
-    "@fortawesome/fontawesome-free": "^6.3.0",
+    "@fortawesome/fontawesome-free": "^6.4.0",
     "bootstrap": "^5.2.3",
     "htmx.org": "^1.8.6",
     "jquery": "^3.6.4",
