@@ -662,7 +662,8 @@ function _csv_file_incoming(?string $source_mail, string $csv_file) : bool
 		}
 
 		if (empty($lic_data['id'])) {
-			_exit_fail_file_move($csv_file, $csv_line, '!! License Not Found');
+			var_dump($lic_code);
+			_exit_fail_file_move($csv_file, $csv_line, '!! License Not Found [BCC-665]');
 		}
 
 		$err = _process_err_list($csv_line);
@@ -954,7 +955,7 @@ function _process_csv_file_b2b_incoming(string $csv_file, string $req_ulid, $csv
 
 		$lic_data = _license_load_check($dbc, $lic_data['code'], $csv_line['ToLicenseNumber']);
 		if (empty($lic_data)) {
-			_exit_fail_file_move($csv_file, $csv_line, '!! License Not Found');
+			_exit_fail_file_move($csv_file, $csv_line, '!! License Not Found [BCC-957]');
 		}
 
 		// Build ID from Hash
