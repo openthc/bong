@@ -22,6 +22,14 @@ $B2B_Blob = $Manifest['data']['@source'];
 // var_dump($B2B_Blob);
 // exit;
 
+$dtC = new \DateTime($Manifest['created_at']);
+$dt0 = new \DateTime('2023-01-09');
+if ($dtC <= $dt0) {
+	echo "We don't Manifest OLD ones\n";
+	exit(1);
+}
+
+
 $req_ulid = _ulid();
 $csv_name = sprintf('Manifest_%s_%s.csv', $cre_service_key, $req_ulid);
 

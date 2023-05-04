@@ -18,6 +18,7 @@ function _cre_ccrs_upload_b2b_incoming($cli_args)
 	switch ($chk) {
 		case 102:
 		case 200:
+			syslog(LOG_DEBUG, "license:{$lic}; b2b/incoming-stat={$chk}; skip");
 			return(0);
 			break;
 		default:
@@ -80,9 +81,13 @@ function _cre_ccrs_upload_b2b_incoming($cli_args)
 				// Ignore
 				break;
 			case 400:
-				// Ignore
+				// Recycle
+				$dbc->query('UPDATE b2b_incoming_item SET stat = 100, data = data #- \'{ "@result" }\' WHERE id = :s0', [
+					':s0' => $x['b2b_incoming_item_id'],
+				]);
 				break;
 			case 404:
+				// Try Insert and Recycle
 				$cmd = 'INSERT';
 				$dbc->query('UPDATE b2b_incoming_item SET stat = 100, data = data #- \'{ "@result" }\' WHERE id = :s0', [
 					':s0' => $x['b2b_incoming_item_id'],
@@ -148,5 +153,9 @@ function _cre_ccrs_upload_b2b_incoming($cli_args)
 	fseek($csv_temp, 0);
 
 	_upload_to_queue_only($License, $csv_name, $csv_temp);
+
+	$rdb->hset(sprintf('/license/%s', $License['id']), 'b2b/incoming/push', 102);
+	$rdb->hset(sprintf('/license/%s', $License['id']), 'b2b/incoming/push/time', time());
+	$rdb->hset(sprintf('/license/%s', $License['id']), 'b2b/incoming/sync', 102);
 
 }
