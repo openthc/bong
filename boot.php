@@ -65,6 +65,56 @@ function _from_cre_file($f0, $REQ, $RES, $ARG)
 }
 
 /**
+ * Create Object Status Table
+ */
+function object_status_table($html)
+{
+	if (empty($html)) {
+		return '<strong>No Data</strong>';
+	}
+
+	ob_start();
+	echo '<table class="table table-sm">';
+	echo '<thead class="table-dark">';
+	echo '<tr><th style="width: 8em;">Status</th><th style="width: 8em;">Count</th><th>Errors</th></tr></thead>';
+	echo '<tbody>';
+	echo $html;
+	echo '</tbody>';
+	echo '</table>';
+
+	return ob_get_clean();
+
+}
+
+
+/**
+ * Output Helper
+ */
+function object_status_tbody($obj, $res)
+{
+	if (empty($res)) {
+		return null;
+	}
+
+	$ret = [];
+	foreach ($res as $rec) {
+		$ret[] = sprintf('<tr><td><a href="/%s?stat=%d">%d</a></td><td class="r">%d</td><td><a href="/%s?q=%s">%s</a></td></tr>'
+			, $obj
+			, $rec['stat']
+			, $rec['stat']
+			, $rec['c']
+			, $obj
+			, rawurlencode($rec['e'])
+			, __h($rec['e'])
+		);
+	}
+
+	return $ret;
+
+}
+
+
+/**
  * Set Option
  */
 function _set_option($dbc, $key, $val)

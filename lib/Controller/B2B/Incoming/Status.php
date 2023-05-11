@@ -45,7 +45,7 @@ class Status extends \OpenTHC\Bong\Controller\Base\Status
 		$sql = sprintf($sql, $this->_tab_name);
 		$res = $dbc->fetchAll($sql, $arg);
 		$out = object_status_tbody('b2b/incoming', $res);
-		echo html_table_wrap(implode('', $out));
+		echo object_status_table(implode('', $out));
 
 		exit(0);
 
