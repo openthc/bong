@@ -28,7 +28,6 @@ Commands:
 	upload-script-create  create an upload-builder shell script
 	upload-status         ??  What DO?
 	license-status        Show License Status
-	license-verify        Re-Init a License and try to Verify via magic Section
 	verify                Re-Init a License and try to Verify via magic Section
 
 Options:
@@ -54,9 +53,6 @@ switch ($cli_args['<command>']) {
 		break;
 	case 'license-status':
 		_cre_ccrs_license_status(array_merge([ 'license-status' ], $cli_args['<command-options>']));
-		break;
-	case 'license-verify':
-		_cre_ccrs_upload_verify(array_merge([ 'license-verify' ], $cli_args['<command-options>']));
 		break;
 	case 'push':
 		_cre_ccrs_push(array_merge([ 'push' ], $cli_args['<command-options>']));
