@@ -129,6 +129,5 @@ function _cre_ccrs_upload_crop($cli_args)
 
 	$rdb->hset(sprintf('/license/%s', $License['id']), 'crop/stat', 102);
 	$rdb->hset(sprintf('/license/%s', $License['id']), 'crop/stat/time', time());
-	$rdb->hset(sprintf('/license/%s', $License['id']), 'crop/sync', 100);
 
 }

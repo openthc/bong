@@ -14,24 +14,27 @@ function _cre_ccrs_upload_section($cli_args)
 
 	// Check Cache
 	$rdb = \OpenTHC\Service\Redis::factory();
-	$chk = $rdb->hget(sprintf('/license/%s', $lic), 'section/stat');
-	switch ($chk) {
-		case 102:
+	$rdb_stat = intval($rdb->hget(sprintf('/license/%s', $lic), 'section/stat'));
+	if ($cli_args['--force']) {
+		$rdb_stat = 100;
+	}
+	syslog(LOG_DEBUG, "license:{$lic}/section/stat={$rdb_stat}");
+	switch ($rdb_stat) {
 		case 200:
-			return(0);
+			$rdb_stat = 202;
 			break;
-		default:
-			syslog(LOG_DEBUG, "license:{$lic}; section-stat={$chk}");
+		case 202:
+			// All Good
+			return(0);
 	}
 
 	$dbc = _dbc();
-	$License = _load_license($dbc, $lic);
+	$License = _load_license($dbc, $lic, 'section');
 
 	$tz0 = new DateTimezone(\OpenTHC\Config::get('cre/usa/wa/ccrs/tz'));
 
 	// Get Data
 	$csv_data = [];
-
 	$sql = <<<SQL
 	SELECT section.*, license.code AS license_code
 	FROM section
@@ -65,19 +68,25 @@ function _cre_ccrs_upload_section($cli_args)
 			case 200:
 				// Move to 202 -- will get error from CCRS if NOT Good
 				$cmd = 'UPDATE';
-				$dbc->query('UPDATE section SET stat = 202 WHERE id = :s0', [
+				// $sql = 'UPDATE section SET stat = 202, data = data #- \'{ "@result" }\' WHERE id = :s0';
+				$sql = 'UPDATE section SET stat = 202 WHERE id = :s0';
+				$dbc->query($sql, [
 					':s0' => $section['id'],
 				]);
 				break;
 			case 202:
-				// Ignore
+				// $dbc->query('UPDATE section SET data = data #- \'{ "@result" }\' WHERE id = :s0', [
+				// 	':s0' => $section['id'],
+				// ]);
 				break;
+			case 400:
+			case 403:
 			case 404:
-				$cmd = 'INSERT';
-				$dbc->query('UPDATE section SET stat = 100, data = data #- \'{ "@result" }\' WHERE id = :s0', [
-					':s0' => $section['id'],
-				]);
-				break;
+				// $cmd = 'INSERT';
+				// $dbc->query('UPDATE section SET stat = 100, data = data #- \'{ "@result" }\' WHERE id = :s0', [
+				// 	':s0' => $section['id'],
+				// ]);
+				// break;
 			case 410:
 				// $cmd = 'DELETE'; // Move to 666 ?
 				// continue 2; // foreach
@@ -109,9 +118,8 @@ function _cre_ccrs_upload_section($cli_args)
 
 	// No Data, In Sync
 	if (empty($csv_data)) {
-		$rdb->hset(sprintf('/license/%s', $License['id']), 'section/stat', 200);
+		$rdb->hset(sprintf('/license/%s', $License['id']), 'section/stat', 202);
 		$rdb->hset(sprintf('/license/%s', $License['id']), 'section/stat/time', time());
-		$rdb->hset(sprintf('/license/%s', $License['id']), 'section/sync', 200);
 		return;
 	}
 
@@ -122,7 +130,8 @@ function _cre_ccrs_upload_section($cli_args)
 	$csv_head = explode(',', 'LicenseNumber,Area,IsQuarantine,ExternalIdentifier,CreatedBy,CreatedDate,UpdatedBy,UpdatedDate,Operation');
 	$col_size = count($csv_head);
 
-	$csv_data[] = [ '-canary-', "SECTION UPLOAD $req_ulid", 'FALSE', '-canary-', '-canary-', date('m/d/Y'), '-canary-', date('m/d/Y'), 'UPDATE' ];
+	$req_data = [ '-canary-', "SECTION UPLOAD $req_ulid", 'FALSE', '-canary-', '-canary-', date('m/d/Y'), '-canary-', date('m/d/Y'), 'UPDATE' ];
+	array_unshift($csv_data, $req_data);
 	$row_size = count($csv_data);
 
 	$csv_temp = fopen('php://temp', 'w');
@@ -143,6 +152,5 @@ function _cre_ccrs_upload_section($cli_args)
 
 	$rdb->hset(sprintf('/license/%s', $License['id']), 'section/stat', 102);
 	$rdb->hset(sprintf('/license/%s', $License['id']), 'section/stat/time', time());
-	$rdb->hset(sprintf('/license/%s', $License['id']), 'section/sync', 100);
 
 }

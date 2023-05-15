@@ -135,8 +135,5 @@ function _cre_ccrs_upload_b2b_outgoing($cli_args)
 
 	$rdb->hset(sprintf('/license/%s', $License['id']), 'b2b/outgoing/stat', 102);
 	$rdb->hset(sprintf('/license/%s', $License['id']), 'b2b/outgoing/stat/time', time());
-	$rdb->hset(sprintf('/license/%s', $License['id']), 'b2b/outgoing/sync', 0);
-	$rdb->hset(sprintf('/license/%s', $License['id']), 'b2b/outgoing/sync/time', 0);
-
 
 }

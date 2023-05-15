@@ -14,22 +14,25 @@ function _cre_ccrs_upload_variety($cli_args)
 
 	// Check Cache
 	$rdb = \OpenTHC\Service\Redis::factory();
-	$chk = $rdb->hget(sprintf('/license/%s', $lic), 'variety/stat');
-	switch ($chk) {
-		case 102:
-		case 200:
-			return(0);
-			break;
-		default:
-			syslog(LOG_DEBUG, "license:{$lic}; variety-stat={$chk}");
+	$rdb_stat = intval($rdb->hget(sprintf('/license/%s', $lic), 'variety/stat'));
+	if ($cli_args['--force']) {
+		$rdb_stat = 100;
 	}
-
+	syslog(LOG_DEBUG, "license:{$lic}/variety/stat={$rdb_stat}");
+	switch ($rdb_stat) {
+		case 200:
+			$rdb_stat = 202;
+			break;
+		case 202:
+			// All Good
+			return(0);
+	}
 
 	$dbc = _dbc();
 
 	$tz0 = new DateTimezone(\OpenTHC\Config::get('cre/usa/wa/ccrs/tz'));
 
-	$License = _load_license($dbc, $cli_args['--license']);
+	$License = _load_license($dbc, $cli_args['--license'], 'variety');
 
 	// Get Data
 	$csv_data = [];
@@ -44,10 +47,6 @@ function _cre_ccrs_upload_variety($cli_args)
 		':l0' => $License['id'],
 	]);
 	foreach ($res_variety as $variety) {
-
-		if (preg_match('/Duplicate Strain/', $variety['data'])) {
-			$variety['stat'] = 100;
-		}
 
 		switch ($variety['stat']) {
 			case 100:
@@ -76,6 +75,16 @@ function _cre_ccrs_upload_variety($cli_args)
 					, date('m/d/Y')
 				];
 
+				break;
+
+			case 202:
+
+				$dbc->query('UPDATE variety SET data = data #- \'{ "@result" }\' WHERE id = :x0', [
+					':x0' => $variety['id'],
+				]);
+
+				break;
+
 		}
 	}
 
@@ -83,7 +92,6 @@ function _cre_ccrs_upload_variety($cli_args)
 	if (empty($csv_data)) {
 		$rdb->hset(sprintf('/license/%s', $License['id']), 'variety/stat', 200);
 		$rdb->hset(sprintf('/license/%s', $License['id']), 'variety/stat/time', time());
-		$rdb->hset(sprintf('/license/%s', $License['id']), 'variety/sync', 200);
 		return;
 	}
 
@@ -94,7 +102,8 @@ function _cre_ccrs_upload_variety($cli_args)
 	$csv_head = explode(',', 'LicenseNumber,Strain,StrainType,CreatedBy,CreatedDate');
 	$col_size = count($csv_head);
 
-	$csv_data[] = [ '-canary-', "VARIETY UPLOAD $req_ulid", '-canary-', '-canary-', '-canary-' ];
+	$req_data = [ '-canary-', "VARIETY UPLOAD $req_ulid", '-canary-', '-canary-', '-canary-' ];
+	array_unshift($csv_data, $req_data);
 	$row_size = count($csv_data);
 
 	$csv_temp = fopen('php://temp', 'w');
@@ -114,6 +123,5 @@ function _cre_ccrs_upload_variety($cli_args)
 
 	$rdb->hset(sprintf('/license/%s', $License['id']), 'variety/stat', 102);
 	$rdb->hset(sprintf('/license/%s', $License['id']), 'variety/stat/time', time());
-	$rdb->hset(sprintf('/license/%s', $License['id']), 'variety/sync', 100);
 
 }

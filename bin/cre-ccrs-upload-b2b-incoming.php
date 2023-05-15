@@ -128,7 +128,6 @@ function _cre_ccrs_upload_b2b_incoming($cli_args)
 	if (empty($csv_data)) {
 		$rdb->hset(sprintf('/license/%s', $License['id']), 'b2b/incoming/stat', 200);
 		$rdb->hset(sprintf('/license/%s', $License['id']), 'b2b/incoming/stat/time', time());
-		$rdb->hset(sprintf('/license/%s', $License['id']), 'b2b/incoming/sync', 200);
 		return;
 	}
 
@@ -156,6 +155,5 @@ function _cre_ccrs_upload_b2b_incoming($cli_args)
 
 	$rdb->hset(sprintf('/license/%s', $License['id']), 'b2b/incoming/push', 102);
 	$rdb->hset(sprintf('/license/%s', $License['id']), 'b2b/incoming/push/time', time());
-	$rdb->hset(sprintf('/license/%s', $License['id']), 'b2b/incoming/sync', 102);
 
 }

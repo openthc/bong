@@ -163,7 +163,6 @@ function _cre_ccrs_upload_product($cli_args)
 	if (empty($csv_data)) {
 		$rdb->hset(sprintf('/license/%s', $License['id']), 'product/stat', 200);
 		$rdb->hset(sprintf('/license/%s', $License['id']), 'product/stat/time', time());
-		$rdb->hset(sprintf('/license/%s', $License['id']), 'product/sync', 200);
 		return;
 	}
 
@@ -193,6 +192,5 @@ function _cre_ccrs_upload_product($cli_args)
 
 	$rdb->hset(sprintf('/license/%s', $License['id']), 'product/stat', 102);
 	$rdb->hset(sprintf('/license/%s', $License['id']), 'product/stat/time', time());
-	$rdb->hset(sprintf('/license/%s', $License['id']), 'product/sync', 100);
 
 }
