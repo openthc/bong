@@ -1,21 +1,17 @@
 <?php
 /**
- * Bong Example Config
+ * OpenTHC Bong Configuration Example
  */
 
-// Our Prefered Timezone
+// Init
+$cfg = [];
+
+// Base
 $cfg = [
 	'tz' => 'UTC',
 ];
 
-// These are BONG Service Keys for DEV
-$cfg['application'] = [
-	// This service ID from openthc_auth.auth_service
-	'id' => '',
-	// This service hash from openthc_auth.auth_service
-	'secret' => '',
-];
-
+// Database
 $cfg['database'] = [
 	'hostname' => '127.0.0.1',
 	'username' => 'openthc_bong',
@@ -40,21 +36,23 @@ $cfg['cre'] = [
 	]
 ];
 
-$cfg['openthc'] = [];
-$cfg['openthc']['app'] = [
-	'id' => '',
-	'secret' => '',
-	'base' => 'https://app.openthc.example.com/'
-];
-$cfg['openthc']['bong'] = [
-	'id' => '', // from openthc_auth.auth_service
-	'secret' => '',
-	'base' => 'https://bong.openthc.example.com/',
-	'system' => [
-		// IDS from openthc_auth database
-		'company' => '',
-		'contact' => '',
-		'license' => '',
+// OpenTHC
+$cfg['openthc'] = [
+	'app' => [
+		'id' => '',
+		'origin' => 'https://app.openthc.example.com/',
+		'secret' => '',
+	],
+	'bong' => [
+		'id' => '', // from openthc_auth.auth_service
+		'origin' => 'https://bong.openthc.example.com/',
+		'secret' => '',
+		'system' => [
+			// IDS from openthc_auth database
+			'company' => '',
+			'contact' => '',
+			'license' => '',
+		]
 	]
 ];
 
