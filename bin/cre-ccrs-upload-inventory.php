@@ -157,4 +157,5 @@ function _cre_ccrs_upload_inventory($cli_args)
 
 	unset($csv_temp);
 
+	$uphelp->setStatus(102);
 }

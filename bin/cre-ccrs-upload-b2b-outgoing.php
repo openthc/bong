@@ -138,7 +138,6 @@ function _cre_ccrs_upload_b2b_outgoing($cli_args)
 
 	unset($csv_temp);
 
-	$rdb->hset(sprintf('/license/%s', $License['id']), 'b2b/outgoing/stat', 102);
-	$rdb->hset(sprintf('/license/%s', $License['id']), 'b2b/outgoing/stat/time', time());
+	$uphelp->setStatus(102);
 
 }

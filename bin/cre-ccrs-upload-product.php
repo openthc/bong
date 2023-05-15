@@ -185,7 +185,6 @@ function _cre_ccrs_upload_product($cli_args)
 	// Upload
 	_upload_to_queue_only($License, $csv_name, $csv_temp);
 
-	$rdb->hset(sprintf('/license/%s', $License['id']), 'product/stat', 102);
-	$rdb->hset(sprintf('/license/%s', $License['id']), 'product/stat/time', time());
+	$uphelp->setStatus(102);
 
 }

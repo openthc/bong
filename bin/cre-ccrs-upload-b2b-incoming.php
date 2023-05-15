@@ -146,7 +146,6 @@ function _cre_ccrs_upload_b2b_incoming($cli_args)
 
 	_upload_to_queue_only($License, $csv_name, $csv_temp);
 
-	$rdb->hset(sprintf('/license/%s', $License['id']), 'b2b/incoming/push', 102);
-	$rdb->hset(sprintf('/license/%s', $License['id']), 'b2b/incoming/push/time', time());
+	$uphelp->setStatus(102);
 
 }

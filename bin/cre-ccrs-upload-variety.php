@@ -113,7 +113,6 @@ function _cre_ccrs_upload_variety($cli_args)
 
 	_upload_to_queue_only($License, $csv_name, $csv_temp);
 
-	$rdb->hset(sprintf('/license/%s', $License['id']), 'variety/stat', 102);
-	$rdb->hset(sprintf('/license/%s', $License['id']), 'variety/stat/time', time());
+	$uphelp->setStatus(102);
 
 }

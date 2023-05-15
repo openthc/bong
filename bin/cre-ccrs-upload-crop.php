@@ -114,10 +114,9 @@ function _cre_ccrs_upload_crop($cli_args)
 		return;
 	}
 
-	$output_row_count = count($csv_data);
 	\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'SubmittedBy',   'OpenTHC' ], $col_size, '')));
 	\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'SubmittedDate', date('m/d/Y') ], $col_size, '')));
-	\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'NumberRecords', $output_row_count ], $col_size, '')));
+	\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'NumberRecords', $row_size ], $col_size, '')));
 	\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values($csv_head));
 	foreach ($csv_data as $row) {
 		\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, $row);
@@ -130,7 +129,6 @@ function _cre_ccrs_upload_crop($cli_args)
 
 	unset($csv_temp);
 
-	$rdb->hset(sprintf('/license/%s', $License['id']), 'crop/stat', 102);
-	$rdb->hset(sprintf('/license/%s', $License['id']), 'crop/stat/time', time());
+	$uphelp->setStatus(102);
 
 }
