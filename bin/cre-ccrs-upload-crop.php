@@ -10,27 +10,22 @@ use OpenTHC\Bong\CRE;
 
 function _cre_ccrs_upload_crop($cli_args)
 {
-	$lic = $cli_args['--license'];
-
 	// Check Cache
-	$rdb = \OpenTHC\Service\Redis::factory();
-	$chk = $rdb->hget(sprintf('/license/%s', $lic), 'crop/stat');
-	switch ($chk) {
-		case 102:
-		case 200:
-			return(0);
-			break;
-		default:
-			syslog(LOG_DEBUG, "license:{$lic}; crop-stat={$chk}");
+	$uphelp = new \OpenTHC\BONG\CRE\CCRS\Upload([
+		'license' => $cli_args['--license'],
+		'object' => 'crop',
+		'force' => $cli_args['--force']
+	]);
+	if (202 == $uphelp->getStatus()) {
+		return 0;
 	}
 
+	$tz0 = new DateTimezone(\OpenTHC\Config::get('cre/usa/wa/ccrs/tz'));
 
 	$dbc = _dbc();
-
-	$tz0 = new DateTimezone(\OpenTHC\Config::get('cre/usa/wa/ccrs/tz'));
-	$cre_service_key = \OpenTHC\Config::get('cre/usa/wa/ccrs/service-key');
-
 	$License = _load_license($dbc, $cli_args['--license']);
+
+	$cre_service_key = \OpenTHC\Config::get('cre/usa/wa/ccrs/service-key');
 
 	$sql = <<<SQL
 	SELECT *
@@ -111,6 +106,14 @@ function _cre_ccrs_upload_crop($cli_args)
 		$csv_data[] = $obj;
 
 	}
+
+	// No Data, In Sync
+	$row_size = count($csv_data);
+	if ($row_size <= 1) {
+		$uphelp->setStatus(202);
+		return;
+	}
+
 	$output_row_count = count($csv_data);
 	\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'SubmittedBy',   'OpenTHC' ], $col_size, '')));
 	\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'SubmittedDate', date('m/d/Y') ], $col_size, '')));

@@ -10,10 +10,15 @@ use OpenTHC\Bong\CRE;
 
 function _cre_ccrs_upload_b2b_outgoing($cli_args)
 {
-
-	$rdb = \OpenTHC\Service\Redis::factory();
-	$chk = $rdb->get(sprintf('/license/%s/b2b-outgoing', $License['id']));
-	syslog(LOG_DEBUG, "license:{$License['id']}; b2b-outgoing-stat={$chk}");
+	// Check Cache
+	$uphelp = new \OpenTHC\BONG\CRE\CCRS\Upload([
+		'license' => $cli_args['--license'],
+		'object' => 'b2b/outgoing',
+		'force' => $cli_args['--force']
+	]);
+	if (202 == $uphelp->getStatus()) {
+		return 0;
+	}
 
 	$dbc = _dbc();
 
@@ -51,8 +56,8 @@ function _cre_ccrs_upload_b2b_outgoing($cli_args)
 	$res_b2b_outgoing_item = $dbc->fetchAll($sql, $arg);
 	foreach ($res_b2b_outgoing_item as $b2b_outgoing_item) {
 
-		$dtC = new DateTime($b2b_outgoing_item['created_at']);
-		$dtU = new DateTime($b2b_outgoing_item['updated_at']);
+		$dtC = new DateTime($b2b_outgoing_item['created_at'], $tz0);
+		$dtU = new DateTime($b2b_outgoing_item['updated_at'], $tz0);
 
 		$src_b2b = json_decode($b2b_outgoing_item['b2b_outgoing_data'], true);
 		$src_b2b = $src_b2b['@source'];

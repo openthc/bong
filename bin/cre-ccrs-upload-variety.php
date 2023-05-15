@@ -10,29 +10,22 @@ use OpenTHC\Bong\CRE;
 
 function _cre_ccrs_upload_variety($cli_args)
 {
-	$lic = $cli_args['--license'];
-
 	// Check Cache
-	$rdb = \OpenTHC\Service\Redis::factory();
-	$rdb_stat = intval($rdb->hget(sprintf('/license/%s', $lic), 'variety/stat'));
-	if ($cli_args['--force']) {
-		$rdb_stat = 100;
-	}
-	syslog(LOG_DEBUG, "license:{$lic}/variety/stat={$rdb_stat}");
-	switch ($rdb_stat) {
-		case 200:
-			$rdb_stat = 202;
-			break;
-		case 202:
-			// All Good
-			return(0);
+	$uphelp = new \OpenTHC\BONG\CRE\CCRS\Upload([
+		'license' => $cli_args['--license'],
+		'object' => 'variety',
+		'force' => $cli_args['--force']
+	]);
+	if (202 == $uphelp->getStatus()) {
+		return 0;
 	}
 
 	$dbc = _dbc();
 
-	$tz0 = new DateTimezone(\OpenTHC\Config::get('cre/usa/wa/ccrs/tz'));
-
 	$License = _load_license($dbc, $cli_args['--license'], 'variety');
+
+	// $api_code = \OpenTHC\Config::get('cre/usa/wa/ccrs/service-key');
+	// $csv = new \OpenTHC\BONG\CRE\CCRS\CSV($api_code, 'variety');
 
 	// Get Data
 	$csv_data = [];
@@ -90,8 +83,7 @@ function _cre_ccrs_upload_variety($cli_args)
 
 	// No Data, In Sync
 	if (empty($csv_data)) {
-		$rdb->hset(sprintf('/license/%s', $License['id']), 'variety/stat', 200);
-		$rdb->hset(sprintf('/license/%s', $License['id']), 'variety/stat/time', time());
+		$uphelp->setStatus(202);
 		return;
 	}
 

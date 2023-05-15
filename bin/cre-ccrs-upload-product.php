@@ -10,22 +10,18 @@ use OpenTHC\Bong\CRE;
 
 function _cre_ccrs_upload_product($cli_args)
 {
-	$lic = $cli_args['--license'];
-
 	// Check Cache
-	$rdb = \OpenTHC\Service\Redis::factory();
-	$chk = $rdb->hget(sprintf('/license/%s', $lic), 'product/stat');
-	switch ($chk) {
-		case 102:
-		case 200:
-			return(0);
-			break;
-		default:
-			syslog(LOG_DEBUG, "license:{$lic}; product-stat={$chk}");
+	$uphelp = new \OpenTHC\BONG\CRE\CCRS\Upload([
+		'license' => $cli_args['--license'],
+		'object' => 'product',
+		'force' => $cli_args['--force']
+	]);
+	if (202 == $uphelp->getStatus()) {
+		return 0;
 	}
 
 	$dbc = _dbc();
-	$License = _load_license($dbc, $lic);
+	$License = _load_license($dbc, $cli_args['--license']);
 
 	$tz0 = new DateTimezone(\OpenTHC\Config::get('cre/usa/wa/ccrs/tz'));
 
@@ -102,8 +98,8 @@ function _cre_ccrs_upload_product($cli_args)
 		}
 
 
-		$dtC = new DateTime($product['created_at']);
-		$dtU = new DateTime($product['updated_at']);
+		$dtC = new DateTime($product['created_at'], $tz0);
+		$dtU = new DateTime($product['updated_at'], $tz0);
 
 		$row = [];
 
@@ -161,8 +157,7 @@ function _cre_ccrs_upload_product($cli_args)
 
 	// No Data, In Sync
 	if (empty($csv_data)) {
-		$rdb->hset(sprintf('/license/%s', $License['id']), 'product/stat', 200);
-		$rdb->hset(sprintf('/license/%s', $License['id']), 'product/stat/time', time());
+		$uphelp->setStatus(202);
 		return;
 	}
 

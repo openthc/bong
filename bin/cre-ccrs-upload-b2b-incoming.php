@@ -10,21 +10,15 @@ use OpenTHC\Bong\CRE;
 
 function _cre_ccrs_upload_b2b_incoming($cli_args)
 {
-	$lic = $cli_args['--license'];
-
 	// Check Cache
-	$rdb = \OpenTHC\Service\Redis::factory();
-	$chk = $rdb->hget(sprintf('/license/%s', $lic), 'b2b/incoming/stat');
-	switch ($chk) {
-		case 102:
-		case 200:
-			syslog(LOG_DEBUG, "license:{$lic}; b2b/incoming-stat={$chk}; skip");
-			return(0);
-			break;
-		default:
-			syslog(LOG_DEBUG, "license:{$lic}; b2b/incoming-stat={$chk}");
+	$uphelp = new \OpenTHC\BONG\CRE\CCRS\Upload([
+		'license' => $cli_args['--license'],
+		'object' => 'b2b/incoming',
+		'force' => $cli_args['--force']
+	]);
+	if (202 == $uphelp->getStatus()) {
+		return 0;
 	}
-
 
 	$dbc = _dbc();
 
@@ -53,10 +47,10 @@ function _cre_ccrs_upload_b2b_incoming($cli_args)
 		$x['data'] = json_decode($x['data'], true);
 		$x['b2b_incoming_item_data'] = json_decode($x['b2b_incoming_item_data'], true);
 
-		$dtC = new \DateTime($x['created_at']);
+		$dtC = new \DateTime($x['created_at'], $tz0);
 		$dtC->setTimezone($tz0);
 
-		$dtU = new \DateTime($x['updated_at']);
+		$dtU = new \DateTime($x['updated_at'], $tz0);
 		$dtU->setTimezone($tz0);
 
 		$cmd = '';
@@ -126,8 +120,7 @@ function _cre_ccrs_upload_b2b_incoming($cli_args)
 
 	// No Data, In Sync
 	if (empty($csv_data)) {
-		$rdb->hset(sprintf('/license/%s', $License['id']), 'b2b/incoming/stat', 200);
-		$rdb->hset(sprintf('/license/%s', $License['id']), 'b2b/incoming/stat/time', time());
+		$uphelp->setStatus(202);
 		return;
 	}
 

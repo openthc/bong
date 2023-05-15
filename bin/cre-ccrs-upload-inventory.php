@@ -10,26 +10,21 @@ use OpenTHC\Bong\CRE;
 
 function _cre_ccrs_upload_inventory($cli_args)
 {
-	$lic = $cli_args['--license'];
-
 	// Check Cache
-	$rdb = \OpenTHC\Service\Redis::factory();
-	$chk = $rdb->hget(sprintf('/license/%s', $lic), 'inventory/stat');
-	switch ($chk) {
-		case 102:
-		case 200:
-			return(0);
-			break;
-		default:
-			syslog(LOG_DEBUG, "license:{$lic}; inventory-stat={$chk}");
+	$uphelp = new \OpenTHC\BONG\CRE\CCRS\Upload([
+		'license' => $cli_args['--license'],
+		'object' => 'inventory',
+		'force' => $cli_args['--force']
+	]);
+	if (202 == $uphelp->getStatus()) {
+		return 0;
 	}
 
 	$dbc = _dbc();
+	$License = _load_license($dbc, $cli_args['--license']);
 
 	$tz0 = new DateTimezone(\OpenTHC\Config::get('cre/usa/wa/ccrs/tz'));
 	$cre_service_key = \OpenTHC\Config::get('cre/usa/wa/ccrs/service-key');
-
-	$License = _load_license($dbc, $cli_args['--license']);
 
 	// CSV Data
 	$req_ulid = _ulid();
@@ -140,10 +135,11 @@ function _cre_ccrs_upload_inventory($cli_args)
 
 	}
 
+	// No Data, In Sync
 	$row_size = count($csv_data);
 	if ($row_size <= 1) {
-		echo "No Data to Upload\n";
-		return(0);
+		$uphelp->setStatus(202);
+		return;
 	}
 
 	$csv_temp = fopen('php://temp', 'w');
