@@ -127,8 +127,6 @@ function _cre_ccrs_upload_crop($cli_args)
 
 	_upload_to_queue_only($License, $csv_name, $csv_temp);
 
-	unset($csv_temp);
-
 	$uphelp->setStatus(102);
 
 }

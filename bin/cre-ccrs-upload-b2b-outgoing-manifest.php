@@ -36,5 +36,3 @@ $b2b_helper = new \OpenTHC\CRE\CCRS\B2B();
 $csv_temp = $b2b_helper->create_outgoing_csv($B2B_Blob, $req_ulid);
 
 _upload_to_queue_only($License, $csv_name, $csv_temp);
-
-unset($csv_temp);
