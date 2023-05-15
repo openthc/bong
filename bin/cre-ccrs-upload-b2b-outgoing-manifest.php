@@ -9,7 +9,6 @@ use OpenTHC\Bong\CRE;
 
 $dbc = _dbc();
 
-$tz0 = new DateTimezone(\OpenTHC\Config::get('cre/usa/wa/ccrs/tz'));
 $cre_service_key = \OpenTHC\Config::get('cre/usa/wa/ccrs/service-key');
 
 $license_id = array_shift($argv);

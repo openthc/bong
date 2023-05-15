@@ -11,7 +11,7 @@ use OpenTHC\Bong\CRE;
 function _cre_ccrs_upload_variety($cli_args)
 {
 	// Check Cache
-	$uphelp = new \OpenTHC\BONG\CRE\CCRS\Upload([
+	$uphelp = new \OpenTHC\Bong\CRE\CCRS\Upload([
 		'license' => $cli_args['--license'],
 		'object' => 'variety',
 		'force' => $cli_args['--force']
@@ -25,7 +25,7 @@ function _cre_ccrs_upload_variety($cli_args)
 	$License = _load_license($dbc, $cli_args['--license'], 'variety');
 
 	// $api_code = \OpenTHC\Config::get('cre/usa/wa/ccrs/service-key');
-	// $csv = new \OpenTHC\BONG\CRE\CCRS\CSV($api_code, 'variety');
+	// $csv = new \OpenTHC\Bong\CRE\CCRS\CSV($api_code, 'variety');
 
 	// Get Data
 	$csv_data = [];

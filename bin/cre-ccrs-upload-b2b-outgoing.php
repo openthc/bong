@@ -11,7 +11,7 @@ use OpenTHC\Bong\CRE;
 function _cre_ccrs_upload_b2b_outgoing($cli_args)
 {
 	// Check Cache
-	$uphelp = new \OpenTHC\BONG\CRE\CCRS\Upload([
+	$uphelp = new \OpenTHC\Bong\CRE\CCRS\Upload([
 		'license' => $cli_args['--license'],
 		'object' => 'b2b/outgoing',
 		'force' => $cli_args['--force']
