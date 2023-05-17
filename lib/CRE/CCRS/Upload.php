@@ -59,7 +59,8 @@ class Upload
 	function setStatus($s)
 	{
 		$rdb = \OpenTHC\Service\Redis::factory();
-		$rdb->hset(sprintf('/license/%s', $this->_lic), sprintf('%s/stat', $this->_obj), $s);
-		$rdb->hset(sprintf('/license/%s', $this->_lic), sprintf('%s/stat/time', $this->_obj), time());
+		$k0 = sprintf('/license/%s', $this->_lic);
+		$rdb->hset($k0, sprintf('%s/stat', $this->_obj), $s);
+		$rdb->hset($k0, sprintf('%s/stat/time', $this->_obj), time());
 	}
 }
