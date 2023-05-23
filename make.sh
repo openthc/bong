@@ -1,19 +1,18 @@
 #!/bin/bash
 #
-# Top-Level Make the App Do Stuff Script
+# Does make like things
 #
-
-BIN_SELF=$(readlink -f "$0")
-APP_ROOT=$(dirname "$BIN_SELF")
-
-action="${1:-}"
-shift
 
 set -o errexit
 set -o errtrace
 set -o nounset
 set -o pipefail
 
+BIN_SELF=$(readlink -f "$0")
+APP_ROOT=$(dirname "$BIN_SELF")
+
+action="${1:-}"
+shift
 
 case "$action" in
 # Install or Update the System

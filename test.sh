@@ -4,7 +4,9 @@
 #
 
 set -o errexit
+set -o errtrace
 set -o nounset
+set -o pipefail
 
 x=${OPENTHC_TEST_BASE:-}
 if [ -z "$x" ]
@@ -20,14 +22,7 @@ cd "$d"
 
 declare -rx OUTPUT_BASE="webroot/test-output"
 declare -rx OUTPUT_MAIN="${OUTPUT_BASE}/index.html"
-declare -rx SOURCE_LIST="
-	boot.php
-	bin/
-	lib/
-	sbin/
-	test/
-	view/
-"
+declare -rx SOURCE_LIST="boot.php bin/ lib/ sbin/ test/ view/"
 
 mkdir -p "${OUTPUT_BASE}"
 
@@ -39,7 +34,15 @@ vendor/openthc/common/test/phplint.sh
 
 #
 # PHP-CPD
-vendor/openthc/common/test/phpcpd.sh
+# /opt/pmd/pmd-bin-6.54.0/bin/run.sh \
+# java -cp '/opt/pmd/pmd-bin-6.55.0/lib/*' \
+# 	net.sourceforge.pmd.cpd.CPD \
+# 	--minimum-tokens 8 \
+# 	--language php \
+# 	--dir "${SOURCE_LIST}" \
+# 	2>&1 \
+# 	> "$OUTPUT_BASE/phpcpd.txt" \
+# 	|| true
 
 
 #
