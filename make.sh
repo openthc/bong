@@ -10,7 +10,10 @@ action="${1:-}"
 shift
 
 set -o errexit
+set -o errtrace
 set -o nounset
+set -o pipefail
+
 
 case "$action" in
 # Install or Update the System
