@@ -3,12 +3,13 @@
 Interfaces with multiple Cannabis APIs (BioTrack, CCRS, Leafdata, Metrc).
 Normalizes to the OpenTHC API interfaces and data-models.
 
+
 ## Install
 
 1. Clone this Repository to somewhere clever `git clone $REPO /opt/openthc/bong`
-1. Update the Apache Config (use `etc/apache2.conf` as a template)
-1. Create the Base Database from `etc/schema.sql` and add the triggers.
-1. Configure in `etc/database`
+1. Update the Apache Config (use `etc/apache2-example.conf` as a template)
+1. Create the Base Database from `etc/00-schema.sql` and add the triggers.
+1. Configure in `etc/config.php`
 
 
 ## Connect
@@ -18,8 +19,17 @@ You can use BONG through it's normal web-interface to view objects in real time 
 BONG also provides an API -- so that other services can consume the data from the different back-ends easier.
 
 
+### With JWT
+
+```
+curl --header "Bearer: jwt/$JWT" $BONG/auth/open
+```
+
+
+### With Session
+
 ```php
-curl --cookie=cookie-file.dat https://$BONG/auth/open
+curl --cookie=cookie-file.dat $BONG/auth/open
 ```
 
 
@@ -29,8 +39,8 @@ The APIs that BONG interfaces with don't all agree on how to do pages of data, o
 BONG has tools that work in the background to pull and cache data.
 
 ```
-GET https://$BONG/status
-GET https://$BONG/inventory/status
+GET $BONG/status
+GET $BONG/inventory/status
 ```
 
 
@@ -44,8 +54,6 @@ GET https://$BONG/license
 GET https://$BONG/license/current/status
 GET https://$BONG/license/$ID/status
 ```
-
-
 
 
 ## Reading Crop
