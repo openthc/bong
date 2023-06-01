@@ -62,9 +62,10 @@ class CSV
 	}
 
 	/**
-	 *
+	 * @param string $return_type 'string' or 'stream'
+	 * @return string|resource
 	 */
-	function getData()
+	function getData($return_type='string')
 	{
 		$row_size = count($this->_csv_data) + 1;
 
@@ -81,6 +82,10 @@ class CSV
 
 		// Upload
 		fseek($csv_temp, 0);
+
+		if ('stream' == $return_type) {
+			return $csv_temp;
+		}
 
 		return stream_get_contents($csv_temp);
 
@@ -157,5 +162,10 @@ class CSV
 
 		$this->_col_size = count($this->_col_list);
 
+	}
+
+	function isEmpty()
+	{
+		return (0 == count($this->_csv_data));
 	}
 }
