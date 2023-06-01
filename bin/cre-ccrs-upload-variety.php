@@ -21,7 +21,6 @@ function _cre_ccrs_upload_variety($cli_args)
 	}
 
 	$dbc = _dbc();
-
 	$License = _load_license($dbc, $cli_args['--license'], 'variety');
 
 	$api_code = \OpenTHC\Config::get('cre/usa/wa/ccrs/service-key');
