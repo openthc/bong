@@ -36,7 +36,7 @@ class Product extends \OpenTHC\Module\Base
 		$a->post('/{id}', 'OpenTHC\Bong\Controller\Product\Update');
 
 		// Delete
-		$a->delete('/{id}', 'OpenTHC\Bong\Controller\Product\Update');
+		$a->delete('/{id}', 'OpenTHC\Bong\Controller\Product\Delete');
 
 	}
 }
