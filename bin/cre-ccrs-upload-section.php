@@ -52,6 +52,7 @@ function _cre_ccrs_upload_section($cli_args)
 		$cmd = '';
 		switch ($section['stat']) {
 			case 100:
+			case 404:
 				$cmd = 'INSERT'; // Moves to 404 via CCRS Response
 				$dbc->query('UPDATE section SET stat = 102, data = data #- \'{ "@result" }\' WHERE id = :s0', [
 					':s0' => $section['id'],
@@ -76,7 +77,6 @@ function _cre_ccrs_upload_section($cli_args)
 				break;
 			case 400:
 			case 403:
-			case 404:
 				// $cmd = 'INSERT';
 				// $dbc->query('UPDATE section SET stat = 100, data = data #- \'{ "@result" }\' WHERE id = :s0', [
 				// 	':s0' => $section['id'],
