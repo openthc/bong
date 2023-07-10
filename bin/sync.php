@@ -40,6 +40,9 @@ switch ($_SESSION['cre']['engine']) {
 	case 'biotrack':
 		require_once(__DIR__ . '/sync-biotrack.php');
 		break;
+	case 'ccrs':
+		require_once(__DIR__ . '/lib/Sync/CCRS.php');
+		break;
 	case 'leafdata':
 		require_once(__DIR__ . '/sync-leafdata.php');
 		break;
