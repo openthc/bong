@@ -10,23 +10,21 @@ $dbc = _dbc();
 $license_list = _load_license_list($dbc, $cli_args);
 foreach ($license_list as $License) {
 	echo "# License: {$License['id']}\n";
-	// _eval_object($License, 'section');
-	// _eval_object($License, 'variety');
-	// _eval_object($License, 'product');
-	// _eval_object($License, 'crop');
-	// _eval_object($License, 'inventory');
-	// _eval_b2b_incoming($License);
-	_eval_b2b_outgoing($License);
+	_eval_object($dbc, $License, 'section');
+	_eval_object($dbc, $License, 'variety');
+	_eval_object($dbc, $License, 'product');
+	_eval_object($dbc, $License, 'crop');
+	_eval_object($dbc, $License, 'inventory');
+	_eval_b2b_incoming($dbc, $License);
+	_eval_b2b_outgoing($dbc, $License);
 }
 
 
 /**
  *
  */
-function _eval_object($License, string $obj)
+function _eval_object($dbc, $License, string $obj)
 {
-	global $dbc;
-
 	$sql = <<<SQL
 	SELECT id, data
 	FROM $obj
@@ -123,10 +121,8 @@ function _eval_object($License, string $obj)
 /**
  *
  */
-function _eval_b2b_incoming($License)
+function _eval_b2b_incoming($dbc, $License)
 {
-	global $dbc;
-
 	$sql = <<<SQL
 	SELECT b2b_incoming_item.id, b2b_incoming_item.b2b_incoming_id, b2b_incoming_item.data
 	FROM b2b_incoming
@@ -169,10 +165,8 @@ function _eval_b2b_incoming($License)
 /**
  *
  */
-function _eval_b2b_outgoing($License)
+function _eval_b2b_outgoing($dbc, $License)
 {
-	global $dbc;
-
 	$sql = <<<SQL
 	SELECT b2b_outgoing_item.id, b2b_outgoing_item.b2b_outgoing_id, b2b_outgoing_item.data
 	FROM b2b_outgoing
