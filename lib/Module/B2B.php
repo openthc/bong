@@ -14,16 +14,6 @@ class B2B extends \OpenTHC\Module\Base
 	 */
 	function __invoke($a)
 	{
-		// Main
-		$a->get('', function($REQ, $RES, $ARG) {
-
-			$dbc = $REQ->getAttribute('dbc');
-			$res = $dbc->fetchAll('SELECT id, hash, updated_at FROM b2b_sale ORDER BY updated_at DESC');
-
-			return $RES->withJSON($res);
-
-		});
-
 		// Create
 		$a->post('', function($REQ, $RES, $ARG) {
 
@@ -48,8 +38,13 @@ class B2B extends \OpenTHC\Module\Base
 			$b2b_type = strtolower($_POST['type']);
 			switch ($b2b_type) {
 				case 'incoming':
+					$subC = new \OpenTHC\Bong\Controller\B2B\Incoming\Update($this->_container);
+					$RES = $subC->__invoke($REQ, $RES, $ARG);
+					return $RES;
 				case 'outgoing':
-					return _from_cre_file(sprintf('b2b/%s/update.php', $b2b_type), $REQ, $RES, $ARG);
+					$subC = new \OpenTHC\Bong\Controller\B2B\Outgoing\Update($this->_container);
+					$RES = $subC->__invoke($REQ, $RES, $ARG);
+					return $RES;
 			}
 
 			// Fail
@@ -79,7 +74,7 @@ class B2B extends \OpenTHC\Module\Base
 
 		});
 
-		// Search Incoming
+		// Incoming Search
 		$a->get('/incoming', 'OpenTHC\Bong\Controller\B2B\Incoming\Search');
 
 		// Incoming Status
@@ -87,7 +82,7 @@ class B2B extends \OpenTHC\Module\Base
 
 		// Incoming Single
 		$a->get('/incoming/{id}', function($REQ, $RES, $ARG) {
-			return _from_cre_file('b2b/outgoing/single.php', $REQ, $RES, $ARG);
+			return _from_cre_file('b2b/incoming/single.php', $REQ, $RES, $ARG);
 		});
 
 		$a->post('/incoming/{id}/accept', function($REQ, $RES, $ARG) {

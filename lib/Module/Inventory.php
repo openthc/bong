@@ -15,19 +15,19 @@ class Inventory extends \OpenTHC\Module\Base
 	function __invoke($a)
 	{
 		// Search
-		$a->get('', '\OpenTHC\Bong\Controller\Inventory\Search');
+		$a->get('', 'OpenTHC\Bong\Controller\Inventory\Search');
 
 		// Create
-		$a->post('', '\OpenTHC\Bong\Controller\Inventory\Create');
+		$a->post('', 'OpenTHC\Bong\Controller\Inventory\Create');
 
 		// Status
-		$a->get('/status', '\OpenTHC\Bong\Controller\Inventory\Status');
+		$a->get('/status', 'OpenTHC\Bong\Controller\Inventory\Status');
 
 		// Single
-		$a->get('/{id}', '\OpenTHC\Bong\Controller\Inventory\Single');
+		$a->get('/{id}', 'OpenTHC\Bong\Controller\Inventory\Single');
 
 		// Update
-		$a->post('/{id}', '\OpenTHC\Bong\Controller\Inventory\Update');
+		$a->post('/{id}', 'OpenTHC\Bong\Controller\Inventory\Update');
 
 		// Delete Item
 		$a->delete('/{id}', function($REQ, $RES, $ARG) {

@@ -15,10 +15,10 @@ class Variety extends \OpenTHC\Module\Base
 		$a->get('', 'OpenTHC\Bong\Controller\Variety\Search');
 
 		// Create
-		$a->post('', '\OpenTHC\Bong\Controller\Variety\Create');
+		$a->post('', 'OpenTHC\Bong\Controller\Variety\Create');
 
 		// Status
-		$a->get('/status','\OpenTHC\Bong\Controller\Variety\Status');
+		$a->get('/status','OpenTHC\Bong\Controller\Variety\Status');
 
 		// Single
 		$c = new \OpenTHC\Bong\Controller\Single($this->_container);
@@ -26,10 +26,10 @@ class Variety extends \OpenTHC\Module\Base
 		$a->get('/{id}', $c);
 
 		// Update
-		$a->post('/{id}', '\OpenTHC\Bong\Controller\Variety\Update');
+		$a->post('/{id}', 'OpenTHC\Bong\Controller\Variety\Update');
 
 		// Delete
-		$a->delete('/{id}', '\OpenTHC\Bong\Controller\Variety\Delete');
+		$a->delete('/{id}', 'OpenTHC\Bong\Controller\Variety\Delete');
 
 	}
 }

@@ -15,7 +15,7 @@ class InventoryAdjust extends \OpenTHC\Module\Base
 	function __invoke($a)
 	{
 		// Search
-		$a->get('', '\OpenTHC\Bong\Controller\InventoryAdjust\Search');
+		$a->get('', 'OpenTHC\Bong\Controller\InventoryAdjust\Search');
 		// function($REQ, $RES, $ARG) {
 		// 	// $dbc = $REQ->getAttribute('dbc');
 		// 	// $res = $dbc->fetchAll('SELECT id, hash, updated_at FROM lot ORDER BY updated_at DESC');
@@ -24,7 +24,7 @@ class InventoryAdjust extends \OpenTHC\Module\Base
 		// });
 
 		// Status
-		$a->get('/status', '\OpenTHC\Bong\Controller\InventoryAdjust\Status');
+		$a->get('/status', 'OpenTHC\Bong\Controller\InventoryAdjust\Status');
 
 		// Single
 		$c = new \OpenTHC\Bong\Controller\Single($this->_container);
