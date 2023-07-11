@@ -25,9 +25,8 @@ Commands:
 	upload-single         Uploads a Single Job
 	upload-queue          not sure what this does?
 	upload-script-create  create an upload-builder shell script
-	upload-status         ??  What DO?
 	license-status        Show License Status
-	review                Review the Data
+	review                Review Data 400 Level Errors
 	verify                Re-Init a License and try to Verify via magic Section
 
 Options:
@@ -56,9 +55,6 @@ switch ($cli_args['<command>']) {
 		break;
 	case 'push':
 		_cre_ccrs_push(array_merge([ 'push' ], $cli_args['<command-options>']));
-		break;
-	case 'upload':
-		_cre_ccrs_upload(array_merge([ 'upload' ], $cli_args['<command-options>']));
 		break;
 	case 'upload-queue':
 		// require_once(APP_ROOT . '/lib/CRE/ccrs/cli/upload-queue.php')
@@ -121,9 +117,6 @@ switch ($cli_args['<command>']) {
 		break;
 	case 'status':
 		_cre_ccrs_status(array_merge([ 'status' ], $cli_args['<command-options>']));
-		break;
-	case 'upload-create':
-		_cre_ccrs_upload_create(array_merge([ 'upload-create' ], $cli_args['<command-options>']));
 		break;
 	case 'upload-script-create':
 		_cre_ccrs_upload_script_create(array_merge([ 'upload-script-create' ], $cli_args['<command-options>']));
@@ -327,6 +320,9 @@ function _cre_ccrs_push($cli_args)
 	}
 }
 
+/**
+ * Review for 400 Errors
+ */
 function _cre_ccrs_review($cli_args)
 {
 	$doc = <<<DOC
@@ -344,29 +340,6 @@ function _cre_ccrs_review($cli_args)
 
 }
 
-function _cre_ccrs_upload($args)
-{
-	$doc = <<<DOC
-	BONG CRE CCRS Authentication
-	Usage:
-		cre-ccrs upload <OBJECT> [OID]
-
-	Options:
-		OBJECT is one of:
-			variety|section|product|crop|inventory|b2b\-incoming|b2b\-outgoing|b2b\-outgoing\-manifest
-
-		OID is the Objects ID
-	DOC;
-
-	$res = Docopt::handle($doc, [
-		'argv' => $args,
-		// 'optionsFirst' => true,
-	]);
-	$cli_args = $res->args;
-	var_dump($cli_args);
-
-
-}
 
 /**
  * Upload a Single Item from the Log_Upload Records
