@@ -22,12 +22,12 @@ Commands:
 	csv-upload-create     from source data create the csv files in the upload queue
 	push                  Does upload-single for all the stuff in the queue
 	push-b2b-old          Push (or check-up on) the old B2B Laggards
-	object-status-update  Update the Redis Status for Each License
 	upload-single         Uploads a Single Job
 	upload-queue          not sure what this does?
 	upload-script-create  create an upload-builder shell script
 	upload-status         ??  What DO?
 	license-status        Show License Status
+	review                Review the Data
 	verify                Re-Init a License and try to Verify via magic Section
 
 Options:
@@ -116,14 +116,14 @@ switch ($cli_args['<command>']) {
 
 		break;
 
+	case 'review':
+		_cre_ccrs_review(array_merge([ 'review' ], $cli_args['<command-options>']));
+		break;
 	case 'status':
 		_cre_ccrs_status(array_merge([ 'status' ], $cli_args['<command-options>']));
 		break;
 	case 'upload-create':
 		_cre_ccrs_upload_create(array_merge([ 'upload-create' ], $cli_args['<command-options>']));
-		break;
-	case 'object-status-update':
-		_cre_ccrs_object_status_update(array_merge([ 'object-status-update' ], $cli_args['<command-options>']));
 		break;
 	case 'upload-script-create':
 		_cre_ccrs_upload_script_create(array_merge([ 'upload-script-create' ], $cli_args['<command-options>']));
@@ -267,11 +267,12 @@ function _cre_ccrs_csv_upload_create($cli_args)
 	Create a shell script to upload data for each license
 
 	Usage:
-		cre-ccrs csv-upload-create [--license=<LIST>] [--object=<LIST>]
+		cre-ccrs csv-upload-create [--license=<LIST>] [--object=<LIST>] [--force]
 
 	Options:
 		--license=<LIST>      comma-list of license [default: ALL]
 		--object=<LIST>       comma-list of objects [default: section,variety,product,crop,inventory,inventory-adjust,b2b-incoming,b2b-outgoing]
+		--force
 	DOC;
 
 	$res = Docopt::handle($doc, [
@@ -299,6 +300,9 @@ function _cre_ccrs_csv_upload_create($cli_args)
 		$cmd[] = 'upload';
 		$cmd[] = sprintf('--license=%s', $license0['id']);
 		$cmd[] = sprintf('--object=%s', $cli_args['--object']);
+		if ( ! empty($cli_args['--force'])) {
+			$cmd[] = '--force';
+		}
 		$cmd[] = '2>&1';
 		$cmd = implode(' ', $cmd);
 		passthru($cmd);
@@ -323,6 +327,22 @@ function _cre_ccrs_push($cli_args)
 	}
 }
 
+function _cre_ccrs_review($cli_args)
+{
+	$doc = <<<DOC
+	BONG CRE CCRS Data Review
+	Usage:
+		cre-ccrs review [--license=<LICENSE>]
+	DOC;
+
+	$res = Docopt::handle($doc, [
+		'argv' => $cli_args,
+	]);
+	$cli_args = $res->args;
+
+	require_once(__DIR__ . '/cre-ccrs-review.php');
+
+}
 
 function _cre_ccrs_upload($args)
 {
@@ -513,24 +533,22 @@ function _cre_ccrs_upload_verify($cli_args)
 	$License = $dbc->fetchRow('SELECT * FROM license WHERE id = :l0', [
 		':l0' => $cli_args['--license'],
 	]);
-	$License['guid'] = $License['code'];
 
 	$cfg = [
-		'server' => 'https://bong.openthc.com/',
-		'company' => $License['company_id'],
-		'contact' => '',
-		'license' => $License['id'],
+		'server' => \OpenTHC\Config::get('openthc/bong/origin'),
+		'company' => \OpenTHC\Config::get('openthc/root/company/id'),
+		'contact' => \OpenTHC\Config::get('openthc/root/contact/id'),
+		'license' => \OpenTHC\Config::get('openthc/root/license/id')
 	];
-	// var_dump($cfg);
 
 	$jwt = new \OpenTHC\JWT([
-		'iss' => 'bong.openthc.com',
+		'iss' => \OpenTHC\Config::get('openthc/bong/id'),
 		'exp' => (time() + 120),
 		'sub' => '',
-		'company' => $cfg['company'],
-		'license' => $cfg['license'],
-		'service' => 'bong', // CRE or BONG or PIPE?
-		'cre' => 'usa/wa/ccrs', // CRE ID
+		'cre' => 'usa/wa', // CRE ID
+		// 'company' => $cfg['company'],
+		// 'license' => $cfg['license'],
+		// 'service' => 'bong', // CRE or BONG or PIPE?
 	]);
 
 	$cre = new \OpenTHC\CRE\OpenTHC($cfg);
@@ -540,10 +558,11 @@ function _cre_ccrs_upload_verify($cli_args)
 	$res = $cre->request('POST', $url, [
 		'headers' => [
 			'openthc-jwt' => $jwt->__toString(),
-			'openthc-company' => $cfg['company'],
-			'openthc-license' => $cfg['license'],
+			'openthc-company-id' => $cfg['company'],
+			'openthc-license-id' => $cfg['license'],
 		]
 	]);
+
 	var_dump($res);
 
 	echo $res->getStatusCode();
