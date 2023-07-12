@@ -23,6 +23,9 @@ class Product extends \OpenTHC\Module\Base
 		// Status
 		$a->get('/status', 'OpenTHC\Bong\Controller\Product\Status');
 
+		// Product Type
+		$a->get('/type', 'OpenTHC\Bong\Controller\System:product_type');
+
 		// Single
 		$a->get('/{id}', 'OpenTHC\Bong\Controller\Product\Single');
 

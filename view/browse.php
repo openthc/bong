@@ -1,6 +1,6 @@
 <?php
 /**
- *
+ * Browse Data
  *
  * SPDX-License-Identifier: MIT
  */
@@ -136,7 +136,7 @@ printf($fmt, 'sync-time-omega', $t1);
 	</div>
 </li>
 <li class="list-group-item d-flex justify-content-between align-items-center">
-	<div><a href="/license-type">/license-type</a> - List all License Information</div>
+	<div><a href="/license/type">/license/type</a> - List all License Information</div>
 	<div>
 		<span class="badge bg-dark">system</span>
 		<span class="badge bg-primary">BioTrack</span>
@@ -161,7 +161,7 @@ printf($fmt, 'sync-time-omega', $t1);
 	</div>
 </li>
 <li class="list-group-item d-flex justify-content-between align-items-center">
-	<div><a href="/product-type">/product-type</a> - System Defined Product Type Details</div>
+	<div><a href="/product/type">/product/type</a> - System Defined Product Type Details</div>
 	<div>
 		<span class="badge bg-dark">system</span>
 		<span class="badge bg-primary">BioTrack</span>

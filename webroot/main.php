@@ -9,7 +9,7 @@ require_once(dirname(dirname(__FILE__)) . '/boot.php');
 
 // Slim Application
 $cfg = [];
-// $cfg['debug'] = true;
+$cfg['debug'] = true;
 $app = new \OpenTHC\App($cfg);
 
 // Container Stuff
@@ -36,11 +36,6 @@ $app->map([ 'GET', 'POST' ], '/browse', 'OpenTHC\Bong\Controller\Browse')
 	->add('OpenTHC\Bong\Middleware\Auth')
 	->add('OpenTHC\Middleware\Session');
 
-
-// Product Type (move to /product/type-list?)
-$app->get('/product-type', 'OpenTHC\Bong\Controller\System:product_type')
-	->add('OpenTHC\Bong\Middleware\CRE')
-	->add('OpenTHC\Middleware\Session');
 
 // Core System Objects
 $app->group('/company', 'OpenTHC\Bong\Module\Company')
@@ -85,11 +80,6 @@ $app->group('/vehicle', 'OpenTHC\Bong\Module\Vehicle')
 	->add('OpenTHC\Bong\Middleware\CRE')
 	->add('OpenTHC\Bong\Middleware\Auth')
 	->add('OpenTHC\Middleware\Session');
-
-// $app->group('/data', 'OpenTHC\Bong\Module\Data')
-// 	->add('OpenTHC\Bong\CRE')
-// 	->add('OpenTHC\Bong\Middleware\Database')
-// 	->add('OpenTHC\Middleware\Session');
 
 // Batch
 // $app->group('/batch', 'OpenTHC\Bong\Module\Batch')
