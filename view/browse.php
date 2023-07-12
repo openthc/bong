@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: MIT
  */
 
- ?>
+?>
 
 <div class="container">
 
@@ -136,7 +136,7 @@ printf($fmt, 'sync-time-omega', $t1);
 	</div>
 </li>
 <li class="list-group-item d-flex justify-content-between align-items-center">
-	<div><a href="/license/type">/license/type</a> - List all License Information</div>
+	<div><a href="/license/type">/license/type</a> - List all License Type Information</div>
 	<div>
 		<span class="badge bg-dark">system</span>
 		<span class="badge bg-primary">BioTrack</span>
@@ -191,14 +191,14 @@ printf($fmt, 'sync-time-omega', $t1);
 
 <div class="mb-4">
 <h2>Batches</h2>
-<p>In most systems Batches are logical containers for Plants and Lots.</p>
+<p>In some systems Batches are logical containers for Plants and Lots.</p>
 
 <ul class="list-group">
 <li class="list-group-item d-flex justify-content-between align-items-center">
 	<div> <a href="/batch">/batch</a> - Batch Details</div>
 	<div>
 		<span class="badge bg-secondary">BioTrack</span>
-		<span class="badge bg-secondary">CCRS</span>
+		<span class="badge bg-dark">CCRS</span>
 		<span class="badge bg-warning">METRC</span>
 	</div>
 </li>
