@@ -16,10 +16,17 @@ class Single extends \OpenTHC\Controller\Base
 	function __invoke($REQ, $RES, $ARG)
 	{
 		$dbc = $REQ->getAttribute('dbc');
-		$sql = sprintf('SELECT id, hash, created_at, updated_at, data FROM %s WHERE id = :pk', $this->_tab_name);
+		$sql = sprintf('SELECT id, hash, stat, created_at, updated_at, data FROM %s WHERE id = :pk', $this->_tab_name);
 		$rec = $dbc->fetchRow($sql, [
 			':pk' => $ARG['id']
 		]);
+
+		if (empty($rec['id'])) {
+			return $RES->withJSON([
+				'data' => null,
+				'meta' => [],
+			], 404);
+		}
 
 		return $RES->withJSON([
 			'data' => json_decode($rec['data'], true),
