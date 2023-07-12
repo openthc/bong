@@ -1,13 +1,13 @@
 <?php
 /**
- * Inventory
+ * Section
  *
  * SPDX-License-Identifier: MIT
  */
 
-namespace OpenTHC\Bong\Controller\Inventory;
+namespace OpenTHC\Bong\Controller\Section;
 
 class Single extends \OpenTHC\Bong\Controller\Single
 {
-	protected $_tab_name = 'inventory';
+	protected $_tab_name = 'section';
 }

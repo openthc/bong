@@ -24,13 +24,7 @@ class Product extends \OpenTHC\Module\Base
 		$a->get('/status', 'OpenTHC\Bong\Controller\Product\Status');
 
 		// Single
-		$c = new \OpenTHC\Bong\Controller\Single($this->_container);
-		$c->tab = 'product';
-		$a->get('/{id}', $c);
-
-		// $a->get('/{id}', function($REQ, $RES, $ARG) {
-		// 	return _from_cre_file('product/single.php', $RES, $ARG);
-		// });
+		$a->get('/{id}', 'OpenTHC\Bong\Controller\Product\Single');
 
 		// Update
 		$a->post('/{id}', 'OpenTHC\Bong\Controller\Product\Update');

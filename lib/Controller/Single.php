@@ -11,12 +11,12 @@ use OpenTHC\Bong\CRE;
 
 class Single extends \OpenTHC\Controller\Base
 {
-	public $tab = null;
+	protected $_tab_name = null;
 
 	function __invoke($REQ, $RES, $ARG)
 	{
 		$dbc = $REQ->getAttribute('dbc');
-		$sql = sprintf('SELECT id, hash, created_at, updated_at, data FROM %s WHERE id = :pk', $this->tab);
+		$sql = sprintf('SELECT id, hash, created_at, updated_at, data FROM %s WHERE id = :pk', $this->_tab_name);
 		$rec = $dbc->fetchRow($sql, [
 			':pk' => $ARG['id']
 		]);

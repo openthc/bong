@@ -24,9 +24,7 @@ class Section extends \OpenTHC\Module\Base
 		$a->get('/status', 'OpenTHC\Bong\Controller\Section\Status');
 
 		// Single
-		$c = new \OpenTHC\Bong\Controller\Single($this->_container);
-		$c->tab = 'section';
-		$a->get('/{id}', $c);
+		$a->get('/{id}', 'OpenTHC\Bong\Controller\Section\Single');
 
 		// Update
 		$a->post('/{id}', 'OpenTHC\Bong\Controller\Section\Update');

@@ -1,13 +1,13 @@
 <?php
 /**
- * Inventory
+ * Company
  *
  * SPDX-License-Identifier: MIT
  */
 
-namespace OpenTHC\Bong\Controller\Inventory;
+namespace OpenTHC\Bong\Controller\Company;
 
 class Single extends \OpenTHC\Bong\Controller\Single
 {
-	protected $_tab_name = 'inventory';
+	protected $_tab_name = 'company';
 }

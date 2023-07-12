@@ -24,9 +24,7 @@ class Vehicle extends \OpenTHC\Module\Base
 		$a->get('/status', 'OpenTHC\Bong\Controller\Vehicle\Status');
 
 		// Single
-		$c = new \OpenTHC\Bong\Controller\Single($this->_container);
-		$c->tab = 'vehicle';
-		$a->get('/{id}', $c);
+		$a->get('/{id}', 'OpenTHC\Bong\Controller\Vehicle\Single');
 
 		// Update
 		$a->post('/{id}', 'OpenTHC\Bong\Controller\Vehicle\Update');
