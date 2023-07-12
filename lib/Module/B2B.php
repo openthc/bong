@@ -35,14 +35,16 @@ class B2B extends \OpenTHC\Module\Base
 		// Update
 		$a->post('/{id}', function($REQ, $RES, $ARG) {
 
+			// Here $this is the Container
+
 			$b2b_type = strtolower($_POST['type']);
 			switch ($b2b_type) {
 				case 'incoming':
-					$subC = new \OpenTHC\Bong\Controller\B2B\Incoming\Update($this->_container);
+					$subC = new \OpenTHC\Bong\Controller\B2B\Incoming\Update($this);
 					$RES = $subC->__invoke($REQ, $RES, $ARG);
 					return $RES;
 				case 'outgoing':
-					$subC = new \OpenTHC\Bong\Controller\B2B\Outgoing\Update($this->_container);
+					$subC = new \OpenTHC\Bong\Controller\B2B\Outgoing\Update($this);
 					$RES = $subC->__invoke($REQ, $RES, $ARG);
 					return $RES;
 			}
