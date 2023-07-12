@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: MIT
  */
 
+$dtX = new \DateTime();
 $tz0 = new \DateTimezone('America/Los_Angeles');
 
 $res = $data['log_upload'];
@@ -126,10 +127,9 @@ textarea {
 
 <h1><?= __h($res['name']) ?> = <code><?= $res['stat'] ?></code></strong></h1>
 <h2>License: <a href="/license/<?= $res['License']['id'] ?>"><?= __h($res['License']['name']) ?></a> <code><?= __h($res['License']['code']) ?></code></h2>
-<div>Updated: <?= $res['updated_at'] ?>; Elapsed: <?= $res['elapsed_ms'] ?>;</div>
 
-<table>
-	<thead>
+<table class="table table-sm table-bordered">
+	<thead class="table-dark">
 		<tr>
 			<th>Action</th>
 			<th>Timestamp</th>
@@ -147,7 +147,6 @@ textarea {
 			<?php
 			$dt1 = $dtC;
 			if (empty($dt_up0)) {
-				$dtX = new \DateTime();
 				$dd = $dt1->diff($dtX);
 				printf('<td>-</td><td class="text-secondary" title="elapsed time"><i>+%s</i></td>', $dd->format('%a %H:%I:%S'));
 			} else {
@@ -162,7 +161,6 @@ textarea {
 			<td>Uploaded (CRE)</td>
 			<?php
 			if (empty($dt_up0_cre)) {
-				$dtX = new \DateTime();
 				$dd = $dt1->diff($dtX);
 				printf('<td>-</td><td class="text-secondary" title="elapsed time"><i>+%s</i></td>', $dd->format('%a %H:%I:%S'));
 			} else {
@@ -177,7 +175,6 @@ textarea {
 			<td>Result File (CRE)</td>
 			<?php
 			if (empty($dt_res1)) {
-				$dtX = new \DateTime();
 				$dd = $dt1->diff($dtX);
 				printf('<td>-</td><td class="text-secondary" title="elapsed time"><i>+%s</i></td>', $dd->format('%a %H:%I:%S'));
 			} else {
@@ -192,7 +189,6 @@ textarea {
 			<td>Result Email (CRE)</td>
 			<?php
 			if (empty($dt_res0)) {
-				$dtX = new \DateTime();
 				$dd = $dt1->diff($dtX);
 				printf('<td>-</td><td class="text-secondary"><i>+%s</i></td>', $dd->format('%a %H:%I:%S'));
 			} else {
@@ -201,6 +197,19 @@ textarea {
 				printf('<td>+%s</td>', $dd->format('%a %H:%I:%S'));
 			}
 			?>
+		</tr>
+		<tr>
+			<td>Updated (DB)</td>
+			<td title="<?= $res['updated_at'] ?>"><?= $dtU->format(\DateTime::RFC3339) ?></td>
+			<td title="This value is the difference from the CREATED">+<?php
+			$dd = $dtU->diff($dtC);
+			echo $dd->format('%a %H:%I:%S');
+			?>*</td>
+		</tr>
+		<tr>
+			<td>Elapsed (DB)</td>
+			<td>-</td>
+			<td>+<?= $res['elapsed_ms'] ?></td>
 		</tr>
 	</tbody>
 </table>
