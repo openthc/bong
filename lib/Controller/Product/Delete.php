@@ -21,7 +21,7 @@ class Delete extends \OpenTHC\Controller\Base
 		$dbc = $REQ->getAttribute('dbc');
 
 		// Object Exists?
-		$sql = 'SELECT id, license_id FROM product WHERE license_id = :0 AND id = :p0';
+		$sql = 'SELECT id, license_id FROM product WHERE license_id = :l0 AND id = :p0';
 		$arg = [
 			':l0' => $_SESSION['License']['id'],
 			':p0' => $ARG['id']
