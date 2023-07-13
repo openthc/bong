@@ -20,21 +20,22 @@ class Update extends \OpenTHC\Bong\Controller\Base\Update
 
 		$dbc = $REQ->getAttribute('dbc');
 
-		$sql = 'SELECT id, target_license_id FROM b2b_incoming WHERE id = :s0';
-		$arg = [ ':s0' => $ARG['id'] ];
-		$chk = $dbc->fetchRow($sql, $arg);
-		if ( ! empty($chk['id'])) {
-
-			if ($chk['target_license_id'] != $_SESSION['License']['id']) {
-				return $RES->withJSON([
-					'data' => $ARG['id'],
-					'meta' => [
-						'detail' => 'Access Denied [BIU-026]'
-					],
-				], 409);
-			}
-
-		}
+		// $sql = 'SELECT id, target_license_id FROM b2b_incoming WHERE target_license_id = :l0 AND id = :s0';
+		// $arg = [
+		// 	':l0' => $_SESSION['License']['id'],
+		// 	':s0' => $ARG['id']
+		// ];
+		// $chk = $dbc->fetchRow($sql, $arg);
+		// if ( ! empty($chk['id'])) {
+		// 	if ($chk['target_license_id'] != $_SESSION['License']['id']) {
+		// 		return $RES->withJSON([
+		// 			'data' => $ARG['id'],
+		// 			'meta' => [
+		// 				'detail' => 'Access Denied [BIU-026]'
+		// 			],
+		// 		], 409);
+		// 	}
+		// }
 
 		// UPSERT B2B Incoming
 		$sql = <<<SQL
