@@ -28,7 +28,6 @@ function _dbc()
 	if (empty($ret)) {
 
 		$cfg = \OpenTHC\Config::get('database');
-		$cfg['database'] = 'openthc_bong_ccrs';
 		$dsn = sprintf('pgsql:host=%s;dbname=%s', $cfg['hostname'], $cfg['database']);
 		$ret = new \Edoceo\Radix\DB\SQL($dsn, $cfg['username'], $cfg['password']);
 
@@ -49,10 +48,13 @@ function _from_cre_file($f0, $REQ, $RES, $ARG)
 	if ( ! is_file($f1)) {
 
 		return $RES->withJSON([
-			'data' => null,
-			'meta' => [
+			'data' => [
+				'f0' => $f0,
+				'f1' => $f1,
 				'cre' => $_SESSION['cre']['engine'],
-				'detail' => 'Interface not implemented [APP#046]',
+			],
+			'meta' => [
+				'note' => 'Interface not implemented [OBB-056]',
 			]
 		], 501);
 
@@ -61,55 +63,6 @@ function _from_cre_file($f0, $REQ, $RES, $ARG)
 	$out = require_once($f1);
 
 	return $out;
-
-}
-
-/**
- * Create Object Status Table
- */
-function object_status_table($html)
-{
-	if (empty($html)) {
-		return '<strong>No Data</strong>';
-	}
-
-	ob_start();
-	echo '<table class="table table-sm">';
-	echo '<thead class="table-dark">';
-	echo '<tr><th style="width: 8em;">Status</th><th style="width: 8em;">Count</th><th>Errors</th></tr></thead>';
-	echo '<tbody>';
-	echo $html;
-	echo '</tbody>';
-	echo '</table>';
-
-	return ob_get_clean();
-
-}
-
-
-/**
- * Output Helper
- */
-function object_status_tbody($obj, $res)
-{
-	if (empty($res)) {
-		return null;
-	}
-
-	$ret = [];
-	foreach ($res as $rec) {
-		$ret[] = sprintf('<tr><td><a href="/%s?stat=%d">%d</a></td><td class="r">%d</td><td><a href="/%s?q=%s">%s</a></td></tr>'
-			, $obj
-			, $rec['stat']
-			, $rec['stat']
-			, $rec['c']
-			, $obj
-			, rawurlencode($rec['e'])
-			, __h($rec['e'])
-		);
-	}
-
-	return $ret;
 
 }
 
