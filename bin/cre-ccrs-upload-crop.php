@@ -20,18 +20,17 @@ function _cre_ccrs_upload_crop($cli_args)
 		return 0;
 	}
 
-	$tz0 = new DateTimezone(\OpenTHC\Config::get('cre/usa/wa/ccrs/tz'));
-
 	$dbc = _dbc();
 	$License = _load_license($dbc, $cli_args['--license']);
 
+	$tz0 = new DateTimezone(\OpenTHC\Config::get('cre/usa/wa/ccrs/tz'));
 	$cre_service_key = \OpenTHC\Config::get('cre/usa/wa/ccrs/service-key');
 
 	$sql = <<<SQL
 	SELECT *
 	FROM crop
 	WHERE license_id = :l0
-	  AND stat IN (100, 102, 200)
+	  AND stat IN (100, 102, 200, 400)
 	ORDER BY stat ASC, updated_at ASC
 	LIMIT 2500
 	SQL;
@@ -41,12 +40,6 @@ function _cre_ccrs_upload_crop($cli_args)
 
 	// Build CSV
 	$req_ulid = _ulid();
-	$csv_name = sprintf('Plant_%s_%s.csv', $cre_service_key, $req_ulid);
-	$csv_temp = fopen('php://temp', 'w');
-	// $csv_temp = fopen('php://stdout', 'w');
-
-	$csv_head = explode(',', 'LicenseNumber,PlantIdentifier,Area,Strain,PlantSource,PlantState,GrowthStage,MotherPlantExternalIdentifier,HarvestDate,IsMotherPlant,ExternalIdentifier,CreatedBy,CreatedDate,UpdatedBy,UpdatedDate,Operation');
-	$col_size = count($csv_head);
 
 	$csv_data = [];
 	$csv_data[] = [ '-canary-', "CROP UPLOAD $req_ulid", '-canary-', '-canary-', '-canary-', '-canary-', '-canary-', '-canary-', date('m/d/Y'), 'FALSE', '-canary-', 'OpenTHC', date('m/d/Y'), '' ,'', 'UPDATE' ];
@@ -55,9 +48,36 @@ function _cre_ccrs_upload_crop($cli_args)
 
 		$x['data'] = json_decode($x['data'], true);
 
-		$cre_op = 'INSERT';
-		if ($x['stat'] == 200) {
-			$cre_op = 'UPDATE';
+		$cmd = '';
+		switch ($x['stat']) {
+			case 100:
+			case 404:
+				$cmd = 'INSERT';
+				$dbc->query("UPDATE crop SET stat = 102, data = jsonb_set(data, '{\"@result\"}', 'null') WHERE id = :s0", [
+					':s0' => $x['id'],
+				]);
+				break;
+			case 102:
+				$cmd = 'INSERT';
+				break;
+			case 200:
+				$cmd = 'UPDATE';
+				$dbc->query('UPDATE crop SET stat = 202 WHERE id = :s0', [
+					':s0' => $x['id'],
+				]);
+				break;
+			case 202:
+				// Fully Uploaded
+				break;
+			case 400:
+				$cmd = 'UPDATE';
+				break;
+			case 410:
+			case 666:
+				// $cmd = 'DELETE';
+				break;
+			default:
+				throw new \Exception("Invalid Crop Stat '{$x['stat']}'");
 		}
 
 		$dtC = new DateTime($x['created_at'], $tz0);
@@ -79,7 +99,7 @@ function _cre_ccrs_upload_crop($cli_args)
 			, $dtC->format('m/d/Y')
 			, '-system-'
 			, $dtU->format('m/d/Y')
-			, $cre_op
+			, $cmd
 		];
 
 		switch ($x['data']['@source']['growthphase']) {
@@ -94,9 +114,9 @@ function _cre_ccrs_upload_crop($cli_args)
 			case 'Harvested':
 				$obj[5] = 'Harvested';
 				$obj[6] = 'Flowering';
-				$obj[8] =
-				var_dump($x);
-				exit;
+				$obj[8] = $dtU->format('m/d/Y');
+				// var_dump($x);
+				// exit;
 				break;
 			case 'Seedling':
 				$obj[5] = 'Growing';
@@ -114,6 +134,11 @@ function _cre_ccrs_upload_crop($cli_args)
 		return;
 	}
 
+	$csv_name = sprintf('Plant_%s_%s.csv', $cre_service_key, $req_ulid);
+	$csv_head = explode(',', 'LicenseNumber,PlantIdentifier,Area,Strain,PlantSource,PlantState,GrowthStage,MotherPlantExternalIdentifier,HarvestDate,IsMotherPlant,ExternalIdentifier,CreatedBy,CreatedDate,UpdatedBy,UpdatedDate,Operation');
+	$col_size = count($csv_head);
+
+	$csv_temp = fopen('php://temp', 'w');
 	\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'SubmittedBy',   'OpenTHC' ], $col_size, '')));
 	\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'SubmittedDate', date('m/d/Y') ], $col_size, '')));
 	\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'NumberRecords', $row_size ], $col_size, '')));
@@ -121,8 +146,6 @@ function _cre_ccrs_upload_crop($cli_args)
 	foreach ($csv_data as $row) {
 		\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, $row);
 	}
-
-	// Upload
 	fseek($csv_temp, 0);
 
 	_upload_to_queue_only($License, $csv_name, $csv_temp);
