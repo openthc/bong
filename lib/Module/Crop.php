@@ -18,7 +18,7 @@ class Crop extends \OpenTHC\Module\Base
 		$a->post('', function($REQ, $RES, $ARG) {
 			return $RES->withJSON(array(
 				'status' => 'failure',
-				'detail' => 'Not Implemented [LMP#024]'
+				'detail' => 'Not Implemented [LMP-024]'
 			), 501);
 		});
 
@@ -33,6 +33,9 @@ class Crop extends \OpenTHC\Module\Base
 
 		// Delete
 		$a->delete('/{id}', 'OpenTHC\Bong\Controller\Crop\Delete');
+
+		// Finish
+		$a->post('/{id}/finish', 'OpenTHC\Bong\Controller\Crop\Finish');
 
 		// Convenience Functions
 		// $a->post('/{id}/move', function($REQ, $RES, $ARG) {
