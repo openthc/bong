@@ -171,6 +171,9 @@ $app->map([ 'GET', 'POST' ], '/log', 'OpenTHC\Bong\Controller\Log')
 	->add('OpenTHC\Bong\Middleware\Auth')
 	->add('OpenTHC\Middleware\Session');
 
+// Search
+$app->get('/search', 'OpenTHC\Bong\Controller\Search');
+
 // Display System Info
 $app->get('/system', 'OpenTHC\Bong\Controller\System');
 
