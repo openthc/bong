@@ -172,7 +172,10 @@ $app->map([ 'GET', 'POST' ], '/log', 'OpenTHC\Bong\Controller\Log')
 	->add('OpenTHC\Middleware\Session');
 
 // Search
-$app->get('/search', 'OpenTHC\Bong\Controller\Search');
+$app->get('/search', 'OpenTHC\Bong\Controller\Search')
+	->add('OpenTHC\Bong\Middleware\Database')
+	->add('OpenTHC\Bong\Middleware\Auth')
+	->add('OpenTHC\Middleware\Session');
 
 // Display System Info
 $app->get('/system', 'OpenTHC\Bong\Controller\System');
