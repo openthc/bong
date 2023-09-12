@@ -102,10 +102,6 @@ class Search extends \OpenTHC\Controller\Base
 	{
 		if (isset($_GET['e'])) {
 
-			var_dump($_GET);
-
-			exit;
-
 			$sql = <<<SQL
 			SELECT id, name, code, stat FROM license
 			WHERE id IN (SELECT license_id FROM {$this->_tab_name} where data::text LIKE '%Integrator is not authorized%')
@@ -175,7 +171,7 @@ class Search extends \OpenTHC\Controller\Base
 		// 	// },
 		// ];
 
-		return $this->render('search.php', $res_data);
+		return $this->render('browse/search.php', $res_data);
 
 	}
 
