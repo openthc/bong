@@ -11,6 +11,9 @@ use OpenTHC\CRE;
 
 class System extends \OpenTHC\Controller\Base
 {
+	/**
+	 *
+	 */
 	function __invoke($REQ, $RES, $ARG)
 	{
 		// Return a list of supported CREs
@@ -39,14 +42,31 @@ class System extends \OpenTHC\Controller\Base
 	 */
 	function ajax($REQ, $RES, $ARG)
 	{
+		session_write_close();
+
 		switch ($_GET['a']) {
-			case 'object-upload-result':
-				$this->ajax_object_result();
-				break;
-			case 'object-upload-status':
-				$this->ajax_object_stat();
-				break;
+			case 'request-processing':
+				return $this->stat_request_queue($RES);
+			case 'recent-update-stat':
+				return $this->stat_recent_update($RES);
+			case 'stat-upload':
+				return $this->stat_upload($RES);
 		}
+
+		$html = [];
+		$html[] = '<h2 class="alert alert-warning">Unknown Request</h2>';
+
+		$html[] = '<h3>GET</h3>';
+		$html[] = '<pre>';
+		$html[] = json_encode($_GET, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+		$html[] = '</pre>';
+
+		$html[] = '<h3>POST</h3>';
+		$html[] = '<pre>';
+		$html[] = json_encode($_POST, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+		$html[] = '</pre>';
+
+		return $RES->write(implode('', $html));
 
 	}
 
@@ -125,143 +145,92 @@ class System extends \OpenTHC\Controller\Base
 
 	}
 
-	/**
-	 *
-	 */
-	function ajax_object_stat() : array
-	{
-		$dbc = _dbc();
-
-		$RET = [];
-
-		$sql = 'select count(id) AS c, stat from license GROUP BY stat ORDER BY stat';
-		$RET['license'] = $dbc->fetchAll($sql);
-
-		echo '<h3>License</h3>';
-		echo '<table class="table table-sm">';
-		foreach ($RET['license'] as $idx => $rec) {
-
-			printf('<tr><td>%d</td><td>%d</td></tr>'
-				, $rec['stat']
-				, $rec['c']
-			);
-		}
-		echo '</table>';
-
-		$sql = 'select count(id) AS c, stat from section GROUP BY stat ORDER BY stat';
-		$RET['section'] = $dbc->fetchAll($sql);
-
-
-		$sql = 'select count(id) AS c, stat from product GROUP BY stat ORDER BY stat';
-		$RET['product'] = $dbc->fetchAll($sql);
-
-		$sql = 'select count(id) AS c, stat from variety GROUP BY stat ORDER BY stat';
-		$RET['variety'] = $dbc->fetchAll($sql);
-
-		$sql = 'select count(id) AS c, stat from crop GROUP BY stat ORDER BY stat';
-		$RET['crop'] = $dbc->fetchAll($sql);
-
-		$sql = 'select count(id) AS c, stat from inventory GROUP BY stat ORDER BY stat';
-		$RET['inventory'] = $dbc->fetchAll($sql);
-
-		$sql = 'select count(id) AS c, stat from b2b_sale_item GROUP BY stat ORDER BY stat';
-		$RET['b2b_sale_item'] = $dbc->fetchAll($sql);
-
-		// echo "B2C\n";
-		// $sql = 'select count(id), stat from b2b GROUP BY stat ORDER BY stat';
-		// $res = $dbc->fetchAll($sql);
-		// print_r($res);
-
-		return $RET;
-	}
-
-	/**
-	 *
-	 */
-	function ajax_object_result()
-	{
-		$dbc = _dbc();
-
-		// $res = $dbc->fetchAll("select count(id) AS c, stat AS e FROM license GROUP BY 2 ORDER BY 1 DESC");
-		// echo '<h3>License</h3>';
-		// echo '<table class="table table-sm">';
-		// foreach ($res as $rec) {
-		// 	printf("% 6d : %s\n", $rec['c'], $rec['e']);
-		// }
-
-		$sql = "SELECT count(id) AS c, stat, data->'@result'->'data' AS e FROM %s GROUP BY 2, 3 ORDER BY 1, 2 DESC";
-
-		$res = $dbc->fetchAll(sprintf($sql, 'section'));
-		$out = $this->ajax_object_result_output('section', $res);
-		echo '<h3>Section</h3>';
-		echo $this->html_table_wrap(implode('', $out));
-
-		$res = $dbc->fetchAll(sprintf($sql, 'variety'));
-		$out = $this->ajax_object_result_output('variety', $res);
-		echo '<h3>Variety</h3>';
-		echo $this->html_table_wrap(implode('', $out));
-
-		$res = $dbc->fetchAll(sprintf($sql, 'product'));
-		$out = $this->ajax_object_result_output('product', $res);
-		echo '<h3>Product</h3>';
-		echo $this->html_table_wrap(implode('', $out));
-
-		$res = $dbc->fetchAll(sprintf($sql, 'crop'));
-		$out = $this->ajax_object_result_output('crop', $res);
-		echo '<h3>Crop</h3>';
-		echo $this->html_table_wrap(implode('', $out));
-
-		$res = $dbc->fetchAll(sprintf($sql, 'inventory'));
-		$out = $this->ajax_object_result_output('inventory', $res);
-		echo '<h3>Lot</h3>';
-		echo $this->html_table_wrap(implode('', $out));
-
-		$res = $dbc->fetchAll(sprintf($sql, 'b2b_sale_item'));
-		$out = $this->ajax_object_result_output('b2b_sale_item', $res);
-		echo '<h3>B2B Item</h3>';
-		echo $this->html_table_wrap(implode('', $out));
-
-		// $res = $dbc->fetchAll(sprintf($sql, '')"select count(id), data->'result'->'data' from b2b_incoming_item);
-
-		// $res = $dbc->fetchAll("select count(id), data->'result'->'data' from b2c_item);
-
-		exit(0);
-
-	}
-
-	/**
-	 * Output Helper
-	 */
-	function ajax_object_result_output($obj, $res)
-	{
-		$ret = [];
-		foreach ($res as $rec) {
-			$ret[] = sprintf('<tr><td>%d</td><td><a href="/%s?q=%s">%s</a></td><td>%d</td></tr>'
-				, $rec['stat']
-				, $obj
-				, rawurlencode($rec['e'])
-				, $rec['e']
-				, $rec['c']
-			);
-		}
-		return $ret;
-	}
-
-	function html_table_wrap($html)
-	{
-		return sprintf('<table class="table table-sm">%s</table>', $html);
-	}
-
 	function license_type($REQ, $RES, $ARG)
 	{
 		// var_dump($_SESSION);
 		return _from_cre_file('license-type.php', $REQ, $RES, $ARG);
 	}
 
+	/**
+	 *
+	 */
 	function product_type($REQ, $RES, $ARG)
 	{
 		// var_dump($_SESSION);
 		return _from_cre_file('product-type.php', $REQ, $RES, $ARG);
+	}
+
+	/**
+	 *
+	 */
+	function stat_request_queue($RES)
+	{
+		$dt0 = new \DateTime();
+
+		$path_outgoing = sprintf('%s/var/ccrs-outgoing/*.csv', APP_ROOT);
+		$path_incoming = sprintf('%s/var/ccrs-incoming/*.csv', APP_ROOT);
+		$path_incoming_mail = sprintf('%s/var/ccrs-incoming-mail/*', APP_ROOT);
+		$path_incoming_done = sprintf('%s/var/ccrs-incoming-done/*.csv', APP_ROOT);
+		$path_incoming_fail = sprintf('%s/var/ccrs-incoming-fail/*.csv', APP_ROOT);
+
+		$R = \OpenTHC\Service\Redis::factory();
+		$last_incoming_diff = null;
+		$last_incoming_time = $R->get('/cre/ccrs/incoming');
+		if ( ! empty($last_incoming_time)) {
+			$dt1 = new \DateTime($last_incoming_time);
+			$dtDiff = $dt0->diff($dt1);
+			$last_incoming_diff = $dtDiff->format('%aD%Hh%Im%Ss');
+		}
+
+		$cre_stat = $R->hgetall('/cre/ccrs');
+
+
+		$out = [];
+		$out[] = '<pre>';
+		$out[] = $dt0->format(\DateTimeInterface::RFC3339);
+		$out[] = sprintf('CCRS Outgoing:      %04d', count(glob($path_outgoing)));
+		$out[] = sprintf('CCRS Incoming:      %04d  -- @%s [%s]', count(glob($path_incoming)), $last_incoming_time, $last_incoming_diff);
+		$out[] = sprintf('CCRS Incoming Mail: %04d', count(glob($path_incoming_mail)));
+		$out[] = sprintf('CCRS Incoming/Done: %04d', count(glob($path_incoming_done)));
+		$out[] = sprintf('CCRS Incoming/Fail: %04d', count(glob($path_incoming_fail)));
+		$out[] = 'CRE HGET:';
+		$out[] = print_r($cre_stat, true);
+		$out[] = '</pre>';
+
+		return $RES->write(implode("\n", $out));
+	}
+
+	/**
+	 *
+	 */
+	function stat_recent_update($RES)
+	{
+		$dt0 = new \DateTime();
+
+		$out = [];
+		$out[] = '<pre>';
+		$out[] = $dt0->format(\DateTimeInterface::RFC3339);
+
+		$dbc = _dbc();
+
+		$sql = 'SELECT count(id) FROM %s WHERE updated_at >= :dt0';
+
+		$dt0->sub(new \DateInterval('PT24H'));
+		$arg = [ ':dt0' => $dt0->format(\DateTimeInterface::RFC3339) ];
+
+		$out[] = sprintf('Variety: %04d', $dbc->fetchOne(sprintf($sql, 'variety'), $arg));
+		$out[] = sprintf('Section: %04d', $dbc->fetchOne(sprintf($sql, 'section'), $arg));
+		$out[] = sprintf('Product: %04d', $dbc->fetchOne(sprintf($sql, 'product'), $arg));
+		$out[] = sprintf('Inventory: %04d', $dbc->fetchOne(sprintf($sql, 'lot'), $arg));
+		$out[] = sprintf('Crop: %04d', $dbc->fetchOne(sprintf($sql, 'crop'), $arg));
+		$out[] = sprintf('B2B_Sale: %04d', $dbc->fetchOne(sprintf($sql, 'b2b_sale'), $arg));
+		$out[] = sprintf('B2B_Sale_Item: %04d', $dbc->fetchOne(sprintf($sql, 'b2b_sale_item'), $arg));
+		$out[] = sprintf('B2C_Sale: %04d', $dbc->fetchOne(sprintf($sql, 'b2c_sale'), $arg));
+		$out[] = sprintf('B2C_Sale_Item: %04d', $dbc->fetchOne(sprintf($sql, 'b2c_sale_item'), $arg));
+		$out[] = '</pre>';
+
+		return $RES->write(implode("\n", $out));
+
 	}
 
 }

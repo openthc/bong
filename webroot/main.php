@@ -22,7 +22,6 @@ $con = $app->getContainer();
 // 	return new \OpenTHC\HTTP\Response();
 // };
 
-
 // Authentication
 $app->group('/auth', 'OpenTHC\Bong\Module\Auth')
 	->add('OpenTHC\Bong\Middleware\Auth')
@@ -95,7 +94,7 @@ $app->group('/crop', 'OpenTHC\Bong\Module\Crop')
 	->add('OpenTHC\Bong\Middleware\Auth')
 	->add('OpenTHC\Middleware\Session');
 
-// Plant - v0
+// Alias v0
 $app->group('/plant', 'OpenTHC\Bong\Module\Crop')
 	->add('OpenTHC\Bong\Middleware\Database')
 	->add('OpenTHC\Bong\Middleware\CRE')
@@ -171,14 +170,26 @@ $app->map([ 'GET', 'POST' ], '/log', 'OpenTHC\Bong\Controller\Log')
 	->add('OpenTHC\Bong\Middleware\Auth')
 	->add('OpenTHC\Middleware\Session');
 
+// Log Single
+$app->map([ 'GET', 'POST' ], '/log/{id}', 'OpenTHC\Bong\Controller\Log:single')
+	->add('OpenTHC\Bong\Middleware\Database')
+	->add('OpenTHC\Bong\Middleware\Auth')
+	->add('OpenTHC\Middleware\Session');
+
 // Search
 $app->get('/search', 'OpenTHC\Bong\Controller\Search')
 	->add('OpenTHC\Bong\Middleware\Database')
 	->add('OpenTHC\Bong\Middleware\Auth')
 	->add('OpenTHC\Middleware\Session');
 
+$app->get('/status', function($REQ, $RES, $ARG) {
+	// Get the Currently Authenticated License Status
+});
+
 // Display System Info
-$app->get('/system', 'OpenTHC\Bong\Controller\System');
+$app->get('/system', 'OpenTHC\Bong\Controller\System')->add('OpenTHC\Middleware\Session');
+$app->get('/system/ajax', 'OpenTHC\Bong\Controller\System:ajax')->add('OpenTHC\Middleware\Session');;
+$app->get('/system/status', 'OpenTHC\Bong\Controller\System:status')->add('OpenTHC\Middleware\Session');;
 
 // Return a list of supported CREs
 // $app->get('/system/cre', function($REQ, $RES, $ARG) {

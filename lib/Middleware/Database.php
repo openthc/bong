@@ -39,8 +39,12 @@ class Database extends \OpenTHC\Middleware\Base
 			$cfg_user['database'] = $_SESSION['sql-name'];
 
 			// Connect
-			$dsn_base = "pgsql:host={$cfg_base['hostname']};dbname={$cfg_base['database']};user={$cfg_base['username']};password={$cfg_base['password']}";
+			$dsn_base = "pgsql:port=6543;dbname={$cfg_base['database']};user={$cfg_base['username']};password={$cfg_base['password']};application_name=openthc-bong-pool";
+			// $dsn_base = sprintf('pgsql:port=6543;dbname=%s;application_name=openthc-bong-pool', $cfg['database']);
 			$dbc_base = new SQL($dsn_base);
+
+			// $c = sprintf('pgsql:port=6543;dbname=%s;application_name=openthc-ops', $cfg['database']);
+			// $dbc_list[$dsn] = new \Edoceo\Radix\DB\SQL($c, $cfg['username'], $cfg['password']);
 
 			// Create Role
 			// $chk = $dbc_base->fetchOne('SELECT rolname FROM pg_roles WHERE rolname = :u0', [ ':u0' => $cfg_user['username'] ]);
@@ -54,7 +58,7 @@ class Database extends \OpenTHC\Middleware\Base
 				$dbc_base->query("CREATE DATABASE {$cfg_user['database']} WITH OWNER {$cfg_user['username']} TEMPLATE {$cfg_base['database']} ");
 			}
 
-			$_SESSION['sql-conn'] = "pgsql:host={$cfg_user['hostname']};dbname={$cfg_user['database']};user={$cfg_user['username']};password={$cfg_user['password']}";
+			$_SESSION['sql-conn'] = $dsn_base;
 
 		}
 

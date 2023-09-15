@@ -132,7 +132,7 @@ printf($fmt, 'sync-time-omega', $t1);
 		<span class="badge bg-dark">system</span>
 		<span class="badge bg-primary">BioTrack</span>
 		<span class="badge bg-primary">CCRS</span>
-		<span class="badge bg-warning">METRC</span>
+		<span class="badge bg-primary">METRC</span>
 	</div>
 </li>
 <li class="list-group-item d-flex justify-content-between align-items-center">
@@ -141,7 +141,7 @@ printf($fmt, 'sync-time-omega', $t1);
 		<span class="badge bg-dark">system</span>
 		<span class="badge bg-primary">BioTrack</span>
 		<span class="badge bg-primary">CCRS</span>
-		<span class="badge bg-primary">METRC</span>
+		<span class="badge bg-warning">METRC</span>
 	</div>
 </li>
 <li class="list-group-item d-flex justify-content-between align-items-center">

@@ -5,9 +5,11 @@
  * SPDX-License-Identifier: MIT
  */
 
+use \Edoceo\Radix\DB\SQL;
+
 define('APP_ROOT', __DIR__);
 
-error_reporting(E_ALL & ~ E_NOTICE);
+error_reporting(E_ALL & ~ E_NOTICE & ~ E_WARNING);
 
 openlog('openthc-bong', LOG_ODELAY|LOG_PID, LOG_LOCAL0);
 
@@ -28,7 +30,10 @@ function _dbc()
 	if (empty($ret)) {
 
 		$cfg = \OpenTHC\Config::get('database');
-		$dsn = sprintf('pgsql:host=%s;dbname=%s', $cfg['hostname'], $cfg['database']);
+		$dsn = sprintf('pgsql:host=%s;dbname=%s;application_name=openthc-bong', $cfg['hostname'], $cfg['database']);
+		if (getenv('PGBOUNCER_PORT')) {
+			$dsn = sprintf('pgsql:port=6543;dbname=%s;application_name=openthc-bong-pool', $cfg['database']);
+		}
 		$ret = new \Edoceo\Radix\DB\SQL($dsn, $cfg['username'], $cfg['password']);
 
 	}
@@ -36,7 +41,6 @@ function _dbc()
 	return $ret;
 
 }
-
 
 /**
  * Hands work Directly to View Script

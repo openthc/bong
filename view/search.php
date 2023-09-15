@@ -5,28 +5,50 @@
  * SPDX-License-Identifier: MIT
  */
 
-if (empty($data['object_list'])) {
-	echo '<div class="alert alert-warning">No Data Provided to List</div>';
-	return;
+echo '<div class="container">';
+
+printf('<h1>%s</h1>', $data['Page']['title']);
+
+foreach ($data['search_result'] as $tab => $res) {
+	_draw_result_table($tab, $res);
 }
 
-$chk = $data['object_list'][0];
+echo '</div>';
+
+
+/**
+ *
+ */
+function _draw_result_table($tab, $res)
+{
+	echo '<section class="mt-2">';
+	printf('<h2>Table: %s</h2>', __h($tab));
+
+	if (empty($res)) {
+		echo '<div class="alert alert-warning">No results found</div>';
+		echo '</section>';
+		return;
+	}
+
+
+$chk = $res[0];
 // unset($chk['id']);
-if (empty($data['column_list'])) {
-	$data['column_list'] = array_keys($chk);
-}
+//if (empty($data['column_list'])) {
+	$column_list = array_keys($chk);
+//}
 
 
-echo '<table class="table table-sm table-hover">';
+
+echo '<table class="table table-sm table-bordered table-hover">';
 echo '<thead class="table-dark">';
 echo '<tr>';
-foreach ($data['column_list'] as $k) {
+foreach ($column_list as $k) {
 	printf('<th>%s</th>', $k);
 }
 echo '</tr>';
 echo '</thead>';
 echo '<tbody>';
-foreach ($data['object_list'] as $obj) {
+foreach ($res as $obj) {
 
 	echo '<tr>';
 
@@ -35,14 +57,19 @@ foreach ($data['object_list'] as $obj) {
 	// 	, $obj['id']
 	// );
 
-	foreach ($data['column_list'] as $k) {
-		if (isset($data['column_function'][$k])) {
-			echo "\n<!-- $k -->\n";
-			echo $data['column_function'][$k]($obj[$k], $obj);
-		} else {
-			printf('<td>%s</td>', __h($obj[$k]));
+	foreach ($column_list as $k) {
+		switch ($k) {
+			case 'id':
+				printf('<td><a href="/%s/%s">%s</a></td>', $tab, $obj[$k], $obj[$k]);
+				break;
+			default:
+			//if (isset($data['column_function'][$k])) {
+			//	echo "\n<!-- $k -->\n";
+			//	echo $data['column_function'][$k]($obj[$k], $obj);
+			//} else {
+				printf('<td>%s</td>', __h($obj[$k]));
+			//}
 		}
-
 	}
 
 	echo '</tr>';
@@ -51,3 +78,6 @@ foreach ($data['object_list'] as $obj) {
 }
 echo '</tbody>';
 echo '</table>';
+
+	echo '</section>';
+}

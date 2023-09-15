@@ -20,7 +20,7 @@ class Ping extends \OpenTHC\Controller\Base
 		$flag = JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE;
 		$data = [
 			'data' => session_id(),
-			'meta' => [],
+			'meta' => $_SESSION,
 		];
 
 		if (empty($_SESSION['cre'])) {
@@ -36,20 +36,24 @@ class Ping extends \OpenTHC\Controller\Base
 		// $_SESSION['sql-conn'] = null;
 		// $_SESSION['sql-name'] = null;
 
-		// $dbc = _dbc();
-		// $chk = $dbc->fetchRow('SELECT * FROM company WHERE id = :c0', [
-		// 	':c0' => $_SESSION['cre-auth']['company']
-		// ]);
+		$dbc = _dbc();
 
-		// $chk = $dbc->fetchRow('SELECT * FROM license WHERE id = :l0', [
-		// 	':l0' => $_SESSION['cre-auth']['license']
-		// ]);
-		// if (empty($chk['id'])) {
-		// 	$code = 403;
-		// 	$data['data'] = null;
-		// 	$data['meta']['detail'] = 'Invalid License [CAP-036]';
-		// 	return $RES->withJSON($data, $code, $flag);
-		// }
+		// Company Check
+		if ( ! empty($_SESSION['company']['id'])) {
+			$chk = $dbc->fetchRow('SELECT * FROM company WHERE id = :c0', [
+				':c0' => $_SESSION['company']['id']
+			]);
+		}
+
+		// License Check
+		if ( ! empty($_SESSION['license']['id'])) {
+			$chk = $dbc->fetchRow('SELECT * FROM license WHERE id = :c0', [
+				':c0' => $_SESSION['license']['id']
+			]);
+			if ($chk['stat'] != 200) {
+				$code = $chk['stat'];
+			}
+		}
 
 		return $RES->withJSON($data, $code, $flag);
 

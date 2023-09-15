@@ -103,6 +103,24 @@ class Open extends \OpenTHC\Controller\Base
 		try {
 			$chk = JWT::decode($jwt);
 
+			// Temp Shit Hack
+			$_SESSION['cre'] = [
+				'id' => 'usa/wa/ccrs',
+				'engine' => 'ccrs',
+				'name' => '',
+			];
+
+			// Temp Shit Hack
+			$_SESSION['cre-auth'] = [
+				'company' => '',
+				'license' => '',
+				'username' => 'bullshit',
+				'password' => 'bullshit',
+			];
+
+			// Temp Shit Hack
+			$_SESSION['sql-name'] = 'openthc_bong_ccrs';
+
 			// Mostly Real Now
 			$_SESSION['Company'] = [
 				'id' => $chk['company'],
@@ -250,8 +268,12 @@ class Open extends \OpenTHC\Controller\Base
 			':c0' => $_SESSION['cre-auth']['company']
 		]);
 		if (empty($C['id'])) {
+			$C = [];
+			$C['id'] = $_SESSION['cre-auth']['company'];
 			$dbc->insert('company', [
-				'id' => $_SESSION['cre-auth']['company']
+				'id' => $_SESSION['cre-auth']['company'],
+				'hash' => '-',
+				// 'stat' => 100,
 			]);
 		}
 
@@ -261,9 +283,11 @@ class Open extends \OpenTHC\Controller\Base
 		if (empty($L['id'])) {
 			$dbc->insert('license', [
 				'id' => $_SESSION['cre-auth']['license'],
-				'stat' => 200,
+				'company_id' => $C['id'],
 				'code' => $_SESSION['cre-auth']['license'],
 				'name' => $_SESSION['cre-auth']['license'],
+				'stat' => 100,
+				'hash' => '-',
 			]);
 		}
 

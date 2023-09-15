@@ -24,17 +24,30 @@ class Single extends \OpenTHC\Controller\Base
 
 		$filter = [];
 		if ( ! empty($_SESSION['License']['id'])) {
-			$filter[] = 'license.id = :l0';
+			$filter[] = 'license_id = :l0';
 			$arg[':l0'] = $_SESSION['License']['id'];
 		} elseif ( ! empty($_GET['license_id'])) {
-			$filter[] = 'license.id = :l0';
+			$filter[] = 'license_id = :l0';
 			$arg[':l0'] = $_SESSION['License']['id'];
 		}
+		// Added License context /mbw 2023-139
+		// $license_id = null;
+		// if ( ! empty($_SESSION['License']['id'])) {
+		// 	$license_id = $_SESSION['License']['id'];
+		// }
+		// if ( ! empty($_GET['license_id'])) {
+		// 	$license_id = $_GET['license_id'];
+		// }
+		// if ( ! empty($license_id)) {
+		// 	$sql.= ' AND license_id = :l0';
+		// 	$arg[':l0'] = $license_id;
+		// }
+
 
 		$filter[] = ' id = :pk';
 		$arg[':pk'] = $ARG['id'];
 
-		$sql = sprintf('SELECT id, hash, stat, created_at, updated_at, data FROM %s', $this->_tab_name);
+		$sql = sprintf('SELECT * FROM %s', $this->_tab_name);
 		$sql.= ' WHERE ';
 		$sql.= implode(' AND ', $filter);
 
@@ -47,8 +60,10 @@ class Single extends \OpenTHC\Controller\Base
 			], 404);
 		}
 
+		$rec['data'] = json_decode($rec['data'], true);
+
 		$ret = [
-			'data' => json_decode($rec['data'], true),
+			'data' => $rec, // json_decode($rec['data'], true), // $rec,
 			'meta' => [
 				'stat' => $rec['stat'],
 				'hash' => $rec['hash'],
@@ -56,6 +71,8 @@ class Single extends \OpenTHC\Controller\Base
 				'updated_at' => $rec['updated_at'],
 			]
 		];
+		$ret['data']['id'] = $rec['id'];
+		$ret['data']['name'] = $rec['name'];
 
 		return $RES->withJSON($ret, 200, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 

@@ -33,18 +33,25 @@ class Search extends \OpenTHC\Controller\Base
 
 		foreach ($tab_list as $tab) {
 			$sql = <<<SQL
-			SELECT id, name
+			SELECT id, stat, name
 			FROM $tab
 			WHERE name LIKE :q1
-			   OR text::text LIKE :q1
+			   -- OR data::text LIKE :q1
 			SQL;
+
+			$arg = [
+				':q1' => sprintf('%%%s%%', $_GET['q']),
+			];
+
 
 			$res[$tab] = $dbc->fetchAll($sql, $arg);
 		}
 
 		$data = [];
+		$data['Page'] = [ 'title' => 'Search' ];
 		$data['search_result'] = $res;
 
 		return $RES->write( $this->render('search.php', $data) );
+
 	}
 }

@@ -46,10 +46,25 @@ class Status extends \OpenTHC\Controller\Base
 
 		$sql = sprintf($sql, $this->_tab_name);
 		$res = $dbc->fetchAll($sql, $arg);
-		$tbody = $this->object_status_tbody($this->_tab_name, $res);
-		echo $this->object_status_table($tbody);
 
-		exit(0);
+		$want_type = strtolower(trim(strtok($_SERVER['HTTP_ACCEPT'], ';')));
+		switch ($want_type) {
+			case 'application/json':
+
+				return $RES->withJSON([
+					'data' => $res,
+					'meta' => [],
+				], 200, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+
+			default:
+
+				// echo date('Y-m-d H:i:s');
+				$tbody = $this->object_status_tbody($this->_tab_name, $res);
+				echo $this->object_status_table($tbody);
+
+		}
+
+		return $RES;
 	}
 
 	/**
