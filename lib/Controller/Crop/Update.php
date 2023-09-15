@@ -41,7 +41,8 @@ class Update extends \OpenTHC\Bong\Controller\Base\Update
 				'@source' => $source_data
 			]),
 		];
-		$arg[':h0'] = \OpenTHC\CRE\Base::objHash($arg[':d0']);
+		//$arg[':h0'] = \OpenTHC\CRE\Base::objHash($arg[':d0']);
+		$arg[':h0'] = \OpenTHC\CRE\Base::objHash($source_data);
 
 		$dbc = $REQ->getAttribute('dbc');
 		$cmd = $dbc->prepare($sql);
@@ -60,10 +61,13 @@ class Update extends \OpenTHC\Bong\Controller\Base\Update
 		// 	]);
 		// }
 
+		/*
 		$ret_code = 200;
 		if ($ret['stat'] >= 200) {
 			$ret_code = $ret['stat'];
 		}
+		 */
+		$output_data->stat = 100;
 
 		// $ret_code = 200;
 		// switch ($hit) {
@@ -91,7 +95,7 @@ class Update extends \OpenTHC\Bong\Controller\Base\Update
 
 		return $RES->withJSON([
 			'data' => $output_data,
-			'meta' => [],
+			'meta' => [ '_res' => $res, '_hit' => $hit ],
 		], $ret_code);
 
 	}

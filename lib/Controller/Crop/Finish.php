@@ -7,7 +7,7 @@
 
 namespace OpenTHC\Bong\Controller\Crop;
 
-class Finish extends \OpenTHC\Controller\Base
+class Finish extends \OpenTHC\Bong\Controller\Base\Update
 {
 	use \OpenTHC\Traits\JSONValidator;
 
@@ -36,6 +36,7 @@ class Finish extends \OpenTHC\Controller\Base
 		$arg = [
 			':o0' => $ARG['id'],
 			':l0' => $_SESSION['License']['id'],
+			':n0' => sprintf('Finish Crop %s', $ARG['id']),
 			':d0' => json_encode([
 				'@version' => 'openthc/2015',
 				'@source' => $source_data
@@ -55,7 +56,8 @@ class Finish extends \OpenTHC\Controller\Base
 
 		$this->updateStatus();
 
-		$output_data = $this->getReturnObject($dbc, $source_data->id);
+		$output_data = [];
+		$output_data = $this->getReturnObject($dbc, $ARG['id']);
 
 		return $RES->withJSON([
 			'data' => $output_data,
