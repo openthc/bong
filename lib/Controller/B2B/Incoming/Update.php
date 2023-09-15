@@ -31,7 +31,7 @@ class Update extends \OpenTHC\Bong\Controller\Base\Update
 		// 		return $RES->withJSON([
 		// 			'data' => $ARG['id'],
 		// 			'meta' => [
-		// 				'detail' => 'Access Denied [BIU-026]'
+		// 				'note' => 'Access Denied [BIU-026]'
 		// 			],
 		// 		], 409);
 		// 	}
