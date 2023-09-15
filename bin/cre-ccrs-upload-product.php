@@ -52,6 +52,13 @@ function _cre_ccrs_upload_product($cli_args)
 			]);
 			continue;
 		}
+		// Waste -- Should be Uploaded?
+		if ('018NY6XC00PT8AXVZGNZN3A0QT' == $product_source['type']) {
+			$dbc->query('UPDATE product SET stat = 546 WHERE id = :p0', [
+				':p0' => $product['id']
+			]);
+			continue;
+		}
 
 		$cmd = '';
 		switch ($product['stat']) {
@@ -66,12 +73,15 @@ function _cre_ccrs_upload_product($cli_args)
 				break;
 			case 200:
 				$cmd = 'UPDATE';
-				$dbc->query('UPDATE product SET stat = 202 WHERE id = :s0', [
+				$dbc->query('UPDATE product SET stat = 202, data = data #- \'{ "@result" }\' WHERE id = :s0', [
 					':s0' => $product['id'],
 				]);
 				break;
 			case 202:
 				// Ignore
+				$dbc->query('UPDATE product SET data = data #- \'{ "@result" }\' WHERE id = :x0', [
+					':x0' => $product['id'],
+				]);
 				break;
 			case 404:
 				// $cmd = 'INSERT';
@@ -119,27 +129,30 @@ function _cre_ccrs_upload_product($cli_args)
 				, $cmd
 			];
 		} catch (\Exception $e) {
-			var_dump($License);
+			// var_dump($License);
 			var_dump($product);
 			echo "BAD PRODUCT\n";
-			exit(0);
+			echo $e->getMessage();
+			echo "\n";
+			// exit(0);
+			continue;
 		}
 
 		if (empty($row[1])) {
 			var_dump($row);
 			var_dump($product);
 			echo "FAIL 1 \n";
-			exit;
+			continue;
 		}
 		if (empty($row[2])) {
 			var_dump($product);
 			echo "FAIL 2 \n";
-			exit;
+			continue;
 		}
 		if (empty($row[3])) {
 			var_dump($product);
 			echo "FAIL 3 \n";
-			exit;
+			continue;
 		}
 
 		switch ($product_source['package']['type']) {
@@ -163,7 +176,8 @@ function _cre_ccrs_upload_product($cli_args)
 
 	$req_ulid = _ulid();
 
-	$csv_data[] = [ '-canary-', '-canary-', '-canary-', "PRODUCT UPLOAD $req_ulid", '', '0', '-canary-', '-canary-', date('m/d/Y'), '-canary-', date('m/d/Y'), 'UPDATE' ];
+	$req_data = [ '-canary-', '-canary-', '-canary-', "PRODUCT UPLOAD $req_ulid", '', '0', '-canary-', '-canary-', date('m/d/Y'), '-canary-', date('m/d/Y'), 'UPDATE' ];
+	array_unshift($csv_data, $req_data);
 
 	$api_code = \OpenTHC\Config::get('cre/usa/wa/ccrs/service-key');
 	$csv_name = sprintf('Product_%s_%s.csv', $api_code, $req_ulid);

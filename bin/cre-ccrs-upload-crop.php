@@ -30,7 +30,7 @@ function _cre_ccrs_upload_crop($cli_args)
 	SELECT *
 	FROM crop
 	WHERE license_id = :l0
-	  AND stat IN (100, 102, 200, 400)
+	  AND stat IN (100, 102, 200, 400, 404)
 	ORDER BY stat ASC, updated_at ASC
 	LIMIT 2500
 	SQL;
@@ -70,7 +70,9 @@ function _cre_ccrs_upload_crop($cli_args)
 				// Fully Uploaded
 				break;
 			case 400:
-				$cmd = 'UPDATE';
+			case 403:
+				// Ignore
+				// $cmd = 'UPDATE';
 				break;
 			case 410:
 			case 666:
@@ -78,6 +80,11 @@ function _cre_ccrs_upload_crop($cli_args)
 				break;
 			default:
 				throw new \Exception("Invalid Crop Stat '{$x['stat']}'");
+		}
+
+		if (empty($cmd)) {
+			// echo "SKIP: {$inv['id']}\n";
+			continue;
 		}
 
 		$dtC = new DateTime($x['created_at'], $tz0);
@@ -115,8 +122,6 @@ function _cre_ccrs_upload_crop($cli_args)
 				$obj[5] = 'Harvested';
 				$obj[6] = 'Flowering';
 				$obj[8] = $dtU->format('m/d/Y');
-				// var_dump($x);
-				// exit;
 				break;
 			case 'Seedling':
 				$obj[5] = 'Growing';

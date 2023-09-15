@@ -98,7 +98,7 @@ foreach ($message_file_list as $message_file)
 	switch ($message_type) {
 		case 'ccrs-failure-full':
 			// NOthing To do?  What?
-			_ccrs_pull_failure_full($message_file, $message_head, $message_body, $output_file);
+			_ccrs_pull_failure_full($message_file, $message_head, $message_body);
 			break;
 		case 'ccrs-failure-data':
 			_ccrs_pull_failure_data($message_file, $output_file);
@@ -216,7 +216,7 @@ function _ccrs_pull_failure_data(string $message_file, string $output_file) : in
  * Process Full Failure
  * The CSV "has not been processed"
  */
-function _ccrs_pull_failure_full(string $message_file, array $message_head, string $message_body, string $output_file) : int
+function _ccrs_pull_failure_full(string $message_file, array $message_head, string $message_body) : int
 {
 	global $dbc, $tz0;
 
@@ -388,9 +388,28 @@ function _ccrs_pull_manifest_file(string $message_file, string $output_file) : i
 
 		$req_ulid = $m[1];
 
-		$dbc->query('UPDATE log_upload SET stat = 202 WHERE id = :pk', [
-			':pk' => $req_ulid,
+		// Need to Trap the Email Here Too
+		// $dbc->query('UPDATE log_upload SET stat = 202 WHERE id = :pk', [
+		// 	':pk' => $req_ulid,
+		// ]);
+		$sql = <<<SQL
+		UPDATE log_upload SET stat = 202, result_data = coalesce(result_data, '{}'::jsonb) || :d0
+		WHERE id = :r0
+		SQL;
+		$res = $dbc->query($sql, [
+			':r0' => $req_ulid,
+			':d0' => json_encode([
+				'type' => '',
+				'data' => '',
+				'@result' => [
+					'type' => 'mail',
+					'data' => $message_data,
+					// 'created_at' => $dt0->format(\DateTime::RFC3339),
+					// 'created_at_cre' => $dt1->format(\DateTime::RFC3339)
+				]
+			])
 		]);
+
 
 		// $log_data = $dbc->fetchRow('SELECT id, license_id, result_data FROM log_upload WHERE id = :u0', [ ':u0' => $req_ulid ]);
 		// if (empty($log_data)) {
@@ -1080,7 +1099,15 @@ function _process_csv_file_b2b_outgoing_manifest($csv_file, $csv_pipe, $csv_head
 				$cre_stat = $err['code'];
 
 				// Somekind of Errors
-				$res = $dbc->query('UPDATE b2b_outgoing SET updated_at = now(), stat = :s1, data = (data || :d1) WHERE id = :b0', [
+				$sql = <<<SQL
+				UPDATE b2b_outgoing
+				   SET updated_at = now(),
+				   stat = :s1,
+				   data = (data || :d1)
+				WHERE id = :b0;
+				SQL;
+				// AND license_id_source ?
+				$res = $dbc->query($sql, [
 					':b0' => $csv_line['@id'],
 					':s1' => $err['code'],
 					':d1' => json_encode([
@@ -1089,6 +1116,7 @@ function _process_csv_file_b2b_outgoing_manifest($csv_file, $csv_pipe, $csv_head
 				]);
 
 				if (1 != $res) {
+					var_dump($res);
 					throw new \Exception(sprintf('Failed to Update B2B Outgoing "%s"', $csv_line['@id']));
 				}
 
@@ -1318,6 +1346,7 @@ function _process_err_list($csv_line)
 			case 'Invalid VehicleColor':
 			case 'Invalid VehicleMake':
 			case 'Invalid VehiclePlateNumber':
+			case 'Invalid VINNumber':
 			case 'InventoryCategory is required':
 			case 'InventoryExternalIdentifier or PlantExternalIdentifier is required':
 			case 'InventoryType is required':
@@ -1328,6 +1357,7 @@ function _process_err_list($csv_line)
 			case 'Name is over 75 characters':
 			case 'Name is required':
 			case 'Operation is invalid must be INSERT UPDATE or DELETE':
+			case 'OriginLicenseeEmailAddress is required':
 			case 'OriginLicenseePhone is required':
 			case 'OriginLicenseePhone must not exceed 14 characters':
 			case 'OriginLicenseNumber must be numeric':
@@ -1346,7 +1376,9 @@ function _process_err_list($csv_line)
 			case 'TotalCost must be numeric':
 			case 'UnitPrice is required':
 			case 'UnitPrice must be numeric':
+			case 'UpdatedBy is required for Update or Delete Operations':
 			case 'UpdatedDate is required for Update or Delete Operations':
+			case 'UpdatedDate must be a date for Update and Delete operations':
 			case 'VehicleColor is required':
 			case 'VehicleMake is required':
 			case 'VehicleModel is required':

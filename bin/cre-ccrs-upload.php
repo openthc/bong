@@ -10,63 +10,77 @@ use OpenTHC\Bong\CRE;
 
 require_once(__DIR__ . '/../boot.php');
 
-$script = array_shift($argv);
-$action = array_shift($argv);
+openlog('openthc-bong', LOG_ODELAY | LOG_PERROR | LOG_PID, LOG_LOCAL0);
 
-$action_file = null;
-if (! preg_match('/^(create|single|variety|section|product|crop|inventory|b2b\-incoming|b2b\-outgoing|b2b\-outgoing\-manifest)$/', $action)) {
-	echo "Cannot Match Action [CCU-018]\n";
-	exit(1);
+$doc = <<<DOC
+BONG CRE CCRS Upload Tool
+Usage:
+	cre-ccrs-upload upload --license=LICENSE_ID [--object=<OBJECT>] [--object-id=<OBJECT_ID>] [--force]
+
+Options:
+	--license=ID        The license ID of the one to work on.
+	--object=TYPE...    The type of record to work on. [default: section,variety,product,crop,inventory,inventory-adjust,b2b-incoming,b2b-outgoing]
+	--object-id=ID      To UPLOAD only a single item.
+	--force
+DOC;
+
+$res = Docopt::handle($doc);
+$cli_args = $res->args;
+
+// Action
+$action = null;
+foreach ([ 'single', 'upload', 'verify' ] as $k) {
+	if ($cli_args[$k]) {
+		$action = $k;
+		break;
+	}
 }
 
-/**
- * Create the Upload Script-Set for a License
- */
-if ('create' == $action) {
+// Action
+switch ($action) {
+	case 'upload':
 
-	$dbc = _dbc();
-	$license_id = array_shift($argv);
+		$obj_list = explode(',', $cli_args['--object']);
 
-	$sql = 'SELECT * FROM license WHERE stat IN (100, 200)';
-	$arg = [];
+		// Check Parameters
+		foreach ($obj_list as $obj) {
 
-	if ($license_id) {
-		$sql = 'SELECT * FROM license WHERE id = :l0';
-		$arg[':l0'] = $license_id;
-	}
+			if ( ! preg_match('/^(section|variety|product|crop|inventory|inventory\-adjust|b2b\-incoming|b2b\-outgoing|b2b\-outgoing\-manifest)$/', $obj)) {
+				echo "Cannot Match Object [CCU-058]\n";
+				exit(1);
+			}
 
-	$res_license = $dbc->fetchAll($sql, $arg);
-	foreach ($res_license as $l0) {
+			$obj_file = sprintf('%s/cre-ccrs-upload-%s.php', __DIR__, $obj);
+			if ( ! is_file($obj_file)) {
+				echo "Cannot Match Object File [CCU-064]\n";
+				exit(1);
+			}
+		}
 
-		echo "# License: {$l0['id']} / {$l0['name']}\n";
+		// Run the Scripts
+		foreach ($obj_list as $obj) {
+			$obj_file = sprintf('%s/cre-ccrs-upload-%s.php', __DIR__, $obj);
+			// echo "$obj_file\n";
+			require_once($obj_file);
+			$obj = str_replace('-', '_', $obj);
+			$obj_func = sprintf('_cre_ccrs_upload_%s', $obj);
+			// echo "$obj_func\n";
+			$res = call_user_func($obj_func, $cli_args);
+			// var_dump($res);
+		}
 
-		echo "./bin/cre-ccrs-upload.php variety {$l0['id']}\n";
-		echo "./bin/cre-ccrs-upload.php section {$l0['id']}\n";
-		echo "./bin/cre-ccrs-upload.php product {$l0['id']}\n";
-		echo "./bin/cre-ccrs-upload.php crop {$l0['id']}\n";
-		echo "./bin/cre-ccrs-upload.php inventory {$l0['id']}\n";
-		echo "./bin/cre-ccrs-upload.php inventory-delta {$l0['id']}\n";
-		echo "./bin/cre-ccrs-upload.php b2b-incoming {$l0['id']}\n";
-		echo "./bin/cre-ccrs-upload.php b2b-outgoing {$l0['id']}\n";
+		break;
 
-	}
-
-} elseif ('single' == $action) {
-	$req_ulid = array_shift($argv);
-	_upload_single($req_ulid);
-} else {
-
-	$action_file = sprintf('%s/cre-ccrs-upload-%s.php', __DIR__, $action);
-	if (is_file($action_file)) {
-		include_once($action_file);
-	}
-
+	default:
+		echo "Cannot Match Action [CCU-047]\n";
+		exit(1);
 }
+
 
 /**
  * Utility Functions
  */
-function _load_license($dbc, $license_id)
+function _load_license($dbc, $license_id, $object_table=null)
 {
 	$License = $dbc->fetchRow('SELECT * FROM license WHERE id = :l0', [ ':l0' => $license_id ]);
 	if (empty($License['id'])) {
@@ -75,9 +89,17 @@ function _load_license($dbc, $license_id)
 	}
 	switch ($License['stat']) {
 		case 100:
+		case 102:
 		case 200:
 			// OK
 			break;
+		case 403:
+		case 500:
+			$dbc->query("UPDATE {$object_table} SET stat = :s1 WHERE license_id = :l0 AND stat != :s1", [
+				':l0' => $license_id,
+				':s1' => $License['stat']
+			]);
+			// Pass Thru
 		default:
 			echo "Invalid License:'$license_id' status:'{$License['stat']}'\n";
 			exit(1);
@@ -107,8 +129,10 @@ function _upload_to_queue_only(array $License, string $csv_name, $csv_data)
 		'headers' => [
 			'content-name' => basename($csv_name),
 			'content-type' => 'text/csv',
-			'openthc-company' => $License['company_id'],
-			'openthc-license' => $License['id'],
+			'openthc-company' => $License['company_id'], // v0
+			'openthc-company-id' => $License['company_id'], // v1
+			'openthc-license' => $License['id'], // v0
+			'openthc-license-id' => $License['id'], // v1
 			'openthc-license-code' => $License['code'],
 			'openthc-license-name' => $License['name'],
 			'openthc-disable-update' => true,
@@ -136,91 +160,6 @@ function _upload_to_queue_only(array $License, string $csv_name, $csv_data)
 	$buf = trim($buf);
 
 	echo "## BONG $csv_name = $hrc\n";
-	echo $buf;
+	echo ">> $buf ..\n";
 
-}
-
-/**
- * Upload a Single Item from the Log_Upload Records
- */
-function _upload_single($req_ulid)
-{
-	$cfg = \OpenTHC\Config::get('cre/usa/wa/ccrs');
-
-	$dbc = _dbc();
-
-	$req = $dbc->fetchRow('SELECT * FROM log_upload WHERE id = :r0', [ ':r0' => $req_ulid ]);
-	if (empty($req['id'])) {
-		echo "Failed\n";
-		exit(1);
-	}
-
-	if (empty($req['source_data'])) {
-		echo "Failed [CCU-067]";
-		exit(1);
-	}
-
-	$src = json_decode($req['source_data'], true);
-
-	if (preg_match('/Manifest__(\w+)\.csv$/', $src['name'], $m)) {
-		$src['name'] = sprintf('Manifest_%s_%s.csv', $cfg['service-key'], $m[1]);
-	}
-
-	//print_r($src);
-	if ( ! empty($src['data']) && ! empty($src['name'])) {
-
-
-		$cookie_file = sprintf('%s/var/ccrs-cookies.json', APP_ROOT);
-		if ( ! is_file($cookie_file)) {
-			echo "Cannot find Cookie File\n";
-			exit(1);
-		}
-		$cookie_list = json_decode(file_get_contents($cookie_file), true);
-		// foreach ($cookie_list0 as $c) {
-		// 	if (preg_match('/lcb\.wa\.gov/', $c['domain'])) {
-		// 		$cookie_list1[] = sprintf('%s=%s', $c['name'], $c['value']);
-		// 	}
-		// }
-
-		$cfg['cookie-list'] = $cookie_list;
-		// var_dump($cfg);
-
-		$cre = new \OpenTHC\CRE\CCRS($cfg);
-		$res = $cre->ping();
-		if (200 != $res['code']) {
-			$res = $cre->auth($cfg['username'], $cfg['password']);
-			var_dump($res);
-		}
-
-		$res = $cre->upload($src);
-		switch ($res['code']) {
-			case 200:
-
-				// OK
-
-				// Save in Database
-				$sql = <<<SQL
-				UPDATE log_upload
-				SET updated_at = now(), result_data = coalesce(result_data, '{}'::jsonb) || :rd1::jsonb
-				WHERE id = :u0
-				SQL;
-
-				$arg = [
-					':u0' => $req_ulid,
-					':rd1' => json_encode([
-						'@upload' => $res,
-					])
-				];
-
-				$dbc->query($sql, $arg);
-
-				echo "Uploaded: {$res['meta']['created_at']}\n";
-
-				break;
-			default:
-				var_dump($res);
-				exit(1);
-		}
-
-	}
 }

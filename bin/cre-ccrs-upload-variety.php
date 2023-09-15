@@ -67,9 +67,17 @@ function _cre_ccrs_upload_variety($cli_args)
 
 				break;
 
-			case 202:
+			case 200:
 
-				$dbc->query('UPDATE variety SET data = data #- \'{ "@result" }\' WHERE id = :x0', [
+				$csv->addRow([
+					$License['code'] // v1
+					, CCRS::sanatize($variety['name'], 100)
+					, 'Hybrid'
+					, '-system-'
+					, date('m/d/Y')
+				]);
+
+				$dbc->query('UPDATE variety SET stat = 202, data = data #- \'{ "@result" }\' WHERE id = :x0', [
 					':x0' => $variety['id'],
 				]);
 

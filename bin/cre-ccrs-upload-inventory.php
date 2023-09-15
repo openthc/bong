@@ -31,15 +31,14 @@ function _cre_ccrs_upload_inventory($cli_args)
 
 	$csv_data = [];
 	$csv_data[] = [ '-canary-', '-canary-', '-canary-', '-canary-', '0', '0', '0', 'FALSE', "INVENTORY UPLOAD $req_ulid", '-canary-', date('m/d/Y'), '-canary-', date('m/d/Y'), 'UPDATE' ];
-	$csv_head = explode(',', 'LicenseNumber,Strain,Area,Product,InitialQuantity,QuantityOnHand,TotalCost,IsMedical,ExternalIdentifier,CreatedBy,CreatedDate,UpdatedBy,UpdatedDate,Operation');
-	$csv_name = sprintf('Inventory_%s_%s.csv', $cre_service_key, $req_ulid);
-	$col_size = count($csv_head);
 
+	// Get Data
 	$sql = <<<SQL
 	SELECT *
 	FROM inventory
 	WHERE license_id = :l0
-	  AND stat IN (100, 102, 200)
+	  AND stat IN (100, 102, 200, 400, 404, 410)
+	--   AND stat IN (400) AND inventory.data::text ILIKE '%Strain Name reported is not linked%'
 	ORDER BY stat ASC, updated_at ASC
 	LIMIT 2500
 	SQL;
@@ -51,20 +50,8 @@ function _cre_ccrs_upload_inventory($cli_args)
 		$inv_source = $inv_data['@source'];
 
 		if (empty($inv_data['@version'])) {
-			// var_dump($inv); exit;
-			$inv_source = [
-				'qty' => $inv_data['@source']['QuantityOnHand'],
-				'qty_initial' => $inv_data['@source']['InitialQuantity'],
-				'variety' => [
-					'name' => $inv_data['@source']['Strain']
-				],
-				'section' => [
-					'name' => $inv_data['@source']['Area'],
-				],
-				'product' => [
-					'name' => $inv_data['@source']['Product'],
-				]
-			];
+			// wtf /mbw 2023-142
+			//var_dump($inv); exit;
 		}
 
 		$dtC = new DateTime($inv['created_at']);
@@ -86,21 +73,28 @@ function _cre_ccrs_upload_inventory($cli_args)
 				$cmd = 'INSERT';
 				break;
 			case 200:
-				// $cmd = 'UPDATE';
-				// $dbc->query('UPDATE inventory SET stat = 202 WHERE id = :s0', [
-				// 	':s0' => $inv['id'],
-				// ]);
+				$cmd = 'UPDATE';
+				$dbc->query('UPDATE inventory SET stat = 202 WHERE id = :s0', [
+					':s0' => $inv['id'],
+				]);
 				break;
 			case 202:
 				// Fully Uploaded
 				break;
 			case 400:
+			case 403:
+				// Ignore
 				// $cmd = 'UPDATE';
+				// $dbc->query('UPDATE inventory SET stat = 102, data = data #- \'{ "@result" }\' WHERE id = :s0', [
+				// 	':s0' => $inv['id'],
+				// ]);
 				break;
 			// case 404:
 			// 	$cmd = 'INSERT';
 			// 	break;
 			case 410:
+				$cmd = 'DELETE';
+				break;
 			case 666:
 				// $cmd = 'DELETE';
 				break;
@@ -110,6 +104,21 @@ function _cre_ccrs_upload_inventory($cli_args)
 
 		if (empty($cmd)) {
 			// echo "SKIP: {$inv['id']}\n";
+			continue;
+		}
+
+		if ($inv_source['qty'] < 0) {
+			$inv_source['qty'] = 0;
+		}
+
+		// Eight Decimal Places Limit (IR73322 & IR73481)
+		if ($inv_source['qty_initial'] > 99999999) {
+			echo "SKIPPING INVENTORY {$inv['guid']}; qty_initial: {$inv_source['qty_initial']}\n";
+			continue;
+		}
+
+		if ($inv_source['qty'] > 99999999) {
+			echo "SKIPPING INVENTORY {$inv['guid']}; qty: {$inv_source['qty']}\n";
 			continue;
 		}
 
@@ -126,10 +135,19 @@ function _cre_ccrs_upload_inventory($cli_args)
 			, $inv['id']
 			, '-system-'
 			, $dtC->format('m/d/Y')
-			, '-system-'
-			, $dtU->format('m/d/Y')
+			, '' // '-system-'
+			, '' // $dtU->format('m/d/Y')
 			, $cmd
 		];
+
+		// Add Contact ULID?
+		switch ($cmd) {
+			case 'DELETE':
+			case 'UPDATE':
+				$row[11] = '-system-';
+				$row[12] = $dtU->format('m/d/Y');
+				break;
+		}
 
 		$csv_data[] = $row;
 
@@ -141,6 +159,11 @@ function _cre_ccrs_upload_inventory($cli_args)
 		$uphelp->setStatus(202);
 		return;
 	}
+
+	$csv_name = sprintf('Inventory_%s_%s.csv', $cre_service_key, $req_ulid);
+	$csv_head = explode(',', 'LicenseNumber,Strain,Area,Product,InitialQuantity,QuantityOnHand,TotalCost,IsMedical,ExternalIdentifier,CreatedBy,CreatedDate,UpdatedBy,UpdatedDate,Operation');
+	$col_size = count($csv_head);
+
 
 	$csv_temp = fopen('php://temp', 'w');
 	\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'SubmittedBy',   'OpenTHC' ], $col_size, '')));

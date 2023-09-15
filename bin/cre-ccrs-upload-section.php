@@ -64,19 +64,17 @@ function _cre_ccrs_upload_section($cli_args)
 			case 200:
 				// Move to 202 -- will get error from CCRS if NOT Good
 				$cmd = 'UPDATE';
-				// $sql = 'UPDATE section SET stat = 202, data = data #- \'{ "@result" }\' WHERE id = :s0';
-				$sql = 'UPDATE section SET stat = 202 WHERE id = :s0';
+				$sql = 'UPDATE section SET stat = 202, data = data #- \'{ "@result" }\' WHERE id = :s0';
 				$dbc->query($sql, [
 					':s0' => $section['id'],
 				]);
 				break;
 			case 202:
-				// $dbc->query('UPDATE section SET data = data #- \'{ "@result" }\' WHERE id = :s0', [
-				// 	':s0' => $section['id'],
-				// ]);
+				// Ignore
 				break;
 			case 400:
 			case 403:
+				// Ignore
 				// $cmd = 'INSERT';
 				// $dbc->query('UPDATE section SET stat = 100, data = data #- \'{ "@result" }\' WHERE id = :s0', [
 				// 	':s0' => $section['id'],

@@ -68,16 +68,34 @@ function _cre_ccrs_upload_b2b_outgoing($cli_args)
 		$cmd = '';
 		switch ($b2b_outgoing_item['stat']) {
 			case 100:
+			case 404:
+
 				$cmd = 'INSERT';
+
+				// $dbc->query('UPDATE b2b_outgoing SET stat = 102, data = data #- \'{ "@result" }\' WHERE id = :s0', [
+				// 	':s0' => $b2b_outgoing_item['b2b_outgoing_id'],
+				// ]);
+
 				$dbc->query('UPDATE b2b_outgoing_item SET stat = 102, data = data #- \'{ "@result" }\' WHERE id = :s0', [
 					':s0' => $b2b_outgoing_item['b2b_outgoing_item_id'],
 				]);
+
 				break;
 			case 102:
 				$cmd = 'INSERT';
 				break;
 			case 200:
+				// Move to 202 -- will get error from CCRS if NOT Good
 				$cmd = 'UPDATE';
+				$dbc->query('UPDATE b2b_outgoing_item SET stat = 202 WHERE id = :s0', [
+					':s0' => $x['b2b_outgoing_item_id'],
+				]);
+				break;
+			case 400:
+				// Re-Cycle
+				$dbc->query('UPDATE b2b_outgoing_item SET stat = 100, data = data #- \'{ "@result" }\' WHERE id = :s0', [
+					':s0' => $x['b2b_outgoing_item_id'],
+				]);
 				break;
 		}
 

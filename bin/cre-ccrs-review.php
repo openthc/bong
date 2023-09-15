@@ -10,13 +10,13 @@ $dbc = _dbc();
 $license_list = _load_license_list($dbc, $cli_args);
 foreach ($license_list as $License) {
 	echo "# License: {$License['id']}\n";
-	_eval_object($dbc, $License, 'section');
-	_eval_object($dbc, $License, 'variety');
-	_eval_object($dbc, $License, 'product');
-	_eval_object($dbc, $License, 'crop');
+	// _eval_object($dbc, $License, 'section');
+	// _eval_object($dbc, $License, 'variety');
+	// _eval_object($dbc, $License, 'product');
+	// _eval_object($dbc, $License, 'crop');
 	_eval_object($dbc, $License, 'inventory');
-	_eval_b2b_incoming($dbc, $License);
-	_eval_b2b_outgoing($dbc, $License);
+	// _eval_b2b_incoming($dbc, $License);
+	// _eval_b2b_outgoing($dbc, $License);
 }
 
 
@@ -29,12 +29,12 @@ function _eval_object($dbc, $License, string $obj)
 	SELECT id, data
 	FROM $obj
 	WHERE license_id = :l0
-	  AND stat = 400
-	-- AND data::text LIKE '%["Invalid Area"]%'
-	-- AND data::text ILIKE '%["Strain is required", "Area is required", "Product is required", "Invalid Area", "Invalid Product"]%'
-	-- AND data::text LIKE '%["Invalid Area", "Invalid Product"]%'
-	-- AND data::text LIKE '%["Invalid Product"]%'
-	-- AND data::text LIKE '%Strain Name reported is not linked to the license number%'
+		AND stat = 400
+		-- AND data::text LIKE '%Invalid Area%'
+		-- AND data::text ILIKE '%["Strain is required", "Area is required", "Product is required", "Invalid Area", "Invalid Product"]%'
+		-- AND data::text LIKE '%["Invalid Area", "Invalid Product"]%'
+		-- AND data::text LIKE '%["Invalid Product"]%'
+		AND data::text LIKE '%Strain Name reported is not linked to the license number%'
 	ORDER BY license_id, id
 	SQL;
 
@@ -47,6 +47,10 @@ function _eval_object($dbc, $License, string $obj)
 		$rec['data'] = json_decode($rec['data'], true);
 
 		$err = $rec['data']['@result']['data'][0];
+		if (empty($err)) {
+			continue;
+		}
+
 		switch ($err) {
 			case 'Integrator is not authorized to update licensee':
 				$sql = sprintf('UPDATE %s SET stat = 403 WHERE license_id = :l0 AND id = :o0', $obj);
@@ -57,9 +61,31 @@ function _eval_object($dbc, $License, string $obj)
 				$dbc->query('UPDATE license SET stat = 403 WHERE id = :l0 AND stat != 403', [
 					':l0' => $rec['license_id']
 				]);
+
 				continue 2; // the foreach
+
 				break;
-			// case 'Invalid Area':
+
+			case 'Invalid Area':
+
+				echo "## SECTION: {$rec['data']['@source']['section']['id']} = {$rec['data']['@source']['section']['name']}\n";
+				echo "## SELECT id, stat FROM section WHERE license_id = '{$License['id']}' AND id = '{$rec['data']['@source']['section']['id']}';\n";
+
+				$n = \OpenTHC\CRE\CCRS::sanatize($rec['data']['@source']['section']['name'], 100);
+				echo "## SELECT id FROM log_upload WHERE name LIKE 'SECTION UPLOAD%' AND license_id = '{$License['id']}' AND source_data::text ILIKE '%$n%';\n";
+
+				$cmd = [];
+				$cmd[] = '/opt/openthc/app/bin/sync.php';
+				$cmd[] = '--force';
+				$cmd[] = sprintf('--company=%s', $License['company_id']);
+				$cmd[] = sprintf('--license=%s', $License['id']);
+				$cmd[] = sprintf('--object=%s', 'section');
+				$cmd[] = sprintf('--object-id=%s', $rec['data']['@source']['section']['id']);
+				$cmd = implode(' ', $cmd);
+				echo "$cmd\n";
+
+				break;
+
 			case 'Invalid Product':
 
 				echo "## PRODUCT: {$rec['data']['@source']['product']['id']} = {$rec['data']['@source']['product']['name']}\n";
@@ -70,7 +96,9 @@ function _eval_object($dbc, $License, string $obj)
 
 				$cmd = [];
 				$cmd[] = '/opt/openthc/app/bin/sync.php';
+
 				$cmd[] = sprintf('--company=%s', $License['company_id']);
+				$cmd[] = '--force';
 				$cmd[] = sprintf('--license=%s', $License['id']);
 				$cmd[] = sprintf('--object=%s', 'product');
 				$cmd[] = sprintf('--object-id=%s', $rec['data']['@source']['product']['id']);
@@ -88,28 +116,30 @@ function _eval_object($dbc, $License, string $obj)
 
 				$cmd = [];
 				$cmd[] = '/opt/openthc/app/bin/sync.php';
+				$cmd[] = '--force';
 				$cmd[] = sprintf('--company=%s', $License['company_id']);
 				$cmd[] = sprintf('--license=%s', $License['id']);
 				$cmd[] = sprintf('--object=%s', 'variety');
 				$cmd[] = sprintf('--object-id=%s', $rec['data']['@source']['variety']['id']);
-				$cmd[] = '--force';
 				$cmd = implode(' ', $cmd);
 				echo "$cmd\n";
 
 				break;
 
 			default:
-				echo "NOT HANDLED: $err\n";
-				exit;
+				// echo "## NOT HANDLED: $err\n";
+
+				continue 2; // foreach
+				// exit;
 		}
 
 		$cmd = [];
 		$cmd[] = '/opt/openthc/app/bin/sync.php';
+		$cmd[] = '--force';
 		$cmd[] = sprintf('--company=%s', $License['company_id']);
 		$cmd[] = sprintf('--license=%s', $License['id']);
 		$cmd[] = sprintf('--object=%s', $obj);
 		$cmd[] = sprintf('--object-id=%s', $rec['id']);
-		$cmd[] = '--force';
 		$cmd = implode(' ', $cmd);
 		echo "$cmd\n";
 
@@ -213,7 +243,7 @@ function _eval_b2b_outgoing($dbc, $License)
 				break;
 			default:
 				echo "FAIL: UNHANDLED {$err}\n";
-				$dbc->query('UPDATE b2b_outgoing_item SET stat = 100 WHERE id = :bii0', [
+				$dbc->query('UPDATE b2b_outgoing_item SET stat = 100 WHERE id = :bii0 AND stat != 100', [
 					':bii0' => $rec['id']
 				]);
 				$dbc->query('UPDATE b2b_outgoing SET stat = 100 WHERE stat != 100 AND id = :bi0 AND source_license_id = :l0', [
