@@ -61,10 +61,6 @@ $rec['source_data'] = json_encode([
 
 $dbc->insert('log_upload', $rec);
 
-// Redis Queue
-// $R = \OpenTHC\Service\Redis::factory();
-// $R->rpush('/cre/ccrs/upload-queue', $req_ulid);
-
 return $RES->withJSON([
 	'data' => $req_ulid,
 	'meta' => [],

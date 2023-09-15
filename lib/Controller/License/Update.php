@@ -21,7 +21,12 @@ class Update extends \OpenTHC\Bong\Controller\Base\Update
 		}
 
 		if ($ARG['id'] != $_SESSION['License']['id']) {
-			return $RES->withJSON([], 403, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+			return $RES->withJSON([
+				'data' => null,
+				'meta' => [
+					'note' => 'Not Authorized [CLU-027]'
+				]
+			], 403, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 		}
 
 		$ret = [];
@@ -39,8 +44,8 @@ class Update extends \OpenTHC\Bong\Controller\Base\Update
 			$res = $dbc->query('UPDATE license SET code = :c0, name = :n0, company_id = :company_id WHERE id = :l0', [
 				':company_id' => $_POST['company_id'],
 				':l0' => $_SESSION['License']['id'],
-				':c0' => $_POST['code'],
-				':n0' => $_POST['name'],
+				':c0' => trim($_POST['code']),
+				':n0' => trim($_POST['name']),
 			]);
 			$ret['data'] = $res;
 		}

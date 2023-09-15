@@ -28,6 +28,8 @@ class Status extends \OpenTHC\Bong\Controller\Base\Status
 		$RET['license'] = $dbc->fetchAll($sql);
 
 		echo '<table class="table table-sm">';
+		echo '<thead class="table-dark"><tr><th>Status</th><th>Count</th></tr></thead>';
+		echo '<tbody>';
 		foreach ($RET['license'] as $idx => $rec) {
 
 			printf('<tr><td>%d</td><td>%d</td></tr>'
@@ -35,6 +37,7 @@ class Status extends \OpenTHC\Bong\Controller\Base\Status
 				, $rec['c']
 			);
 		}
+		echo '</tbody>';
 		echo '</table>';
 
 		exit(0);

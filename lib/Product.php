@@ -20,7 +20,7 @@ class Product
 			'type' => 'object',  // ("null", "boolean", "object", "array", "number", or "string")
 			// 'definitions' => [],
 			'properties' => [],
-			'required' => [ 'id', 'name', 'type', 'uom' ],
+			'required' => [ 'id', 'name', 'type' ],
 		];
 		$schema_spec['properties']['id'] = [ 'type' => 'string' ];
 		$schema_spec['properties']['name'] = [ 'type' => 'string' ];
@@ -39,7 +39,7 @@ class Product
 		// $schema_spec['properties']['package_size'] = [ 'type' => 'number' ];
 
 		// @todo Make Enum
-		$schema_spec['properties']['uom'] = [ 'type' => 'string' ];
+		// $schema_spec['properties']['uom'] = [ 'type' => 'string' ];
 
 		$schema_spec = \Opis\JsonSchema\Helper::toJSON($schema_spec);
 

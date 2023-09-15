@@ -59,13 +59,16 @@ class Update extends \OpenTHC\Bong\Controller\Base\Update
 		// $ret = $cmd->fetchAll();
 
 		$ret_code = 200;
-		if ($ret['stat'] >= 200) {
-			$ret_code = $ret['stat'];
-		}
+		// if ($ret['stat'] >= 200) {
+		// 	$ret_code = $ret['stat'];
+		// }
 
 		$this->updateStatus();
 
 		$output_data = $this->getReturnObject($dbc, $source_data->id);
+		if ($output_data->stat >= 200) {
+			$ret_code = $output_data->stat;
+		}
 
 		return $RES->withJSON([
 			'data' => $output_data,

@@ -30,7 +30,8 @@ class Update extends \OpenTHC\Bong\Controller\Base\Update
 			return $RES->withJSON([
 				'data' => null,
 				'meta' => [
-					'note' => 'Invalid Product Name [CPU-033]'
+					'note' => 'Invalid Product Name [CPU-033]',
+					'arg' => json_encode($_POST), // Why is it empty on HTTP DELETE ? /mbw 2023-129
 				],
 			], 400);
 		}
@@ -50,7 +51,7 @@ class Update extends \OpenTHC\Bong\Controller\Base\Update
 
 		$source_data = \Opis\JsonSchema\Helper::toJSON($source_data);
 		$schema_spec = \OpenTHC\Bong\Product::getJSONSchema();
-		$this->validateJSON($source_data, $schema_spec);
+		// $this->validateJSON($source_data, $schema_spec);
 
 		$sql = $this->getUpsertSQL();
 		$arg = [

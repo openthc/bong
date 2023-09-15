@@ -66,6 +66,9 @@ class Update extends \OpenTHC\Bong\Controller\Base\Update
 		$this->updateStatus();
 
 		$output_data = $this->getReturnObject($dbc, $source_data->id);
+		if ($output_data->stat >= 200) {
+			$ret_code = $output_data->stat;
+		}
 
 		// Rewrite on Output
 		switch ($_SESSION['cre']['id']) {
