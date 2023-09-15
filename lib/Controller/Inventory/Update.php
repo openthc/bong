@@ -48,12 +48,15 @@ class Update extends \OpenTHC\Bong\Controller\Base\Update
 		$res = $cmd->execute($arg);
 		$hit = $cmd->rowCount();
 
+		$return_data = $source_data;
+		$return_data->stat = 100;
+
 		$ret_code = 200;
 		switch ($hit) {
 			case 0:
 				// No INSERT or UPDATE
 				return $RES->withJSON([
-					'data' => $source_data,
+					'data' => $return_data,
 					'meta' => [],
 				], 202);
 				break;
@@ -70,10 +73,10 @@ class Update extends \OpenTHC\Bong\Controller\Base\Update
 
 		$this->updateStatus();
 
-		$output_data = $this->getReturnObject($dbc, $source_data->id);
+		$return_data = $this->getReturnObject($dbc, $source_data->id);
 
 		return $RES->withJSON([
-			'data' => $output_data,
+			'data' => $return_data,
 			'meta' => [],
 		], $ret_code);
 

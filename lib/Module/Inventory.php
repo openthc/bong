@@ -20,6 +20,9 @@ class Inventory extends \OpenTHC\Module\Base
 		// Create
 		$a->post('', 'OpenTHC\Bong\Controller\Inventory\Create');
 
+		// Adjust Data
+		// $a->get('/adjust', '\OpenTHC\Bong\Controller\InventoryAdjust\Status');
+
 		// Status
 		$a->get('/status', 'OpenTHC\Bong\Controller\Inventory\Status');
 

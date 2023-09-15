@@ -21,8 +21,6 @@ class Create extends \OpenTHC\Bong\Controller\Base\Create
 		$source_data = $_POST;
 		$source_data = \Opis\JsonSchema\Helper::toJSON($source_data);
 		$source_data->qty = floatval($source_data->qty);
-
-
 		switch ($_SESSION['cre']['id']) {
 			case 'usa/hi':
 			case 'usa/nm':
@@ -35,8 +33,12 @@ class Create extends \OpenTHC\Bong\Controller\Base\Create
 				$source_data->id = substr($source_data->id, 0, 16);
 				break;
 		}
+		if (empty($source_data->name)) {
+			$source_data->name = $source_data->id;
+		}
 
 		$schema_spec = \OpenTHC\Bong\Inventory::getJSONSchema();
+
 		$this->validateJSON($source_data, $schema_spec);
 
 		$rec = [

@@ -19,10 +19,14 @@ class Adjust extends \OpenTHC\Bong\Controller\Base\Update
 	function __invoke($REQ, $RES, $ARG)
 	{
 		$source_data = $_POST;
+		$source_data['inventory'] = [
+			'id' => $ARG['id']
+		];
 		$source_data = \Opis\JsonSchema\Helper::toJSON($source_data);
+		// $source_data->inventory_id = $ARG['id'];
 		$source_data->qty = floatval($source_data->qty);
 
-		// $schema_spec = Inventory_Adjust::getJSONSchema();
+		// $schema_spec = \OpenTHC\Bong\Inventory\Adjust::getJSONSchema();
 		// $this->validateJSON($source_data, $schema_spec);
 
 		// UPSERT IT

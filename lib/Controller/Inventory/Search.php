@@ -9,7 +9,7 @@ namespace OpenTHC\Bong\Controller\Inventory;
 
 class Search extends \OpenTHC\Bong\Controller\Base\Search
 {
-	protected $_tab_name = 'inventory';
+	protected $_tab_name = 'lot';
 
 	/**
 	 *
@@ -34,6 +34,10 @@ class Search extends \OpenTHC\Bong\Controller\Base\Search
 				$data = $this->getDefaultColumns();
 				$data['object_list'] = $ret['data'];
 				$data['column_function']['id'] = function($val, $rec) { return sprintf('<td><a href="/inventory/%s">%s</a></td>', $val, $val); };
+
+				$data['Page'] = [
+					'title' => 'Inventory Search'
+				];
 
 				return $this->asHTML($data);
 
