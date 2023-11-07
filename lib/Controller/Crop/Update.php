@@ -41,7 +41,6 @@ class Update extends \OpenTHC\Bong\Controller\Base\Update
 				'@source' => $source_data
 			]),
 		];
-		//$arg[':h0'] = \OpenTHC\CRE\Base::objHash($arg[':d0']);
 		$arg[':h0'] = \OpenTHC\CRE\Base::objHash($source_data);
 
 		$dbc = $REQ->getAttribute('dbc');
@@ -49,52 +48,32 @@ class Update extends \OpenTHC\Bong\Controller\Base\Update
 		$res = $cmd->execute($arg);
 		$hit = $cmd->rowCount();
 
-		// $ret = $dbc->query($sql, $arg);
-		// if (1 == $ret) {
-		// 	return $RES->withJSON([
-		// 		'data' => [
-		// 			'id' => $arg[':o1'],
-		// 			'name' => $arg[':n0'],
-		// 			'hash' => $arg[':h0'],
-		// 		],
-		// 		'meta' => [],
-		// 	]);
-		// }
-
-		/*
 		$ret_code = 200;
-		if ($ret['stat'] >= 200) {
-			$ret_code = $ret['stat'];
+		switch ($hit) {
+			case 0:
+				// No INSERT or UPDATE
+				return $RES->withJSON([
+					'data' => $source_data,
+					'meta' => [],
+				], 202);
+				break;
+			case 1:
+				// Perfection
+				$ret = $cmd->fetch();
+				if (empty($ret['updated_at'])) {
+					$ret_code = 201;
+				}
+				break;
+			default:
+				throw new \Exception('Invalid Database State [CIA-073]');
 		}
-		 */
-		$output_data->stat = 100;
-
-		// $ret_code = 200;
-		// switch ($hit) {
-		// 	case 0:
-		// 		// No INSERT or UPDATE
-		// 		return $RES->withJSON([
-		// 			'data' => $source_data,
-		// 			'meta' => [],
-		// 		], 202);
-		// 		break;
-		// 	case 1:
-		// 		// Perfection
-		// 		$ret = $cmd->fetch();
-		// 		if (empty($ret['updated_at'])) {
-		// 			$ret_code = 201;
-		// 		}
-		// 		break;
-		// 	default:
-		// 		throw new \Exception('Invalid Database State [CIA-073]');
-		// }
 
 		$this->updateStatus();
 
-		$output_data = $this->getReturnObject($dbc, $source_data->id);
+		$return_data = $this->getReturnObject($dbc, $source_data->id);
 
 		return $RES->withJSON([
-			'data' => $output_data,
+			'data' => $return_data,
 			'meta' => [ '_res' => $res, '_hit' => $hit ],
 		], $ret_code);
 
