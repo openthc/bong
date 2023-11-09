@@ -454,6 +454,7 @@ function _cre_ccrs_upload_single($cli_args)
 
 			// Special Case to fix email So we can send the old ones
 			$fix_target_email = false;
+			$fix_source_email = false;
 
 			if (preg_match('/SubmittedDate,([^,]+),,/', $src['data'], $m)) {
 
@@ -463,6 +464,7 @@ function _cre_ccrs_upload_single($cli_args)
 
 				if ($ddX->days >= 1) {
 					$fix_target_email = true;
+					$fix_source_email = true;
 				}
 
 			}
@@ -472,6 +474,14 @@ function _cre_ccrs_upload_single($cli_args)
 				$src['data'] = preg_replace(
 					'/DestinationLicenseeEmailAddress,(.+),,,,,,,,,,/',
 					sprintf('DestinationLicenseeEmailAddress,code+target-%s@openthc.com,,,,,,,,,,', $req_ulid),
+					$src['data']);
+			}
+
+			if ($fix_source_email) {
+				echo "fix_source_email = $fix_source_email\n";
+				$src['data'] = preg_replace(
+					'/OriginLicenseeEmailAddress,(.+),,,,,,,,,,/',
+					sprintf('OriginLicenseeEmailAddress,code+source-%s@openthc.com,,,,,,,,,,', $req_ulid),
 					$src['data']);
 			}
 
