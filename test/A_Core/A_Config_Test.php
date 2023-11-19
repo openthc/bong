@@ -41,13 +41,20 @@ class A_Config_Test extends \OpenTHC\Bong\Test\Base_Case
 			'cre/usa/wa/ccrs/username',
 			'cre/usa/wa/ccrs/password',
 			'cre/usa/wa/ccrs/service-key',
+		];
+		foreach ($key_list as $k) {
+			$x = \OpenTHC\Config::get($k);
+			$this->assertEmpty($x, sprintf('%s should be empty', $k));
+		}
+
+		$key_list = [
+			'tz',
 			'database',
+			'openthc/app/origin',
+			'openthc/bong/origin',
 			// 'google_recaptcha_v2.public', // optional
 			// 'google_recaptcha_v3.public'  // optional
 			// 'google_recaptcha.secret'     // optional
-			'openthc/app/base',
-			'openthc/bong/base',
-			'tz',
 		];
 
 		foreach ($key_list as $k) {
