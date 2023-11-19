@@ -19,23 +19,6 @@ $cfg['database'] = [
 	'database' => 'openthc_bong',
 ];
 
-// CRE Details
-$cfg['cre'] = [
-	'usa' => [
-		'wa' => [
-			'ccrs' => [
-				'tz' => 'America/Los_Angeles',
-				// SAW Account Username & Password
-				'username' => '',
-				'password' => '',
-				'server' => 'https://cannabisreporting.lcb.wa.gov/',
-				// License Number or Service Key from the LCB
-				'service-key' => ''
-			],
-		]
-	]
-];
-
 // OpenTHC
 $cfg['openthc'] = [
 	'app' => [
