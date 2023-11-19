@@ -13,12 +13,11 @@ require_once(__DIR__ . '/../boot.php');
 openlog('openthc-bong', LOG_ODELAY | LOG_PERROR | LOG_PID, LOG_LOCAL0);
 
 $dbc = _dbc();
-$tz0 = new DateTimezone(\OpenTHC\Config::get('cre/usa/wa/ccrs/tz'));
 
 // The Compliance Engine
-$cre = new \OpenTHC\CRE\CCRS([
-	'tz' => $tz0,
-]);
+$cfg = \OpenTHC\CRE::getConfig('usa/wa');
+$cre = \OpenTHC\CRE::factory($cfg);
+$tz0 = new DateTimezone($cfg['tz']);
 
 
 // Process incoming message queue
@@ -69,6 +68,7 @@ foreach ($message_file_list as $message_file)
 			if (
 				preg_match('/^\w+_\w{6,10}_\d+T\d+\.csv$/', $part['content-name'])
 				|| preg_match('/^Strain_\d+T\d+\.csv$/', $part['content-name'])
+				|| preg_match('/^Manifest_(.+)_(\w+)\.pdf$/', $part['content-name']) // It's the Manifest PDF
 				) {
 
 				// echo "message: {$message['id']}; part: $part_key is file: {$part['content-name']}\n";
@@ -77,18 +77,12 @@ foreach ($message_file_list as $message_file)
 				$output_data = mailparse_msg_extract_part_file($part_res, $message_file, null);
 				$output_file = sprintf('%s/var/ccrs-incoming/%s', APP_ROOT, $part['content-name']);
 				$output_size = file_put_contents($output_file, $output_data);
+				if (0 == $output_size) {
+					throw new \Exception('Failed to write Data File');
+				}
 
 				break; // foreach
 
-			} elseif (preg_match('/^Manifest_(.+)_(\w+)\.pdf$/', $part['content-name'])) {
-				// It's the Manifest PDF
-
-				$part_res = mailparse_msg_get_part($message_mime, $part_key);
-				$output_data = mailparse_msg_extract_part_file($part_res, $message_file, null);
-				$output_file = sprintf('%s/var/ccrs-incoming/%s', APP_ROOT, $part['content-name']);
-				$output_size = file_put_contents($output_file, $output_data);
-
-				break; // foreach
 			}
 		}
 	}
