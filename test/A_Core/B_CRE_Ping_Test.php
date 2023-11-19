@@ -29,8 +29,8 @@ class B_CRE_Ping_Test extends \OpenTHC\Bong\Test\Base_Case
 			$cre_conf['license'] = getenv('OPENTHC_TEST_LICENSE_ID');
 			$cre_conf['license-key'] = getenv('OPENTHC_TEST_LICENSE_SECRET');
 			$cre_conf['service'] = getenv('OPENTHC_TEST_BASE_SERVICE_ID');
-			// $cre_conf['service-key'] = getenv('OPENTHC_TEST_BASE_SERVICE_KEY');
-			$cre_conf['service-sk'] = getenv('OPENTHC_TEST_BASE_SERVICE_KEY');
+			// $cre_conf['service-key'] = getenv('OPENTHC_TEST_BASE_SERVICE_SK');
+			$cre_conf['service-sk'] = getenv('OPENTHC_TEST_BASE_SERVICE_SK');
 
 			$cre = \OpenTHC\CRE::factory($cre_conf);
 			$this->assertNotEmpty($cre);

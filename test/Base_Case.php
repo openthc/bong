@@ -43,8 +43,8 @@ class Base_Case extends \OpenTHC\Test\Base_Case
 		$cfg['cre'] = 'usa/wa';
 		$cfg['server'] = getenv('OPENTHC_TEST_BASE');
 		$cfg['service-id'] = getenv('OPENTHC_TEST_BASE_SERVICE_ID');
-		$cfg['service-sk'] = getenv('OPENTHC_TEST_BASE_SERVICE_KEY');
-		$cfg['service-key'] = getenv('OPENTHC_TEST_BASE_SERVICE_KEY');
+		$cfg['service-sk'] = getenv('OPENTHC_TEST_BASE_SERVICE_SK'); // v1
+		$cfg['service-key'] = getenv('OPENTHC_TEST_BASE_SERVICE_SK'); // v0
 		$cfg['contact'] = getenv('OPENTHC_TEST_CONTACT_ID');
 		$cfg['company'] = getenv('OPENTHC_TEST_COMPANY_ID');
 		$cfg['license'] = getenv('OPENTHC_TEST_LICENSE_ID');

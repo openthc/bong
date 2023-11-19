@@ -34,9 +34,10 @@ class A_Open_Test extends \OpenTHC\Bong\Test\Base_Case
 	{
 		$api = $this->_api();
 		$res = $api->post('/auth/open', [ 'form_params' => [
+			'cre' => 'usa/wa',
 			'service-id' => getenv('OPENTHC_TEST_BASE_SERVICE_ID'),
-			'service-key' => getenv('OPENTHC_TEST_BASE_SERVICE_KEY'),
-			'cre' => 'usa/wa/ccrs',
+			'service-sk' => getenv('OPENTHC_TEST_BASE_SERVICE_SK'), // v1
+			'service-key' => getenv('OPENTHC_TEST_BASE_SERVICE_SK'), // v0
 			'company' => getenv('OPENTHC_TEST_CCRS_COMPANY_ID'),
 			'license' => getenv('OPENTHC_TEST_CCRS_LICENSE_ID'),
 			'license-key' => getenv('OPENTHC_TEST_LICENSE_KEY'),
