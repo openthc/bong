@@ -22,8 +22,9 @@ function _cre_ccrs_upload_b2b_incoming($cli_args)
 
 	$dbc = _dbc();
 
-	$tz0 = new DateTimezone(\OpenTHC\Config::get('cre/usa/wa/ccrs/tz'));
-	$cre_service_key = \OpenTHC\Config::get('cre/usa/wa/ccrs/service-key');
+	$cfg = \OpenTHC\CRE::getConfig('usa/wa');
+	$tz0 = new DateTimezone($cfg['tz']);
+	$cre_service_key = $cfg['service-sk'];
 
 	$License = _load_license($dbc, $cli_args['--license']);
 
