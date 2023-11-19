@@ -339,13 +339,7 @@ function _ccrs_pull_manifest_file(string $message_file, string $output_file) : i
 	$cmd->execute();
 
 	// Notify the Primary Application
-	$url = \OpenTHC\Config::get('openthc/app/base');
-	$url = 'https://app.djb.openthc.dev/';
-	$url = rtrim($url, '/');
-	$url = sprintf('%s/api/v2017/notify', $url);
-	$req = _curl_init($url);
-	curl_setopt($req, CURLOPT_POST, true);
-	curl_setopt($req, CURLOPT_POSTFIELDS, http_build_query([
+	$res = _notify_app([
 		'message' => 'b2b-outgoing-notify',
 		'company' => [
 			'id' => $License['company_id'],
@@ -360,14 +354,13 @@ function _ccrs_pull_manifest_file(string $message_file, string $output_file) : i
 				'body' => file_get_contents($output_file),
 			],
 		],
-	]));
+	]);
 
 	$res = curl_exec($req);
 	$inf = curl_getinfo($req);
 	if (200 != $inf['http_code']) {
 		var_dump($res);
 		throw new \Exception('HTTP Request Failed');
-		exit;
 	}
 
 	// Update b2b_outgoing with Stat 200?
@@ -1443,11 +1436,10 @@ function _process_err_list($csv_line)
 
 }
 
+// Notify the Primary Application
 function _notify_app(array $arg)
 {
-	// Notify the Primary Application
-	$url = \OpenTHC\Config::get('openthc/app/base');
-	$url = 'https://app.djb.openthc.dev/';
+	$url = \OpenTHC\Config::get('openthc/app/origin');
 	$url = rtrim($url, '/');
 	$url = sprintf('%s/api/v2017/notify', $url);
 	$req = _curl_init($url);
