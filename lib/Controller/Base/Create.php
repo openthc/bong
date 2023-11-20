@@ -9,6 +9,9 @@ namespace OpenTHC\Bong\Controller\Base;
 
 class Create extends \OpenTHC\Controller\Base
 {
+	use \OpenTHC\Bong\Traits\GetReturnObject;
+	use \OpenTHC\Bong\Traits\UpdateStatus;
+
 	protected $_tab_name;
 
 	/**
@@ -20,16 +23,6 @@ class Create extends \OpenTHC\Controller\Base
 			__exit_text('Invalid Incantation [CBS-020]', 500);
 		}
 
-	}
-
-	/**
-	 * Updates the Redis Status
-	 */
-	function updateStatus()
-	{
-		$rdb = \OpenTHC\Service\Redis::factory();
-		$rdb->hset(sprintf('/license/%s', $_SESSION['License']['id']), sprintf('%s/stat', $this->_tab_name), 100);
-		$rdb->hset(sprintf('/license/%s', $_SESSION['License']['id']), sprintf('%s/stat/time', $this->_tab_name), time());
 	}
 
 }
