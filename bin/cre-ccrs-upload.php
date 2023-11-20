@@ -59,14 +59,15 @@ switch ($action) {
 
 		// Run the Scripts
 		foreach ($obj_list as $obj) {
+
 			$obj_file = sprintf('%s/cre-ccrs-upload-%s.php', __DIR__, $obj);
-			// echo "$obj_file\n";
 			require_once($obj_file);
+
 			$obj = str_replace('-', '_', $obj);
 			$obj_func = sprintf('_cre_ccrs_upload_%s', $obj);
-			// echo "$obj_func\n";
+
+			// Improve Args?
 			$res = call_user_func($obj_func, $cli_args);
-			// var_dump($res);
 		}
 
 		break;
