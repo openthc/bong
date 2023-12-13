@@ -72,6 +72,9 @@ class Open extends \OpenTHC\Controller\Base
 		case 'biotrack':
 			$RES = $this->_biotrack($RES);
 			break;
+		case 'biotrack2022':
+			$RES = $this->_biotrack_2022($RES);
+			break;
 		case 'ccrs':
 			$RES = $this->_ccrs($RES);
 			break;
@@ -80,6 +83,9 @@ class Open extends \OpenTHC\Controller\Base
 			break;
 		case 'metrc':
 			$RES = $this->_metrc($RES);
+			break;
+		case 'metrc2022':
+			$RES = $this->_metrc_2022($RES);
 			break;
 		}
 
@@ -252,6 +258,20 @@ class Open extends \OpenTHC\Controller\Base
 	}
 
 	/**
+	 * Connect to a BT system
+	 */
+	function _biotrack_2022($RES)
+	{
+		// if ( !empty($_POST['sid'])) {
+
+		// }
+
+		$cre = \OpenTHC\CRE::factory($cfg);
+		$res = $cre->auth();
+		// $res = $cre->ping();
+	}
+
+	/**
 	 * "Authenticate" to CCRS
 	 */
 	function _ccrs($RES)
@@ -382,6 +402,16 @@ class Open extends \OpenTHC\Controller\Base
 			'meta' => [ 'note' => 'Failed to Connect to METRC' ],
 		), 500);
 
+	}
+
+	/**
+	 * Connect to a METRC system
+	 */
+	function _metrc_2022($RES)
+	{
+		return $RES->withJSON(array(
+			'meta' => [ 'note' => 'Not Implemented [CAO-413]' ],
+		), 501);
 	}
 
 	/**
