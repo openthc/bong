@@ -115,7 +115,7 @@ function _load_license($dbc, $license_id, $object_table=null)
  */
 function _upload_to_queue_only(array $License, string $csv_name, $csv_data)
 {
-	$url_base = \OpenTHC\Config::get('openthc/bong/base');
+	$url_base = \OpenTHC\Config::get('openthc/bong/origin');
 
 	$cfg = array(
 		'base_uri' => $url_base,

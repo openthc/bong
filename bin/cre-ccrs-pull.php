@@ -389,14 +389,6 @@ function _ccrs_pull_manifest_file(string $message_file, string $output_file) : i
 		],
 	]);
 
-	$res = curl_exec($req);
-	$inf = curl_getinfo($req);
-	if (200 != $inf['http_code']) {
-		var_dump($res);
-		throw new \Exception('HTTP Request Failed');
-	}
-
-
 	// Archive File
 	$message_file_done = sprintf('%s/var/ccrs-incoming-mail-done/%s', APP_ROOT, basename($message_file));
 	if ( ! rename($message_file, $message_file_done)) {
