@@ -23,7 +23,6 @@ Commands:
 	push                  Does upload-single for all the stuff in the queue
 	push-b2b-old          Push (or check-up on) the old B2B Laggards
 	upload-single         Uploads a Single Job
-	upload-queue          not sure what this does?
 	upload-script-create  create an upload-builder shell script
 	license-status        Show License Status
 	review                Review Data 400 Level Errors
@@ -61,62 +60,6 @@ switch ($cli_args['<command>']) {
 		require_once(__DIR__ . '/cre-ccrs-upload-b2b-outgoing-redo.php');
 		_cre_ccrs_push_b2b_old(array_merge([ 'push-b2b-old' ], $cli_args['<command-options>']));
 		break;
-	case 'upload-queue':
-		// require_once(APP_ROOT . '/lib/CRE/ccrs/cli/upload-queue.php')
-		// _cre_ccrs_upload_queue(array_merge([ 'upload-queue' ], $cli_args['<command-options>']));
-		$R = \OpenTHC\Service\Redis::factory();
-		$key_list = $R->keys('/license/*/variety');
-		foreach ($key_list as $k) {
-			if (preg_match('/license\/(\w+)\/variety/', $k, $m)) {
-				$l = $m[1];
-				echo "./bin/cre-ccrs-upload.php upload --license=$l --object=variety\n";
-				$R->del($k);
-			}
-		}
-		exit;
-		// $R->set('/license/%s/stat', 100);  ', $req_ulid);
-
-		while ($k = $R->lpop('/cre/ccrs/upload-queue')) {
-			echo "QUEUE: $k\n";
-			echo "./bin/cre-ccrs.php upload-single --upload-id={$k}\n";
-			exit(0);
-		}
-
-		$key_list = $R->keys('/license/*');
-		foreach ($key_list as $k) {
-
-			$license_id = null;
-			$dataset = null;
-
-			if (preg_match('/\/license\/(\w+)\/([\w\-]+)/', $k, $m)) {
-				$license_id = $m[1];
-				$dataset = $m[2];
-			}
-
-			$val = $R->get($k);
-			switch ($val) {
-				case 100:
-					// Trigger Upload for this License
-					$cmd = [];
-					// $cmd[] = sprintf('%s/bin/cre-ccrs.php', APP_ROOT);
-					// $cmd[] = 'upload-object';
-
-					$cmd[] = sprintf('%s/bin/cre-ccrs-upload.php', APP_ROOT);
-					$cmd[] = 'upload';
-					$cmd[] = sprintf('--license=%s', $license_id);
-					$cmd[] = sprintf('--object=%s', $dataset);
-					$cmd[] = '2>&1';
-					$cmd = implode(' ', $cmd);
-					echo "$cmd\n";
-
-					// ./bin/cre-ccrs-upload.php upload --license=01CAV122Q843RESRTRFK96RTT5 --object=variety
-
-					break;
-			}
-		}
-
-		break;
-
 	case 'review':
 		_cre_ccrs_review(array_merge([ 'review' ], $cli_args['<command-options>']));
 		break;
@@ -165,6 +108,11 @@ function _cre_ccrs_auth($cli_args)
 	$cfg['cookie-list'] = _cre_ccrs_auth_cookies();
 
 	$cre = new \OpenTHC\CRE\CCRS($cfg);
+
+	// // The Compliance Engine
+	// $cfg = \OpenTHC\CRE::getConfig('usa/wa');
+	// $cre = \OpenTHC\CRE::factory($cfg);
+	// $tz0 = new DateTimezone($cfg['tz']);
 
 	// Check & Refresh if Needed
 	if (empty($cli_args['--ping']) && empty($cli_args['--refresh'])) {
@@ -629,14 +577,8 @@ function _cre_ccrs_upload_verify($cli_args)
 		':l0' => $cli_args['--license'],
 	]);
 
-	$License['guid'] = $License['code'];
-	switch ($License['stat']) {
-		case 410:
-		case 500:
-			echo "SKIP: {$License['id']}; STAT={$License['stat']}\n";
-			return(0);
-			break;
-	}
+	$V = new \OpenTHC\BONG\CRE\CCRS\License\Verify($dbc, $License);
+	$V->verify();
 
 	// Hard-Reset?
 	if ($cli_args['--reset']) {
@@ -670,40 +612,5 @@ function _cre_ccrs_upload_verify($cli_args)
 		echo "B2B-Outgoing Reset: $c\n";
 
 	}
-
-	$cfg = [
-		'server' => \OpenTHC\Config::get('openthc/bong/origin'),
-		'company' => \OpenTHC\Config::get('openthc/root/company/id'),
-		'contact' => \OpenTHC\Config::get('openthc/root/contact/id'),
-		'license' => \OpenTHC\Config::get('openthc/root/license/id')
-	];
-
-	$jwt = new \OpenTHC\JWT([
-		'iss' => \OpenTHC\Config::get('openthc/bong/id'),
-		'exp' => (time() + 120),
-		'sub' => $cfg['contact'],
-	]);
-
-	$cre = new \OpenTHC\CRE\OpenTHC($cfg);
-	$cre->setLicense($License);
-
-	$url = sprintf('/license/%s/verify', $License['id']);
-	// $res = $cre->post($url, []);
-	$res = $cre->request('POST', $url, [
-		'headers' => [
-			// 'authorization' => sprintf('Bearer jwt:%s', $jwt->__toString()),
-			'openthc-cre' => 'usa/wa',
-			'openthc-jwt' => $jwt->__toString(),
-			'openthc-company-id' => $cfg['company'],
-			'openthc-license-id' => $cfg['license'],
-		]
-	]);
-
-	var_dump($res);
-
-	echo $res['code'];
-	echo "\t";
-	echo __json_encode($res);
-	echo "\n";
 
 }
