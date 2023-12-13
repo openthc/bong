@@ -1390,12 +1390,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/openthc/cre-adapter.git",
-                "reference": "4ddfa8f9e84b67861aa56a9eded2f484b5e096ed"
+                "reference": "13a56e4f9394ee8650f3e1b01698fd39379cf4db"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/openthc/cre-adapter/zipball/4ddfa8f9e84b67861aa56a9eded2f484b5e096ed",
-                "reference": "4ddfa8f9e84b67861aa56a9eded2f484b5e096ed",
+                "url": "https://api.github.com/repos/openthc/cre-adapter/zipball/13a56e4f9394ee8650f3e1b01698fd39379cf4db",
+                "reference": "13a56e4f9394ee8650f3e1b01698fd39379cf4db",
                 "shasum": ""
             },
             "require": {
@@ -1429,7 +1429,7 @@
                 "issues": "https://github.com/openthc/cre-adapter/issues",
                 "source": "https://github.com/openthc/cre-adapter/tree/master"
             },
-            "time": "2023-11-19T23:01:11+00:00"
+            "time": "2023-12-13T15:38:10+00:00"
         },
         {
             "name": "opis/json-schema",
