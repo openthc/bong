@@ -31,9 +31,9 @@ if (empty($_ENV['title'])) {
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="google" content="notranslate">
-<link rel="stylesheet" href="/vendor/fontawesome/css/all.min.css" integrity="sha256-HtsXJanqjKTc8vVQjO4YMhiqFoXkfBsjBWcX91T1jr8=">
+<link rel="stylesheet" href="/vendor/fontawesome/css/all.min.css" integrity="sha256-CTSx/A06dm1B063156EVh15m6Y67pAjZZaQc89LLSrU=">
 <link rel="stylesheet" href="/vendor/jquery-ui/jquery-ui.min.css" integrity="sha256-VNxxeWv78fBpVZ3cM8LomS7+xUH2IXl6hJ1EKmmCJpY=">
-<link rel="stylesheet" href="/vendor/bootstrap/bootstrap.min.css" integrity="sha256-wLz3iY/cO4e6vKZ4zRmo4+9XDpMcgKOvv/zEU3OMlRo=">
+<link rel="stylesheet" href="/vendor/bootstrap/bootstrap.min.css" integrity="sha256-MBffSnbbXwHCuZtgPYiwMQbfE7z+GOZ7fBPCNB06Z98=">
 <link rel="stylesheet" href="https://cdn.openthc.com/css/www/0.0.1/www.css" crossorigin="anonymous" referrerpolicy="no-referrer">
 <link rel="stylesheet" href="/css/app.css">
 <title><?= __h(strip_tags($_ENV['title'])) ?></title>
@@ -74,10 +74,10 @@ echo $this->block('footer');
 
 ?>
 
-<script src="/vendor/jquery/jquery.min.js" integrity="sha256-oP6HI9z1XaZNBrJURtCoUT5SUnxFr8s3BzRl+cbzUq8=" crossorigin="anonymous"></script>
+<script src="/vendor/jquery/jquery.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
 <script src="/vendor/jquery-ui/jquery-ui.min.js" integrity="sha256-lSjKY0/srUM9BE3dPm+c4fBo1dky2v27Gdjm2uoZaL0=" crossorigin="anonymous"></script>
-<script src="/vendor/bootstrap/bootstrap.bundle.min.js" integrity="sha256-lSABj6XYH05NydBq+1dvkMu6uiCc/MbLYOFGRkf3iQs=" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="/vendor/htmx/htmx.min.js" integrity="sha256-gwdkw1bFIH90aq/Okd79rwLcv4mko7fGDpohjK15284=" crossorigin="anonymous"></script>
+<script src="/vendor/bootstrap/bootstrap.bundle.min.js" integrity="sha256-gvZPYrsDwbwYJLD5yeBfcNujPhRoGOY831wwbIzz3t0=" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="/vendor/htmx/htmx.min.js" integrity="sha256-lqM0qVcKOCz5xhofhtVYcLocZeFmzFvK6Y3djNq+uIY=" crossorigin="anonymous"></script>
 <?= $this->foot_script ?>
 </body>
 </html>
