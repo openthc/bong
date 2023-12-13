@@ -25,8 +25,8 @@ Commands:
 	upload-single         Uploads a Single Job
 	upload-script-create  create an upload-builder shell script
 	license-status        Show License Status
+	license-verify        Re-Init a License and try to Verify via magic Section
 	review                Review Data 400 Level Errors
-	verify                Re-Init a License and try to Verify via magic Section
 
 Options:
 	--license=<LIST>
@@ -53,6 +53,9 @@ switch ($cli_args['<command>']) {
 		require_once(__DIR__ . '/cre-ccrs-license-status.php');
 		_cre_ccrs_license_status(array_merge([ 'license-status' ], $cli_args['<command-options>']));
 		break;
+	case 'license-verify':
+		_cre_ccrs_upload_verify(array_merge([ 'license-verify' ], $cli_args['<command-options>']));
+		break;
 	case 'push':
 		_cre_ccrs_push(array_merge([ 'push' ], $cli_args['<command-options>']));
 		break;
@@ -71,9 +74,6 @@ switch ($cli_args['<command>']) {
 		_cre_ccrs_upload_script_create(array_merge([ 'upload-script-create' ], $cli_args['<command-options>']));
 	case 'upload-single':
 		_cre_ccrs_upload_single(array_merge([ 'upload-single' ], $cli_args['<command-options>']));
-		break;
-	case 'verify':
-		_cre_ccrs_upload_verify(array_merge([ 'verify' ], $cli_args['<command-options>']));
 		break;
 	default:
 		var_dump($cli_args);
@@ -559,7 +559,7 @@ function _cre_ccrs_upload_verify($cli_args)
 	$doc = <<<DOC
 	BONG CRE CCRS Verification
 	Usage:
-		cre-ccrs verify --license=LICENSE [--force] [--reset]
+		cre-ccrs license-verify --license=LICENSE [--force] [--reset]
 
 	Options:
 		--force    will force the verify, even if stat is locked
@@ -572,45 +572,14 @@ function _cre_ccrs_upload_verify($cli_args)
 	$cli_args = $res->args;
 
 	$dbc = _dbc();
+	$License = new \OpenTHC\Bong\License($dbc, $cli_args['--license']);
 
-	$License = $dbc->fetchRow('SELECT * FROM license WHERE id = :l0', [
-		':l0' => $cli_args['--license'],
-	]);
-
-	$V = new \OpenTHC\BONG\CRE\CCRS\License\Verify($dbc, $License);
+	$V = new \OpenTHC\Bong\CRE\CCRS\License\Verify($dbc, $License);
 	$V->verify();
 
 	// Hard-Reset?
 	if ($cli_args['--reset']) {
-
-		$sql_args = [
-			':l0' => $License['id']
-		];
-
-		$c = $dbc->query('UPDATE section SET stat = 100 WHERE stat != 100 AND license_id = :l0', $sql_args);
-		echo "Section Reset: $c\n";
-
-		$c = $dbc->query('UPDATE variety SET stat = 100 WHERE stat != 100 AND license_id = :l0', $sql_args);
-		echo "Variety Reset: $c\n";
-
-		$c = $dbc->query('UPDATE product SET stat = 100 WHERE stat != 100 AND license_id = :l0', $sql_args);
-		echo "Product Reset: $c\n";
-
-		$c = $dbc->query('UPDATE crop SET stat = 100 WHERE stat != 100 AND license_id = :l0', $sql_args);
-		echo "Crop Reset: $c\n";
-
-		$c = $dbc->query('UPDATE lot SET stat = 100 WHERE stat != 100 AND license_id = :l0', $sql_args);
-		echo "Inventory Reset: $c\n";
-
-		$c = $dbc->query('UPDATE inventory_adjust SET stat = 100 WHERE stat != 100 AND license_id = :l0', $sql_args);
-		echo "Inventory-Adjust Reset: $c\n";
-
-		$c = $dbc->query('UPDATE b2b_incoming SET stat = 100 WHERE stat != 100 AND target_license_id = :l0', $sql_args);
-		echo "B2B-Incoming Reset: $c\n";
-
-		$c = $dbc->query('UPDATE b2b_outgoing SET stat = 100 WHERE stat != 100 AND source_license_id = :l0', $sql_args);
-		echo "B2B-Outgoing Reset: $c\n";
-
+		$License->reset();
 	}
 
 }

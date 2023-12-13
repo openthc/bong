@@ -52,9 +52,9 @@ class Verify
 		]);
 
 		$cre = new \OpenTHC\CRE\OpenTHC($cfg);
-		$cre->setLicense($License);
+		$cre->setLicense($this->License);
 
-		$url = sprintf('/license/%s/verify', $License['id']);
+		$url = sprintf('/license/%s/verify', $this->License['id']);
 		// $res = $cre->post($url, []);
 		$res = $cre->request('POST', $url, [
 			'headers' => [
