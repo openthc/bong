@@ -338,6 +338,39 @@ function _ccrs_pull_manifest_file(string $message_file, string $output_file) : i
 	$cmd->bindParam(':b1', file_get_contents($output_file), \PDO::PARAM_LOB);
 	$cmd->execute();
 
+	// Update b2b_outgoing with Stat 200?
+	// Still Need to do the B2B_Outgoing (Sales) Upload
+	$sql = 'UPDATE b2b_outgoing SET stat = 200 WHERE id = :b2b0';
+	$arg = [ ':b2b0' => $b2b_outgoing['id'] ];
+	$dbc->query($sql, $arg);
+
+	// How to Find the CCRS Upload to Re-Map?
+	$message_data = file_get_contents($message_file);
+	if (preg_match('/Manifest_\w+_(\w+)_\d+T\d+\.csv/', $message_data, $m)) {
+
+		$req_ulid = $m[1];
+
+		// Need to Trap the Email Here Too
+		$sql = <<<SQL
+		UPDATE log_upload SET stat = 202, result_data = coalesce(result_data, '{}'::jsonb) || :d0
+		WHERE id = :r0
+		SQL;
+		$res = $dbc->query($sql, [
+			':r0' => $req_ulid,
+			':d0' => json_encode([
+				'type' => '',
+				'data' => '',
+				'@result' => [
+					'type' => 'mail',
+					'data' => $message_data,
+					// 'created_at' => $dt0->format(\DateTime::RFC3339),
+					// 'created_at_cre' => $dt1->format(\DateTime::RFC3339)
+				]
+			])
+		]);
+
+	}
+
 	// Notify the Primary Application
 	$res = _notify_app([
 		'message' => 'b2b-outgoing-notify',
@@ -363,70 +396,6 @@ function _ccrs_pull_manifest_file(string $message_file, string $output_file) : i
 		throw new \Exception('HTTP Request Failed');
 	}
 
-	// Update b2b_outgoing with Stat 200?
-	// Still Need to do the B2B_Outgoing (Sales) Upload
-	$sql = 'UPDATE b2b_outgoing SET stat = 200 WHERE id = :b2b0';
-	$arg = [ ':b2b0' => $b2b_outgoing['id'] ];
-	$dbc->query($sql, $arg);
-
-	// How to Find the CCRS Upload to Re-Map?
-	$message_data = file_get_contents($message_file);
-	if (preg_match('/Manifest_\w+_(\w+)_\d+T\d+\.csv/', $message_data, $m)) {
-
-		$req_ulid = $m[1];
-
-		// Need to Trap the Email Here Too
-		// $dbc->query('UPDATE log_upload SET stat = 202 WHERE id = :pk', [
-		// 	':pk' => $req_ulid,
-		// ]);
-		$sql = <<<SQL
-		UPDATE log_upload SET stat = 202, result_data = coalesce(result_data, '{}'::jsonb) || :d0
-		WHERE id = :r0
-		SQL;
-		$res = $dbc->query($sql, [
-			':r0' => $req_ulid,
-			':d0' => json_encode([
-				'type' => '',
-				'data' => '',
-				'@result' => [
-					'type' => 'mail',
-					'data' => $message_data,
-					// 'created_at' => $dt0->format(\DateTime::RFC3339),
-					// 'created_at_cre' => $dt1->format(\DateTime::RFC3339)
-				]
-			])
-		]);
-
-
-		// $log_data = $dbc->fetchRow('SELECT id, license_id, result_data FROM log_upload WHERE id = :u0', [ ':u0' => $req_ulid ]);
-		// if (empty($log_data)) {
-		// 	throw new \Exception('Lost Log Audit');
-		// 	// echo "!! NO LOG\n";
-		// 	// INSERT RESPONSE THO?
-		// }
-
-
-		// $result_data = json_decode($log_data['result_data'], true);
-		// if (empty($result_data)) {
-		// 	$result_data = [];
-		// }
-
-		// $result_data['@result-file'] = [
-		// 	'name' => basename($output_file),
-		// 	'data' => file_get_contents($output_file),
-		// 	// 'created_at_cre' => $csv_time->format(\DateTimeInterface::RFC3339),
-		// ];
-		// if ( ! empty($message_file)) {
-		// 	$result_data['@result-mail'] = file_get_contents($message_file);
-		// }
-		// $update = [
-		// 	'stat' => 200,
-		// 	'result_data' => json_encode($result_data),
-		// 	'updated_at' => $csv_time->format(\DateTimeInterface::RFC3339),
-		// ];
-		// $dbc->update('log_upload', $update, [ 'id' => $req_ulid ]);
-
-	}
 
 	// Archive File
 	$message_file_done = sprintf('%s/var/ccrs-incoming-mail-done/%s', APP_ROOT, basename($message_file));
