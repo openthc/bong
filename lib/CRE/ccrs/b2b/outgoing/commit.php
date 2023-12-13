@@ -5,8 +5,6 @@
  * SPDX-License-Identifier: MIT
  */
 
-// require_once('/opt/openthc/bong/vendor/openthc/cre-adapter/lib/CCRS/B2B.php');
-
 $cre_service_key = \OpenTHC\Config::get('cre/usa/wa/ccrs/service-key');
 
 // I Have to Load the Object from our Database

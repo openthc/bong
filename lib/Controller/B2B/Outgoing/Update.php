@@ -30,7 +30,7 @@ class Update extends \OpenTHC\Bong\Controller\Base\Update
 				return $RES->withJSON([
 					'data' => $ARG['id'],
 					'meta' => [
-						'detail' => 'Access Denied [BOU-026]'
+						'note' => 'Access Denied [BOU-026]'
 					],
 				], 409);
 			}
@@ -42,7 +42,7 @@ class Update extends \OpenTHC\Bong\Controller\Base\Update
 			return $RES->withJSON([
 				'data' => $ARG['id'],
 				'meta' => [
-					'detail' => 'Invalid Target License; Invalid ID [BOU-032]'
+					'note' => 'Invalid Target License; Invalid ID [BOU-032]'
 				]
 			], 400);
 		}
@@ -50,7 +50,7 @@ class Update extends \OpenTHC\Bong\Controller\Base\Update
 			return $RES->withJSON([
 				'data' => $ARG['id'],
 				'meta' => [
-					'detail' => 'Invalid Target License; Invalid Code [BOU-041]'
+					'note' => 'Invalid Target License; Invalid Code [BOU-041]'
 				]
 			], 400);
 		}
@@ -58,7 +58,7 @@ class Update extends \OpenTHC\Bong\Controller\Base\Update
 			return $RES->withJSON([
 				'data' => $ARG['id'],
 				'meta' => [
-					'detail' => 'Invalid Target License; Phone Required [BOU-049]'
+					'note' => 'Invalid Target License; Phone Required [BOU-049]'
 				]
 			], 400);
 		}
@@ -66,7 +66,7 @@ class Update extends \OpenTHC\Bong\Controller\Base\Update
 			return $RES->withJSON([
 				'data' => $ARG['id'],
 				'meta' => [
-					'detail' => 'Invalid Target License; Email Required [BOU-057]'
+					'note' => 'Invalid Target License; Email Required [BOU-057]'
 				]
 			], 400);
 		}
@@ -178,7 +178,7 @@ class Update extends \OpenTHC\Bong\Controller\Base\Update
 				'want' => $want,
 			],
 			'meta' => [
-				'detail' => 'Not Implemented',
+				'note' => 'Not Implemented',
 			],
 		], 501);
 
