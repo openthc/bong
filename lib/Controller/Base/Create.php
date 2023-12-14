@@ -25,4 +25,33 @@ class Create extends \OpenTHC\Controller\Base
 
 	}
 
+	function checkObjectExists($RES, $dbc, $oid)
+	{
+		$sql = <<<SQL
+		SELECT id, license_id, name, hash, stat, data
+		FROM {$this->_tab_name}
+		WHERE license_id = :l0 AND id = :s0
+		SQL;
+
+		$arg = [
+			':l0' => $_SESSION['License']['id'],
+			':s0' => $oid,
+		];
+
+		$chk = $dbc->fetchRow($sql, $arg);
+
+		if ( ! empty($chk['id'])) {
+			// $ret_code = 409;
+			// $chk['stat'] = $ret_code;
+			return $RES->withJSON([
+				'data' => $chk,
+				'meta' => [ 'note' => 'Object Exists [CBC-048]' ],
+			], 409);
+
+		}
+
+		return $RES;
+
+	}
+
 }
