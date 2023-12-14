@@ -68,18 +68,20 @@ class Single extends \OpenTHC\Controller\Base
 		$want_type = strtolower(trim(strtok($_SERVER['HTTP_ACCEPT'], ';')));
 		switch ($want_type) {
 			case 'application/json':
-				return $RES->withJSON($ret, $ret_code, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+				$RES = $RES->withJSON($ret, $ret_code, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+				break;
 			case 'text/html':
 			default:
 
 				$html = $this->render('license/single.php', $ret['data']);
 
 				$RES = $RES->write($html);
-
-				return $RES;
-				// return $RES->withStatus($ret_code);
+				$RES = $RES->withStatus($ret_code);
 
 		}
 
+		return $RES;
+
 	}
+
 }
