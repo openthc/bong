@@ -97,7 +97,7 @@ class Upload extends \OpenTHC\Controller\Base
 		if (empty($output_data)) {
 			return $RES->withJSON([
 				'data' => [],
-				'meta' => [ 'detail' => 'Invalid Upload [LCU-076]' ]
+				'meta' => [ 'note' => 'Invalid Upload [LCU-076]' ]
 			], 400);
 		}
 
@@ -113,14 +113,14 @@ class Upload extends \OpenTHC\Controller\Base
 		if (empty($License['id'])) {
 			return $RES->withJSON([
 				'data' => [],
-				'meta' => [ 'detail' => 'Invalid Request [LCU-068]' ]
+				'meta' => [ 'note' => 'Invalid Request [LCU-068]' ]
 			], 400);
 		}
 
 		if (empty($License['code'])) {
 			return $RES->withJSON([
 				'data' => [],
-				'meta' => [ 'detail' => 'Invalid Request [LCU-075]' ]
+				'meta' => [ 'note' => 'Invalid Request [LCU-075]' ]
 			], 400);
 		}
 
@@ -192,8 +192,7 @@ class Upload extends \OpenTHC\Controller\Base
 
 			$dbc_bong->insert('log_upload', $rec);
 
-		// }
-// ?			$output_file = $dbc_bong->insert('log_upload', $rec);
+			// $output_file = $dbc_bong->insert('log_upload', $rec);
 
 		} elseif (preg_match('/code\+(\w+)@openthc\.com/', $output_data, $m)) {
 
@@ -267,7 +266,7 @@ class Upload extends \OpenTHC\Controller\Base
 			default:
 				return $RES->withJSON([
 					'data' => $source_type,
-					'meta' => [ 'detail' => 'Invalid File Type [LCU-155]' ]
+					'meta' => [ 'note' => 'Invalid File Type [LCU-155]' ]
 				], 400);
 		}
 

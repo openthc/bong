@@ -92,7 +92,7 @@ foreach ($message_file_list as $message_file)
 	switch ($message_type) {
 		case 'ccrs-failure-full':
 			// NOthing To do?  What?
-			_ccrs_pull_failure_full($message_file, $message_head, $message_body);
+			_ccrs_pull_failure_full($message_file, $message_head, $message_body, $output_file);
 			break;
 		case 'ccrs-failure-data':
 			_ccrs_pull_failure_data($message_file, $output_file);
@@ -210,7 +210,7 @@ function _ccrs_pull_failure_data(string $message_file, string $output_file) : in
  * Process Full Failure
  * The CSV "has not been processed"
  */
-function _ccrs_pull_failure_full(string $message_file, array $message_head, string $message_body) : int
+function _ccrs_pull_failure_full(string $message_file, array $message_head, string $message_body, string $output_file) : int
 {
 	global $dbc, $tz0;
 

@@ -10,13 +10,13 @@ $dbc = _dbc();
 $license_list = _load_license_list($dbc, $cli_args);
 foreach ($license_list as $License) {
 	echo "# License: {$License['id']}\n";
-	// _eval_object($dbc, $License, 'section');
-	// _eval_object($dbc, $License, 'variety');
-	// _eval_object($dbc, $License, 'product');
-	// _eval_object($dbc, $License, 'crop');
+	_eval_object($dbc, $License, 'section');
+	_eval_object($dbc, $License, 'variety');
+	_eval_object($dbc, $License, 'product');
+	_eval_object($dbc, $License, 'crop');
 	_eval_object($dbc, $License, 'inventory');
-	// _eval_b2b_incoming($dbc, $License);
-	// _eval_b2b_outgoing($dbc, $License);
+	_eval_b2b_incoming($dbc, $License);
+	_eval_b2b_outgoing($dbc, $License);
 }
 
 
@@ -218,7 +218,7 @@ function _eval_b2b_outgoing($dbc, $License)
 		switch ($err) {
 			case 'Invalid InventoryExternalIdentifier':
 
-				$dbc->query('UPDATE b2b_outgoing_item SET stat = 100 WHERE id = :bii0', [
+				$dbc->query('UPDATE b2b_outgoing_item SET stat = 100 WHERE id = :bii0 AND stat != 100', [
 					':bii0' => $rec['id']
 				]);
 				$dbc->query('UPDATE b2b_outgoing SET stat = 100 WHERE stat != 100 AND id = :bi0 AND source_license_id = :l0', [

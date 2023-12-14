@@ -56,7 +56,6 @@ class Finish extends \OpenTHC\Bong\Controller\Base\Update
 
 		$this->updateStatus();
 
-		$output_data = [];
 		$output_data = $this->getReturnObject($dbc, $ARG['id']);
 
 		return $RES->withJSON([

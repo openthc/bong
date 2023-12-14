@@ -21,6 +21,8 @@ class Create extends \OpenTHC\Bong\Controller\Base\Create
 		$source_data = $_POST;
 		$source_data = \Opis\JsonSchema\Helper::toJSON($source_data);
 		$source_data->qty = floatval($source_data->qty);
+
+
 		switch ($_SESSION['cre']['id']) {
 			case 'usa/hi':
 			case 'usa/nm':

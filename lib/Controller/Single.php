@@ -63,7 +63,7 @@ class Single extends \OpenTHC\Controller\Base
 		$rec['data'] = json_decode($rec['data'], true);
 
 		$ret = [
-			'data' => $rec, // json_decode($rec['data'], true), // $rec,
+			'data' => $rec,
 			'meta' => [
 				'stat' => $rec['stat'],
 				'hash' => $rec['hash'],
@@ -71,8 +71,6 @@ class Single extends \OpenTHC\Controller\Base
 				'updated_at' => $rec['updated_at'],
 			]
 		];
-		$ret['data']['id'] = $rec['id'];
-		$ret['data']['name'] = $rec['name'];
 
 		return $RES->withJSON($ret, 200, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 

@@ -64,6 +64,8 @@ class Search extends \OpenTHC\Bong\Controller\Base\Search
 				$data['object_list'] = $res['data'];
 				$data['column_list'] = [
 					'id',
+					'created_at',
+					'updated_at',
 					'stat',
 					'source_license_id',
 					'target_license_id',

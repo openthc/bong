@@ -9,7 +9,7 @@ namespace OpenTHC\Bong\Controller\Inventory;
 
 class Search extends \OpenTHC\Bong\Controller\Base\Search
 {
-	protected $_tab_name = 'lot';
+	protected $_tab_name = 'inventory';
 
 	/**
 	 *

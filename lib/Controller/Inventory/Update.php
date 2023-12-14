@@ -48,9 +48,6 @@ class Update extends \OpenTHC\Bong\Controller\Base\Update
 		$res = $cmd->execute($arg);
 		$hit = $cmd->rowCount();
 
-		$return_data = $source_data;
-		$return_data->stat = 100;
-
 		$ret_code = 200;
 		switch ($hit) {
 			case 0:
