@@ -31,7 +31,6 @@ class Update extends \OpenTHC\Bong\Controller\Base\Update
 				'data' => null,
 				'meta' => [
 					'note' => 'Invalid Product Name [CPU-033]',
-					'arg' => json_encode($_POST), // Why is it empty on HTTP DELETE ? /mbw 2023-129
 				],
 			], 400);
 		}

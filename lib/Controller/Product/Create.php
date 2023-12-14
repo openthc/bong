@@ -32,21 +32,23 @@ class Create extends \OpenTHC\Bong\Controller\Base\Create
 
 		$dbc = $REQ->getAttribute('dbc');
 
+		// Check Object Exists
+		$RES = $this->checkObjectExists($RES, $dbc, $source_data->id);
+		if (200 != $RES->getStatusCode()) {
+			return $RES;
+		}
+
 		// CCRS uses Name as Primary Key, limit of 100 characters
 		$arg = [
-			':v0' => \OpenTHC\CRE\CCRS::sanatize(strtoupper($source_data->name), 100),
+			':v0' => $source_data->id,
 			':l0' => $_SESSION['License']['id'],
 			':n0' => $source_data->name,
+			':h0' => \OpenTHC\CRE\Base::objHash($source_data),
 			':d0' => json_encode([
 				'@version' => 'openthc/2015',
 				'@source' => $source_data
 			])
 		];
-		$arg[':h0'] = \OpenTHC\CRE\Base::objHash([
-			'id' => $arg[':v0'],
-			'name' => $arg[':n0'],
-		]);
-
 
 		// UPSERT
 		$sql = <<<SQL
@@ -69,16 +71,7 @@ class Create extends \OpenTHC\Bong\Controller\Base\Create
 		$res = $cmd->execute($arg);
 		$ret = $cmd->fetchAll();
 
-		// $rec['data'] = json_decode($rec['data'], true);
 		$this->updateStatus();
-
-		// Rewrite on Output
-		switch ($_SESSION['cre']['id']) {
-			case 'usa/wa/ccrs':
-					// \OpenTHC\CRE\CCRS::createId();
-					$source_data->id = substr(_ulid(), 0, 16);
-					break;
-		}
 
 		return $RES->withJSON([
 			'data' => $source_data,
