@@ -95,8 +95,10 @@ class C_Section_Test extends \OpenTHC\Bong\Test\C_CRE_CCRS\Base_Case
 
 		// Now Pretend We've Uploaded to CCRS and are waiting on response
 		$dbc = _dbc();
+		$License = $this->cre->getLicense();
+
 		$dbc->query('UPDATE section SET stat = 102 WHERE license_id = :l0 AND id = :s0', [
-			':l0' => $_SESSION['License']['id'],
+			':l0' => $License['id'],
 			':s0' => $obj['id'],
 		]);
 
@@ -110,6 +112,7 @@ class C_Section_Test extends \OpenTHC\Bong\Test\C_CRE_CCRS\Base_Case
 	function test_create_verify()
 	{
 		$dbc = _dbc();
+		$License = $this->cre->getLicense();
 
 		// Create
 		$obj = [
@@ -121,10 +124,11 @@ class C_Section_Test extends \OpenTHC\Bong\Test\C_CRE_CCRS\Base_Case
 		$this->assertEquals(100, $res['data']['stat']);
 
 		// Now Pretend We've Uploaded to CCRS and are waiting on response
-		$dbc->query('UPDATE section SET stat = 102 WHERE license_id = :l0 AND id = :s0', [
-			':l0' => $_SESSION['License']['id'],
+		$arg = [
+			':l0' => $License['id'],
 			':s0' => $obj['id'],
-		]);
+		];
+		$dbc->query('UPDATE section SET stat = 102 WHERE license_id = :l0 AND id = :s0', $arg);
 
 		// Now Call UPDATE with Same Info
 		// Now It Should be in the system with data object status 102
@@ -134,7 +138,7 @@ class C_Section_Test extends \OpenTHC\Bong\Test\C_CRE_CCRS\Base_Case
 
 		// CCRS Success
 		$dbc->query('UPDATE section SET stat = 200 WHERE license_id = :l0 AND id = :s0', [
-			':l0' => $_SESSION['License']['id'],
+			':l0' => $License['id'],
 			':s0' => $obj['id'],
 		]);
 
@@ -146,14 +150,14 @@ class C_Section_Test extends \OpenTHC\Bong\Test\C_CRE_CCRS\Base_Case
 
 		// CCRS Verified
 		$dbc->query('UPDATE section SET stat = 202 WHERE license_id = :l0 AND id = :s0', [
-			':l0' => $_SESSION['License']['id'],
+			':l0' => $License['id'],
 			':s0' => $obj['id'],
 		]);
 
 		// Now Call UPDATE with Same Info
 		// Now It Should be in the system with data object status 102
 		$res = $this->cre->section()->update($obj['id'], $obj);
-		$this->assertValidResponse($res, 200);
+		$this->assertValidResponse($res, 202);
 		$this->assertEquals(202, $res['data']['stat']);
 
 	}

@@ -45,18 +45,33 @@ class Update extends \OpenTHC\Bong\Controller\Base\Update
 			':o0' => $source_data->id,
 			':l0' => $_SESSION['License']['id'],
 			':n0' => $source_data->name,
+			':h0' => \OpenTHC\CRE\Base::objHash($source_data),
 			':d0' => json_encode([
 				'@version' => 'openthc/2015',
 				'@source' => $source_data
 			]),
 		];
-		$arg[':h0'] = \OpenTHC\CRE\Base::objHash($source_data);
 
 		$dbc = $REQ->getAttribute('dbc');
 		$cmd = $dbc->prepare($sql);
 		$res = $cmd->execute($arg);
 		$hit = $cmd->rowCount();
-		// $ret = $cmd->fetchAll();
+		$ret = $cmd->fetchAll();
+
+		// On INSERT
+		// $res == true
+		// $hit == 1
+		// $ret == [ 0 => [ stat=100, updated-at set to very recent) ] ]
+
+		// On UPDATE w/Exactly The Same
+		// $res == true
+		// $hit == 0
+		// $ret == [ ]
+
+		// On Update w/Change
+		// $res == true
+		// $hit == 1
+		// $ret = [ 0 => [ stat=100, updated_at=now() ]]
 
 		$ret_code = 200;
 		// if ($ret['stat'] >= 200) {
