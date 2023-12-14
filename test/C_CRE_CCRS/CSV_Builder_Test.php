@@ -13,13 +13,14 @@ class CSV_Builder_Test extends \OpenTHC\Bong\Test\Base_Case
 
 	function setup() : void
 	{
-		$this->_api_code = \OpenTHC\Config::get('cre/usa/wa/ccrs/service-key');
+		$cfg = \OpenTHC\CRE::getConfig('usa/wa');
+		$this->_api_code = $cfg['service-sk'];
 	}
 
 	function test_create_product()
 	{
 		$csv = new \OpenTHC\Bong\CRE\CCRS\CSV($this->_api_code, 'product');
-		$csv->addRow([ '-canary-', '-canary-', '-canary-', 'PRODUCT TEST', '', '0', '-canary-', '-canary-', date('m/d/Y'), '', '', 'INSERT' ]);
+		$csv->addRow([ 'LN', '-TEST-', '-TEST-', 'PRODUCT TEST', '', '0', '-TEST-', '-TEST-', date('m/d/Y'), '', '', 'INSERT' ]);
 
 		$tmp = $csv->getName();
 		$this->assertMatchesRegularExpression('/^Product_\w{6,10}_\w+.csv$/', $tmp);
@@ -49,7 +50,7 @@ class CSV_Builder_Test extends \OpenTHC\Bong\Test\Base_Case
 	function test_create_variety()
 	{
 		$csv = new \OpenTHC\Bong\CRE\CCRS\CSV($this->_api_code, 'variety');
-		$csv->addRow([ '-canary-', "VARIETY TEST", '-canary-', '-canary-', '-canary-' ]);
+		$csv->addRow([ 'LN', "VARIETY TEST", 'HYBRID', '-TEST-', '-TEST-' ]);
 
 		$tmp = $csv->getName();
 		$this->assertMatchesRegularExpression('/^Strain_\w{6,10}_\w+.csv$/', $tmp);

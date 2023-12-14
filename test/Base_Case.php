@@ -18,15 +18,28 @@ class Base_Case extends \OpenTHC\Test\Base_Case
 		return $c;
 	}
 
-	function assertValidResponse($res, $want_code)
+	function assertValidResponse($res, $want_code=200)
 	{
 		$this->assertNotEmpty($res);
-		$this->assertIsArray($res);
-		$this->assertArrayHasKey('code', $res);
-		$this->assertArrayHasKey('data', $res);
-		$this->assertArrayHasKey('meta', $res);
 
-		$this->assertEquals($want_code, $res['code']);
+		if (is_object($res)) {
+			// $this->assertTrue($res instanceof \)
+			$ret_code = $res->getStatusCode();
+			$this->assertEquals($want_code, $ret_code);
+
+			$res = json_decode($res->getBody()->getContents(), true);
+
+		} else {
+
+			$this->assertIsArray($res);
+			$this->assertArrayHasKey('code', $res);
+			$this->assertArrayHasKey('data', $res);
+			$this->assertArrayHasKey('meta', $res);
+
+			$this->assertEquals($want_code, $res['code']);
+		}
+
+
 
 		return $res;
 	}

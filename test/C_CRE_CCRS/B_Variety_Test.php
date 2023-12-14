@@ -7,49 +7,74 @@
 
 namespace OpenTHC\Bong\Test\C_CRE_CCRS;
 
-class B_Variety_Test extends \OpenTHC\Bong\Test\Base_Case
+class B_Variety_Test extends \OpenTHC\Bong\Test\C_CRE_CCRS\Base_Case
 {
+	/**
+	 *
+	 */
 	function test_create()
 	{
-		$cre = $this->getBONGtoCCRS();
-
-		$res = $cre->variety()->create([
+		$res = $this->cre->variety()->create([
 			'id' => _ulid(),
-			'name' => sprintf('Test Variety %s', $this->_pid),
+			'name' => sprintf('Test Variety CREATE %s', $this->_pid),
 		]);
-
-		$this->assertNotEmpty($res);
-		$this->assertIsArray($res);
-		$this->assertArrayHasKey('code', $res);
-		$this->assertArrayHasKey('data', $res);
-		$this->assertArrayHasKey('meta', $res);
-
-		$this->assertEquals(201, $res['code']);
-
+		$this->assertValidResponse($res, 201);
 	}
 
+	/**
+	 *
+	 */
 	function test_create_duplicate()
 	{
-		$x = getenv('OPENTHC_TEST_BASE');
-		$this->assertNotEmpty($x);
+		$obj = [
+			'id' => _ulid(),
+			'name' => sprintf('Test Variety DOUBLE', $this->_pid),
+		];
+		$res = $this->cre->variety()->create($obj);
+		$this->assertValidResponse($res, 201);
+
+		$res = $this->cre->variety()->create($obj);
+		$this->assertValidResponse($res, 409);
+
 	}
 
+	/**
+	 *
+	 */
 	function test_search()
 	{
-		$x = getenv('OPENTHC_TEST_BASE');
-		$this->assertNotEmpty($x);
+		$res = $this->cre->variety()->search();
+		$this->assertValidResponse($res, 200);
 	}
 
 	function test_update()
 	{
-		$x = getenv('OPENTHC_TEST_BASE');
-		$this->assertNotEmpty($x);
+		$obj = [
+			'id' => _ulid(),
+			'name' => sprintf('Test Variety UPDATE %s', $this->_pid),
+		];
+		$res = $this->cre->variety()->create($obj);
+		$this->assertValidResponse($res, 201);
+
+		$res = $this->cre->variety()->update($obj['id'], $obj);
+		$this->assertValidResponse($res, 200);
+
 	}
 
 	function test_delete()
 	{
-		$x = getenv('OPENTHC_TEST_BASE');
-		$this->assertNotEmpty($x);
+		$obj = [
+			'id' => _ulid(),
+			'name' => sprintf('Test Variety DELETE %s', $this->_pid),
+		];
+		$res = $this->cre->variety()->create($obj);
+
+		$obj1 = $this->assertValidResponse($res, 201);
+
+		// $res = $this->cre->variety()->delete($obj['id']);
+		$res = $this->cre->variety()->delete($obj['name']);
+		$this->assertValidResponse($res, 200);
+
 	}
 
 }

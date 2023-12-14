@@ -5,7 +5,7 @@
 
 namespace OpenTHC\Bong\Test\C_CRE_CCRS;
 
-class A_Auth_Test extends \OpenTHC\Bong\Test\Base_Case
+class A_Auth_Test extends \OpenTHC\Bong\Test\C_CRE_CCRS\Base_Case
 {
 	/**
 	 * @test
