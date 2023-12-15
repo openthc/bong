@@ -9,7 +9,9 @@ $dbc = _dbc();
 
 $license_list = _load_license_list($dbc, $cli_args);
 foreach ($license_list as $License) {
-	echo "# License: {$License['id']}\n";
+
+	echo "# License: {$License['id']} / {$License['code']} / {$License['name']}\n";
+
 	_eval_object($dbc, $License, 'section');
 	_eval_object($dbc, $License, 'variety');
 	_eval_object($dbc, $License, 'product');
@@ -76,7 +78,6 @@ function _eval_object($dbc, $License, string $obj)
 
 				$cmd = [];
 				$cmd[] = '/opt/openthc/app/bin/sync.php';
-				$cmd[] = '--force';
 				$cmd[] = sprintf('--company=%s', $License['company_id']);
 				$cmd[] = sprintf('--license=%s', $License['id']);
 				$cmd[] = sprintf('--object=%s', 'section');
@@ -98,7 +99,6 @@ function _eval_object($dbc, $License, string $obj)
 				$cmd[] = '/opt/openthc/app/bin/sync.php';
 
 				$cmd[] = sprintf('--company=%s', $License['company_id']);
-				$cmd[] = '--force';
 				$cmd[] = sprintf('--license=%s', $License['id']);
 				$cmd[] = sprintf('--object=%s', 'product');
 				$cmd[] = sprintf('--object-id=%s', $rec['data']['@source']['product']['id']);
@@ -116,7 +116,6 @@ function _eval_object($dbc, $License, string $obj)
 
 				$cmd = [];
 				$cmd[] = '/opt/openthc/app/bin/sync.php';
-				$cmd[] = '--force';
 				$cmd[] = sprintf('--company=%s', $License['company_id']);
 				$cmd[] = sprintf('--license=%s', $License['id']);
 				$cmd[] = sprintf('--object=%s', 'variety');
@@ -135,7 +134,6 @@ function _eval_object($dbc, $License, string $obj)
 
 		$cmd = [];
 		$cmd[] = '/opt/openthc/app/bin/sync.php';
-		$cmd[] = '--force';
 		$cmd[] = sprintf('--company=%s', $License['company_id']);
 		$cmd[] = sprintf('--license=%s', $License['id']);
 		$cmd[] = sprintf('--object=%s', $obj);
@@ -233,7 +231,6 @@ function _eval_b2b_outgoing($dbc, $License)
 				$cmd[] = sprintf('--license=%s', $License['id']);
 				$cmd[] = sprintf('--object=inventory');
 				$cmd[] = sprintf('--object-id=%s', $rec['data']['@source']['inventory']['id'] ?: $rec['data']['@source']['lot']['id']);
-				$cmd[] = '--force';
 				$cmd = implode(' ', $cmd);
 				echo "$cmd\n";
 				break;
