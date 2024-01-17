@@ -42,38 +42,37 @@ $cli_args = $res->args;
 
 switch ($cli_args['<command>']) {
 	case 'auth':
-		_cre_ccrs_auth(array_merge([ 'auth' ], $cli_args['<command-options>']));
+		_cre_ccrs_auth($cli_args['<command-options>']);
 		break;
 	case 'csv-upload-create':
 		// require_once(APP_ROOT . '/lib/CRE/CCRS/CSV/Create.php');
-		$arg = array_merge([ $cli_args['<command>'] ], $cli_args['<command-options>']);
-		_cre_ccrs_csv_upload_create($arg);
+		_cre_ccrs_csv_upload_create($cli_args['<command-options>']);
 		break;
 	case 'license-status':
 		require_once(__DIR__ . '/cre-ccrs-license-status.php');
-		_cre_ccrs_license_status(array_merge([ 'license-status' ], $cli_args['<command-options>']));
+		_cre_ccrs_license_status($cli_args['<command-options>']);
 		break;
 	case 'license-verify':
-		_cre_ccrs_upload_verify(array_merge([ 'license-verify' ], $cli_args['<command-options>']));
+		_cre_ccrs_license_verify($cli_args['<command-options>']);
 		break;
 	case 'push':
-		_cre_ccrs_push(array_merge([ 'push' ], $cli_args['<command-options>']));
+		_cre_ccrs_push($cli_args['<command-options>']);
 		break;
 	case 'push-b2b-old':
 		require_once(__DIR__ . '/cre-ccrs-upload-b2b-outgoing-redo.php');
-		_cre_ccrs_push_b2b_old(array_merge([ 'push-b2b-old' ], $cli_args['<command-options>']));
+		_cre_ccrs_push_b2b_old($cli_args['<command-options>']);
 		break;
 	case 'review':
-		_cre_ccrs_review(array_merge([ 'review' ], $cli_args['<command-options>']));
+		_cre_ccrs_review($cli_args['<command-options>']);
 		break;
 	case 'status':
-		_cre_ccrs_status(array_merge([ 'status' ], $cli_args['<command-options>']));
+		_cre_ccrs_status($cli_args['<command-options>']);
 		break;
 	case 'upload-script-create':
 		require_once(__DIR__ . '/cre-ccrs-upload-script-create.php');
-		_cre_ccrs_upload_script_create(array_merge([ 'upload-script-create' ], $cli_args['<command-options>']));
+		_cre_ccrs_upload_script_create($cli_args['<command-options>']);
 	case 'upload-single':
-		_cre_ccrs_upload_single(array_merge([ 'upload-single' ], $cli_args['<command-options>']));
+		_cre_ccrs_upload_single($cli_args['<command-options>']);
 		break;
 	default:
 		var_dump($cli_args);
@@ -89,7 +88,7 @@ function _cre_ccrs_auth($cli_args)
 	$doc = <<<DOC
 	BONG CRE CCRS Authentication
 	Usage:
-		cre-ccrs auth [options]
+		auth [options]
 
 	Options:
 		--ping
@@ -215,7 +214,7 @@ function _cre_ccrs_csv_upload_create($cli_args)
 	Create a shell script to upload data for each license
 
 	Usage:
-		cre-ccrs csv-upload-create [--license=<LIST>] [--object=<LIST>] [--force]
+		csv-upload-create [--license=<LIST>] [--object=<LIST>] [--force]
 
 	Options:
 		--license=<LIST>      comma-list of license [default: ALL]
@@ -264,6 +263,22 @@ function _cre_ccrs_csv_upload_create($cli_args)
  */
 function _cre_ccrs_push($cli_args)
 {
+	$doc = <<<DOC
+	BONG CRE CCRS Push
+
+	Pushes data from the Upload Queue into CCRS
+
+	Usage:
+		push [--upload-id=<ID>]
+
+	DOC;
+
+	$res = Docopt::handle($doc, [
+		'argv' => $cli_args,
+	]);
+	$cli_args = $res->args;
+
+
 	$dbc = _dbc();
 	// $dbc->query('BEGIN');
 
@@ -280,7 +295,7 @@ function _cre_ccrs_push($cli_args)
 		exit(0);
 	}
 
-	_cre_ccrs_auth(array_merge([ 'auth' ], []));
+	_cre_ccrs_auth([ 'auth' ]);
 
 	foreach ($res_upload as $rec) {
 		$cli_args['<command-options>'] = [
@@ -313,7 +328,7 @@ function _cre_ccrs_review($cli_args)
 	$doc = <<<DOC
 	BONG CRE CCRS Data Review
 	Usage:
-		cre-ccrs review [--license=<LICENSE>]
+		review [--license=<LICENSE>]
 	DOC;
 
 	$res = Docopt::handle($doc, [
@@ -554,12 +569,12 @@ function _cre_ccrs_upload_single($cli_args)
 /**
  *
  */
-function _cre_ccrs_upload_verify($cli_args)
+function _cre_ccrs_license_verify($cli_args)
 {
 	$doc = <<<DOC
 	BONG CRE CCRS Verification
 	Usage:
-		cre-ccrs license-verify --license=LICENSE [--force] [--reset]
+		license-verify --license=LICENSE [--force] [--reset]
 
 	Options:
 		--force    will force the verify, even if stat is locked
