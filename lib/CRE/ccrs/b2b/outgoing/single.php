@@ -7,9 +7,14 @@
 
 $dbc = $REQ->getAttribute('dbc');
 
-$sql = 'SELECT * FROM b2b_outgoing WHERE id = :i0';
+$sql = <<<SQL
+SELECT *
+FROM b2b_outgoing
+WHERE id = :i0
+  AND (source_license_id = :l0 OR target_license_id = :l0)
+SQL;
 $arg = [
-	// ':l0' => $_SESSION['License']['id'],
+	':l0' => $_SESSION['License']['id'],
 	':i0' => $ARG['id'],
 ];
 
@@ -19,8 +24,7 @@ if (empty($ret['id'])) {
 	return $RES->withJSON([
 		'data' => null,
 		'meta' => [
-			'sql' => $sql,
-			'arg' => $arg,
+			'note' => 'Not Found [BOS-027]',
 		],
 	], 404);
 }
