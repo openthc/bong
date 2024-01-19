@@ -59,8 +59,8 @@ foreach ($message_file_list as $message_file)
 		// mailparse_msg_free($mime_part); // nope, doesn't work
 	}
 
-	$output_data = null;
-	$output_file = null;
+	$output_data = '';
+	$output_file = '';
 
 	foreach ($message_part_data as $part_key => $part) {
 		// echo "$part_key == {$part['content-type']} : {$part['content-name']}\n";
