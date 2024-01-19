@@ -36,7 +36,16 @@ foreach ($res_item_list as $i) {
 }
 
 // File?
+$ret['attachment'] = array();
 $ret['data']['file'] = $dbc->fetchRow('SELECT id, name FROM b2b_outgoing_file WHERE id = :b0', [ ':b0' => $ret['id'] ]);
+if ($ret['data']['file']['id']) {
+	$ret['data']['file']['stat'] = 200;
+	$ret['attachment'][] = $ret['data']['file'];
+} else {
+	$ret['attachment'][] = [
+		'stat' => 404,
+	];
+}
 
 
 return $RES->withJSON([
