@@ -44,4 +44,27 @@ class Status extends \OpenTHC\Bong\Controller\Base\Status
 
 
 	}
+
+	/**
+	 *
+	 */
+	function _echo_status_full($REQ, $RES, $ARG)
+	{
+		$dbc = _dbc();
+
+		$sql = <<<SQL
+		SELECT *
+		FROM license
+		WHERE stat NOT IN ('666', '403')
+		ORDER BY code
+		SQL;
+		$res = $dbc->fetchAll($sql);
+
+		$html = $this->render('license/status-full.php', [ 'license_list' => $res ]);
+
+		$RES = $RES->write($html);
+
+		return $RES;
+
+	}
 }
