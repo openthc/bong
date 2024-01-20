@@ -41,15 +41,6 @@ class Upload
 
 		syslog(LOG_DEBUG, "license:{$this->_lic}/$k1={$rdb_stat}");
 
-		// switch ($rdb_stat) {
-		// 	case 200:
-		// 		// $rdb_stat = 202;
-		// 		break;
-		// 	case 202:
-		// 		// All Good
-		// 		return(0);
-		// }
-
 		return $rdb_stat;
 	}
 
@@ -61,6 +52,6 @@ class Upload
 		$rdb = \OpenTHC\Service\Redis::factory();
 		$k0 = sprintf('/license/%s', $this->_lic);
 		$rdb->hset($k0, sprintf('%s/stat', $this->_obj), $s);
-		$rdb->hset($k0, sprintf('%s/stat/time', $this->_obj), time());
+		$rdb->hset($k0, sprintf('%s/stat/time', $this->_obj), date(\DateTimeInterface::RFC3339));
 	}
 }
