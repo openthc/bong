@@ -65,9 +65,6 @@ switch ($cli_args['<command>']) {
 	case 'review':
 		_cre_ccrs_review($cli_args['<command-options>']);
 		break;
-	case 'status':
-		_cre_ccrs_status($cli_args['<command-options>']);
-		break;
 	case 'upload-script-create':
 		require_once(__DIR__ . '/cre-ccrs-upload-script-create.php');
 		_cre_ccrs_upload_script_create($cli_args['<command-options>']);
@@ -295,7 +292,7 @@ function _cre_ccrs_push($cli_args)
 		exit(0);
 	}
 
-	_cre_ccrs_auth([ 'auth' ]);
+	_cre_ccrs_auth([]);
 
 	foreach ($res_upload as $rec) {
 		$cli_args['<command-options>'] = [
@@ -523,29 +520,26 @@ function _cre_ccrs_upload_single($cli_args)
 						$upload_type = 'b2b_outgoing_notice';
 					}
 				}
-				$upload_type = strtolower($upload_type);
 				if (empty($upload_type)) {
 					throw new \Exception('Unknown Upload Type');
 				}
+				$upload_type = strtolower($upload_type);
+				$upload_type = str_replace('_', '/', $upload_type);
 
 				$rdb = \OpenTHC\Service\Redis::factory();
 				$rdb->hset(sprintf('/license/%s', $license_id), sprintf('%s/push', $upload_type), 200);
-				$rdb->hset(sprintf('/license/%s', $license_id), sprintf('%s/push/time', $upload_type), time());
+				$rdb->hset(sprintf('/license/%s', $license_id), sprintf('%s/push/time', $upload_type), date(\DateTimeInterface::RFC3339));
 
 				break;
 
 			case 302:
 
 				// Authentication has timed out
-				echo "AUTH TIMEOUT\n";
-				exit(1);
-
 				return [
 					'code' => 403,
 					'data' => '',
-					'meta' => [],
+					'meta' => [ 'note' => 'AUTH TIMEOUT [BCC-590]' ],
 				];
-
 
 			default:
 				var_dump($res);
@@ -555,8 +549,7 @@ function _cre_ccrs_upload_single($cli_args)
 
 	}
 
-	$dt0 = new \DateTime();
-	$rdb->hset('/cre/ccrs', 'push/time', $dt0->format(\DateTimeInterface::RFC3339));
+	$rdb->hset('/cre/ccrs', 'push/time', date(\DateTimeInterface::RFC3339));
 
 	return [
 		'code' => 200,
