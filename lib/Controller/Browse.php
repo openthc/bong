@@ -9,7 +9,7 @@ namespace OpenTHC\Bong\Controller;
 
 class Browse extends \OpenTHC\Controller\Base
 {
-	// List of HTTP args & tables
+	// Map of Path to Table
 	protected $table_list = [
 		'b2b/incoming' => 'b2b_incoming',
 		'b2b/outgoing' => 'b2b_outgoing',
@@ -20,16 +20,14 @@ class Browse extends \OpenTHC\Controller\Base
 		'contact' => 'contact',
 		'crop' => 'crop',
 		'crop/collect' => 'crop_collect',
+		'crop/finish' => 'crop_finish',
 		'lab' => 'lab_result',
 		'license-type' => 'license_type',
 		'license' => 'license',
-		'lot' => 'lot',
-		// 'lot/disposal' => '',
-			// 	$sql = 'SELECT * FROM b2b_incoming ORDER BY id OFFSET 0 LIMIT 100';
-			// 	$data['object_list'] = $dbc->fetchAll($sql);
-			// 	break;
-		'lot/history' => 'lot_delta',
-		'product-type' => 'product_type',
+		'inventory' => 'inventory',
+		// 'inventory/finish' => '',
+		'inventory/history' => 'inventory_delta',
+		'product/type' => 'product_type',
 		'product' => 'product',
 		'section' => 'section',
 		'variety' => 'variety',
