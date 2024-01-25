@@ -13,9 +13,11 @@ SELECT b2b_outgoing_file.*
 FROM b2b_outgoing_file
 JOIN b2b_outgoing ON b2b_outgoing.id = b2b_outgoing_file.id
 WHERE (b2b_outgoing.source_license_id = :l0 OR b2b_outgoing.target_license_id = :l0)
+  AND b2b_outgoing_file.id = :i0
 SQL;
 $arg = [
 	':l0' => $_SESSION['License']['id'],
+	':i0' => $ARG['id'],
 ];
 
 if (empty($ARG['file_id'])) {
