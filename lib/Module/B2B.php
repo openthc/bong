@@ -106,6 +106,11 @@ class B2B extends \OpenTHC\Module\Base
 			return _from_cre_file('b2b/outgoing/commit.php', $REQ, $RES, $ARG);
 		});
 
+		// Outgoing Attachments
+		$a->get('/outgoing/{id}/file[/{file_id}]', function($REQ, $RES, $ARG) {
+			return _from_cre_file('b2b/outgoing/file.php', $REQ, $RES, $ARG);
+		});
+
 		// Search Rejected
 		$a->get('/rejected', function($REQ, $RES, $ARG) {
 			return _from_cre_file('b2b/rejected/search.php', $REQ, $RES, $ARG);
