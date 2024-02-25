@@ -18,11 +18,16 @@ class Search extends \OpenTHC\Controller\Base
 	 */
 	function __invoke($REQ, $RES, $ARG)
 	{
+		session_write_close();
+
 		$dbc = $REQ->getAttribute('dbc');
 
 		$res = [];
 
 		$tab_list = [
+			'section',
+			'variety',
+			'product',
 			'crop',
 			'inventory',
 			'b2b_outgoing_item',
@@ -35,8 +40,9 @@ class Search extends \OpenTHC\Controller\Base
 			$sql = <<<SQL
 			SELECT id, stat, name
 			FROM $tab
-			WHERE name LIKE :q1
-			   -- OR data::text LIKE :q1
+			WHERE id LIKE :q1
+				OR name LIKE :q1
+				-- OR data::text LIKE :q1
 			SQL;
 
 			$arg = [
