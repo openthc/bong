@@ -20,7 +20,7 @@ class Upload
 	 */
 	function __construct($cfg)
 	{
-		$this->_force = $cfg['force'];
+		$this->_force = (bool)$cfg['force'];
 		$this->_lic = $cfg['license'];
 		$this->_obj = $cfg['object'];
 	}

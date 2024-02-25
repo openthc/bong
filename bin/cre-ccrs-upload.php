@@ -15,7 +15,7 @@ openlog('openthc-bong', LOG_ODELAY | LOG_PERROR | LOG_PID, LOG_LOCAL0);
 $doc = <<<DOC
 BONG CRE CCRS Upload Tool
 Usage:
-	cre-ccrs-upload upload --license=LICENSE_ID [--object=<OBJECT>] [--object-id=<OBJECT_ID>] [--force]
+	cre-ccrs-upload --license=LICENSE_ID [--object=<OBJECT>] [--object-id=<OBJECT_ID>] [--force]
 
 Options:
 	--license=ID        The license ID of the one to work on.
