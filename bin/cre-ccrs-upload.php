@@ -27,65 +27,46 @@ DOC;
 $res = Docopt::handle($doc);
 $cli_args = $res->args;
 
-// Action
-$action = null;
-foreach ([ 'single', 'upload', 'verify' ] as $k) {
-	if ($cli_args[$k]) {
-		$action = $k;
-		break;
-	}
-}
-
 $dbc = _dbc();
 $License = _load_license($dbc, $cli_args['--license']);
 
 // Action
-switch ($action) {
-	case 'upload':
+$obj_list = explode(',', $cli_args['--object']);
 
-		$obj_list = explode(',', $cli_args['--object']);
-
-		// Check Parameters
-		foreach ($obj_list as $obj) {
-			if ( ! preg_match('/^(section|variety|product|crop|inventory|inventory\-adjust|b2b\-incoming|b2b\-outgoing|b2b\-outgoing\-manifest)$/', $obj)) {
-				echo "Cannot Match Object [CCU-058]\n";
-				exit(1);
-			}
-		}
-
-		// Run the Scripts
-		foreach ($obj_list as $obj) {
-
-			switch ($obj) {
-				case 'product':
-					$csv = new \OpenTHC\Bong\CRE\CCRS\Product\CSV($License);
-					$csv->create();
-					break;
-				case 'section':
-					$csv = new \OpenTHC\Bong\CRE\CCRS\Section\CSV($License);
-					$csv->create();
-					break;
-				case 'variety':
-					$csv = new \OpenTHC\Bong\CRE\CCRS\Variety\CSV($License);
-					$csv->create();
-					break;
-				default:
-					$obj_file = sprintf('%s/cre-ccrs-upload-%s.php', __DIR__, $obj);
-					require_once($obj_file);
-
-					$obj = str_replace('-', '_', $obj);
-					$obj_func = sprintf('_cre_ccrs_upload_%s', $obj);
-
-					// Improve Args?
-					$res = call_user_func($obj_func, $cli_args);
-			}
-		}
-
-		break;
-
-	default:
-		echo "Cannot Match Action [CCU-047]\n";
+// Check Parameters
+foreach ($obj_list as $obj) {
+	if ( ! preg_match('/^(section|variety|product|crop|inventory|inventory\-adjust|b2b\-incoming|b2b\-outgoing|b2b\-outgoing\-manifest)$/', $obj)) {
+		echo "Cannot Match Object [CCU-058]\n";
 		exit(1);
+	}
+}
+
+// Run the Scripts
+foreach ($obj_list as $obj) {
+
+	switch ($obj) {
+		case 'product':
+			$csv = new \OpenTHC\Bong\CRE\CCRS\Product\CSV($License);
+			$csv->create();
+			break;
+		case 'section':
+			$csv = new \OpenTHC\Bong\CRE\CCRS\Section\CSV($License);
+			$csv->create();
+			break;
+		case 'variety':
+			$csv = new \OpenTHC\Bong\CRE\CCRS\Variety\CSV($License);
+			$csv->create();
+			break;
+		default:
+			$obj_file = sprintf('%s/cre-ccrs-upload-%s.php', __DIR__, $obj);
+			require_once($obj_file);
+
+			$obj = str_replace('-', '_', $obj);
+			$obj_func = sprintf('_cre_ccrs_upload_%s', $obj);
+
+			// Improve Args?
+			$res = call_user_func($obj_func, $cli_args);
+	}
 }
 
 
