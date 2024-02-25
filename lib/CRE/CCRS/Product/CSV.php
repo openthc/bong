@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: MIT
  */
 
-namespace OpenTHC\Bong\CRE\CCRS\Section;
+namespace OpenTHC\Bong\CRE\CCRS\Product;
 
 use OpenTHC\CRE\CCRS;
 use OpenTHC\Bong\CRE;
