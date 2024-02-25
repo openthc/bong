@@ -36,6 +36,9 @@ foreach ([ 'single', 'upload', 'verify' ] as $k) {
 	}
 }
 
+$dbc = _dbc();
+$License = _load_license($dbc, $cli_args['--license']);
+
 // Action
 switch ($action) {
 	case 'upload':
@@ -44,15 +47,8 @@ switch ($action) {
 
 		// Check Parameters
 		foreach ($obj_list as $obj) {
-
 			if ( ! preg_match('/^(section|variety|product|crop|inventory|inventory\-adjust|b2b\-incoming|b2b\-outgoing|b2b\-outgoing\-manifest)$/', $obj)) {
 				echo "Cannot Match Object [CCU-058]\n";
-				exit(1);
-			}
-
-			$obj_file = sprintf('%s/cre-ccrs-upload-%s.php', __DIR__, $obj);
-			if ( ! is_file($obj_file)) {
-				echo "Cannot Match Object File [CCU-064]\n";
 				exit(1);
 			}
 		}
@@ -60,14 +56,29 @@ switch ($action) {
 		// Run the Scripts
 		foreach ($obj_list as $obj) {
 
-			$obj_file = sprintf('%s/cre-ccrs-upload-%s.php', __DIR__, $obj);
-			require_once($obj_file);
+			switch ($obj) {
+				case 'product':
+					$csv = new \OpenTHC\Bong\CRE\CCRS\Product\CSV($License);
+					$csv->create();
+					break;
+				case 'section':
+					$csv = new \OpenTHC\Bong\CRE\CCRS\Section\CSV($License);
+					$csv->create();
+					break;
+				case 'variety':
+					$csv = new \OpenTHC\Bong\CRE\CCRS\Variety\CSV($License);
+					$csv->create();
+					break;
+				default:
+					$obj_file = sprintf('%s/cre-ccrs-upload-%s.php', __DIR__, $obj);
+					require_once($obj_file);
 
-			$obj = str_replace('-', '_', $obj);
-			$obj_func = sprintf('_cre_ccrs_upload_%s', $obj);
+					$obj = str_replace('-', '_', $obj);
+					$obj_func = sprintf('_cre_ccrs_upload_%s', $obj);
 
-			// Improve Args?
-			$res = call_user_func($obj_func, $cli_args);
+					// Improve Args?
+					$res = call_user_func($obj_func, $cli_args);
+			}
 		}
 
 		break;
@@ -96,6 +107,7 @@ function _load_license($dbc, $license_id, $object_table=null)
 			break;
 		case 403:
 		case 500:
+		case 666:
 			$dbc->query("UPDATE {$object_table} SET stat = :s1 WHERE license_id = :l0 AND stat != :s1", [
 				':l0' => $license_id,
 				':s1' => $License['stat']
