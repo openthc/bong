@@ -41,7 +41,7 @@ class CSV
 		$api_code = \OpenTHC\Config::get('cre/usa/wa/ccrs/service-key');
 		$csv = new \OpenTHC\Bong\CRE\CCRS\CSV($api_code, 'section');
 
-		$tz0 = new DateTimezone(\OpenTHC\Config::get('cre/usa/wa/ccrs/tz'));
+		$tz0 = new \DateTimezone(\OpenTHC\Config::get('cre/usa/wa/ccrs/tz'));
 
 		// Get Data
 		$csv_data = [];

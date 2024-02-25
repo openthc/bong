@@ -38,7 +38,7 @@ class CSV
 
 		$dbc = _dbc();
 
-		$tz0 = new DateTimezone(\OpenTHC\Config::get('cre/usa/wa/ccrs/tz'));
+		$tz0 = new \DateTimezone(\OpenTHC\Config::get('cre/usa/wa/ccrs/tz'));
 
 		// Get Data
 		$csv_data = [];
@@ -124,8 +124,8 @@ class CSV
 			}
 
 
-			$dtC = new DateTime($product['created_at'], $tz0);
-			$dtU = new DateTime($product['updated_at'], $tz0);
+			$dtC = new \DateTime($product['created_at'], $tz0);
+			$dtU = new \DateTime($product['updated_at'], $tz0);
 
 			$row = [];
 
@@ -221,12 +221,12 @@ class CSV
 		$csv_temp = fopen('php://temp', 'w');
 		$row_size = count($csv_data);
 
-		\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'SubmittedBy',   'OpenTHC' ], $col_size, '')));
-		\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'SubmittedDate', date('m/d/Y') ], $col_size, '')));
-		\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'NumberRecords', $row_size ], $col_size, '')));
-		\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values($csv_head));
+		CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'SubmittedBy',   'OpenTHC' ], $col_size, '')));
+		CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'SubmittedDate', date('m/d/Y') ], $col_size, '')));
+		CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'NumberRecords', $row_size ], $col_size, '')));
+		CCRS::fputcsv_stupidly($csv_temp, array_values($csv_head));
 		foreach ($csv_data as $row) {
-			\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, $row);
+			CCRS::fputcsv_stupidly($csv_temp, $row);
 		}
 		fseek($csv_temp, 0);
 
