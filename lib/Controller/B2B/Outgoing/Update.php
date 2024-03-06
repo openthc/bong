@@ -158,6 +158,7 @@ class Update extends \OpenTHC\Bong\Controller\Base\Update
 		if ($want > 0) {
 
 			if ($have == $want) {
+				$b2b_ret['stat'] = 100;
 				return $RES->withJSON([
 					'data' => $b2b_ret,
 					'meta' => null, // $_POST,
