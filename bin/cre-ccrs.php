@@ -23,7 +23,6 @@ Commands:
 	push                  Does upload-single for all the stuff in the queue
 	push-b2b-old          Push (or check-up on) the old B2B Laggards
 	upload-single         Uploads a Single Job
-	upload-script-create  create an upload-builder shell script
 	license-status        Show License Status
 	license-verify        Re-Init a License and try to Verify via magic Section
 	review                Review Data 400 Level Errors
@@ -65,9 +64,6 @@ switch ($cli_args['<command>']) {
 	case 'review':
 		_cre_ccrs_review($cli_args['<command-options>']);
 		break;
-	case 'upload-script-create':
-		require_once(__DIR__ . '/cre-ccrs-upload-script-create.php');
-		_cre_ccrs_upload_script_create($cli_args['<command-options>']);
 	case 'upload-single':
 		_cre_ccrs_upload_single($cli_args['<command-options>']);
 		break;
