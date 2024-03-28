@@ -95,7 +95,7 @@ class Status extends \OpenTHC\Controller\Base
 	function object_status_tbody($obj, $res) : string
 	{
 		if (empty($res)) {
-			return null;
+			return '';
 		}
 
 		$ret = [];
