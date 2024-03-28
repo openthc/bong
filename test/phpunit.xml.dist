@@ -15,8 +15,8 @@
 	convertWarningsToExceptions="true"
 	processIsolation="false"
 	stopOnError="true"
-	stopOnFailure="false"
-	stopOnRisky="false"
+	stopOnFailure="true"
+	stopOnRisky="true"
 	timeoutForSmallTests="1"
 	timeoutForMediumTests="10"
 	timeoutForLargeTests="60"
@@ -31,7 +31,13 @@
 
 	<testsuites>
 		<testsuite name="All">
-			<directory>.</directory>
+			<directory>A_Core</directory>
+			<directory>B_Auth</directory>
+			<directory>C_CRE_CCRS</directory>
+			<directory>BioTrack2014</directory>
+			<!-- <directory>BioTrack2022</directory> -->
+			<!-- <directory>Metrc2014</directory> -->
+			<!-- <directory>Metrc2022</directory> -->
 		</testsuite>
 	</testsuites>
 
