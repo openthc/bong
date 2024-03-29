@@ -40,6 +40,7 @@ function _cre_ccrs_upload_b2b_incoming($cli_args)
 	FROM b2b_incoming
 	JOIN b2b_incoming_item ON b2b_incoming.id = b2b_incoming_item.b2b_incoming_id
 	WHERE b2b_incoming.target_license_id = :l0
+	  AND b2b_incoming_item.stat IN (100, 102, 200)
 	SQL;
 	$res_b2b_incoming_item = $dbc->fetchAll($sql, [ ':l0' => $License['id'] ]);
 
