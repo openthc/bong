@@ -47,8 +47,10 @@ function _cre_ccrs_upload_b2b_outgoing($cli_args)
 	FROM b2b_outgoing
 	JOIN b2b_outgoing_item ON b2b_outgoing.id = b2b_outgoing_item.b2b_outgoing_id
 	JOIN license AS source_license ON b2b_outgoing.source_license_id = source_license.id
-	-- JOIN license AS target_license ON b2b_outgoing.target_license_id = target_license.id
 	WHERE b2b_outgoing.source_license_id = :l0
+	  AND  b2b_outgoing_item.stat IN (100, 200)
+	ORDER BY b2b_outgoing.id, b2b_outgoing_item.id
+	LIMIT 1000
 	SQL;
 
 	$arg = [ ':l0' => $License['id'] ];
@@ -87,15 +89,15 @@ function _cre_ccrs_upload_b2b_outgoing($cli_args)
 			case 200:
 				// Move to 202 -- will get error from CCRS if NOT Good
 				$cmd = 'UPDATE';
-				$dbc->query('UPDATE b2b_outgoing_item SET stat = 202 WHERE id = :s0', [
-					':s0' => $x['b2b_outgoing_item_id'],
+				$dbc->query('UPDATE b2b_outgoing_item SET stat = 202, data = data #- \'{ "@result" }\' WHERE id = :s0', [
+					':s0' => $b2b_outgoing_item['b2b_outgoing_item_id'],
 				]);
 				break;
 			case 400:
-				// Re-Cycle
-				$dbc->query('UPDATE b2b_outgoing_item SET stat = 100, data = data #- \'{ "@result" }\' WHERE id = :s0', [
-					':s0' => $x['b2b_outgoing_item_id'],
-				]);
+				// Ignore
+				// $dbc->query('UPDATE b2b_outgoing_item SET stat = 100, data = data #- \'{ "@result" }\' WHERE id = :s0', [
+				// 	':s0' => $b2b_outgoing_item['b2b_outgoing_item_id'],
+				// ]);
 				break;
 		}
 
@@ -105,13 +107,13 @@ function _cre_ccrs_upload_b2b_outgoing($cli_args)
 
 		$rec = [
 			$License['code'] // LicenseNumber
-			, $src_b2b['target']['code'] // SoldToLicenseNumber
-			, $src_b2b_item['lot']['id'] // InventoryExternalIdentifier
+			, $src_b2b['target']['code'] ?: $src_b2b['target_license']['code'] // SoldToLicenseNumber
+			, $src_b2b_item['inventory']['id'] ?: $src_b2b_item['lot']['id'] // InventoryExternalIdentifier
 			, '' // PlantExternalIdentifier
 			, 'Wholesale' // SaleType
 			, $dtC->format('m/d/Y') // SaleDate
-			, $src_b2b_item['unit_count'] // Quantity
-			, $src_b2b_item['unit_price'] // UnitPrice
+			, floatval($src_b2b_item['unit_count']) // Quantity
+			, floatval($src_b2b_item['unit_price']) // UnitPrice
 			, '0' // Discount
 			, '0' // SalesTax
 			, '0' // OtherTax
@@ -139,6 +141,8 @@ function _cre_ccrs_upload_b2b_outgoing($cli_args)
 	if ($row_size <= 1) {
 		echo "No Data to Upload\n";
 		return(0);
+		// $uphelp->setStatus(202);
+		// return;
 	}
 
 	$csv_temp = fopen('php://temp', 'w');
