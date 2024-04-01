@@ -53,5 +53,10 @@ class Upload
 		$k0 = sprintf('/license/%s', $this->_lic);
 		$rdb->hset($k0, sprintf('%s/stat', $this->_obj), $s);
 		$rdb->hset($k0, sprintf('%s/stat/time', $this->_obj), date(\DateTimeInterface::RFC3339));
+
+		$k0 = sprintf('/license/%s/%s', $this->_lic, $this->_obj);
+		$rdb->set(sprintf('%s/stat', $k0), $s, [ 'ex' => 3600 ]);
+		$rdb->set(sprintf('%s/stat/time', $k0), date(\DateTimeInterface::RFC3339), [ 'ex' => 3600 ]);
+
 	}
 }

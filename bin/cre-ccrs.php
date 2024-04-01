@@ -526,6 +526,9 @@ function _cre_ccrs_upload_single($cli_args)
 				$rdb->hset(sprintf('/license/%s', $license_id), sprintf('%s/push', $upload_type), 200);
 				$rdb->hset(sprintf('/license/%s', $license_id), sprintf('%s/push/time', $upload_type), date(\DateTimeInterface::RFC3339));
 
+				$rdb->set(sprintf('/license/%s/%s/push', $license_id, $upload_type), 200, [ 'ex' => 3600 ]);
+				$rdb->set(sprintf('/license/%s/%s/push/time', $license_id, $upload_type), date(\DateTimeInterface::RFC3339), [ 'ex' => 3600 ]);
+
 				break;
 
 			case 302:
