@@ -583,7 +583,7 @@ function _cre_ccrs_license_verify($cli_args)
 
 	// Hard-Reset?
 	if ($cli_args['--reset']) {
-		$License->reset();
+		$License->resetData();
 	}
 
 }
