@@ -22,8 +22,7 @@
 		"opis/json-schema": "2.3.0"
 	},
 	"require-dev": {
-		"behat/behat": "3.14.0",
-		"phpstan/phpstan": "1.10.58",
-		"phpunit/phpunit": "9.6.16"
+		"phpstan/phpstan": "1.10.66",
+		"phpunit/phpunit": "9.6.18"
 	}
 }
