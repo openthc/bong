@@ -269,3 +269,20 @@ function _load_license_list($dbc, $cli_args)
 
 	return $ret;
 }
+
+/**
+ * Sync Command Helper
+ */
+function _sync_command($License, string $obj, string $oid) {
+
+	$cmd = [];
+	$cmd[] = '/opt/openthc/app/bin/sync.php';
+	$cmd[] = sprintf('--company=%s', $License['company_id']);
+	$cmd[] = sprintf('--license=%s', $License['id']);
+	$cmd[] = sprintf('--object=%s', escapeshellarg($obj));
+	$cmd[] = sprintf('--object-id=%s', escapeshellarg($oid)); // $rec['b2b_outgoing_id']);
+	$cmd = implode(' ', $cmd);
+
+	return $cmd;
+
+}
