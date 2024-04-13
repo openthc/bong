@@ -94,19 +94,6 @@ function _cre_ccrs_license_status($cli_args)
 		$rdb->hdel(sprintf('/license/%s', $lic['id']), 'section/sync');
 		$rdb->hdel(sprintf('/license/%s', $lic['id']), 'variety/sync');
 		$rdb->hdel(sprintf('/license/%s', $lic['id']), 'variety/sync/time');
-		// $rdb->hdel(sprintf('/license/%s', $lic['id']), 'b2b/outgoing/stat/time');
-		// $rdb->hdel(sprintf('/license/%s', $lic['id']), 'b2b/outgoing/sync');
-		// $rdb->hdel(sprintf('/license/%s', $lic['id']), 'b2b/outgoing/sync/time');
-
-		// $d0 = $rdb->hgetall(sprintf('/license/%s', $lic['id']));
-		// if ( ! empty($d0)) {
-		// 	$k0 = array_keys($d0);
-		// 	sort($k0);
-		// 	echo implode(',', $k0);
-		// 	// echo "\t";
-		// 	// var_dump($d0);
-		// 	// exit;
-		// }
 
 		switch ($lic['stat']) {
 			case 100:
