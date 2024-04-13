@@ -406,8 +406,6 @@ function _cre_ccrs_upload_single($cli_args)
 				exit(1);
 			}
 
-			// $rdb->set(sprintf('/%s/'))
-
 			// Special Case to fix email So we can send the old ones
 			$fix_target_email = false;
 			$fix_source_email = false;
@@ -525,9 +523,6 @@ function _cre_ccrs_upload_single($cli_args)
 				$rdb = \OpenTHC\Service\Redis::factory();
 				$rdb->hset(sprintf('/license/%s', $license_id), sprintf('%s/push', $upload_type), 200);
 				$rdb->hset(sprintf('/license/%s', $license_id), sprintf('%s/push/time', $upload_type), date(\DateTimeInterface::RFC3339));
-
-				$rdb->set(sprintf('/license/%s/%s/push', $license_id, $upload_type), 200, [ 'ex' => 3600 ]);
-				$rdb->set(sprintf('/license/%s/%s/push/time', $license_id, $upload_type), date(\DateTimeInterface::RFC3339), [ 'ex' => 3600 ]);
 
 				break;
 

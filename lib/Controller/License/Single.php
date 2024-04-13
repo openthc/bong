@@ -61,9 +61,9 @@ class Single extends \OpenTHC\Controller\Base
 		$ret['data']['redis-key'] = sprintf('/license/%s', $ARG['id']);
 
 		$rdb = \OpenTHC\Service\Redis::factory();
-		$d0 = $rdb->hgetall($ret['data']['redis-key']);
-		ksort($d0);
-		$ret['data']['redis-cache'] = $d0;
+		$tmp = $rdb->hgetall($ret['data']['redis-key']);
+		ksort($tmp);
+		$ret['data']['redis-cache'] = $tmp;
 
 		$want_type = strtolower(trim(strtok($_SERVER['HTTP_ACCEPT'], ';')));
 		switch ($want_type) {

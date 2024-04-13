@@ -288,6 +288,7 @@ class Upload extends \OpenTHC\Controller\Base
 					break;
 				case 'inventory':
 					$csv_type = 'inventory';
+					break;
 				case 'FromLicenseNumber':
 				case 'LicenseNumber';
 				case 'Strain':

@@ -31,17 +31,27 @@ class Upload
 	function getStatus()
 	{
 		$rdb = \OpenTHC\Service\Redis::factory();
+		$k0 = sprintf('/license/%s/%s/stat', $this->_lic, $this->_obj);
+
 		$k0 = sprintf('/license/%s', $this->_lic);
 		$k1 = sprintf('%s/stat', $this->_obj);
 
-		$rdb_stat = intval($rdb->hget($k0, $k1));
-		if ($this->_force) {
-			$rdb_stat = 100;
+		$tmp_stat = intval($rdb->hget($k0, sprintf('%s/stat', $this->_obj)));
+		$tmp_time = intval($rdb->hget($k0, sprintf('%s/stat/time', $this->_obj)));
+
+		if (empty($tmp_time)) {
+			$tmp_stat = 100;
+		} else {
+			// Make Times and Compare for TTL?
 		}
 
-		syslog(LOG_DEBUG, "license:{$this->_lic}/$k1={$rdb_stat}");
+		if ($this->_force) {
+			$tmp_stat = 100;
+		}
 
-		return $rdb_stat;
+		syslog(LOG_DEBUG, "license:{$this->_lic}/$k1={$tmp_stat}");
+
+		return $tmp_stat;
 	}
 
 	/**
@@ -53,10 +63,5 @@ class Upload
 		$k0 = sprintf('/license/%s', $this->_lic);
 		$rdb->hset($k0, sprintf('%s/stat', $this->_obj), $s);
 		$rdb->hset($k0, sprintf('%s/stat/time', $this->_obj), date(\DateTimeInterface::RFC3339));
-
-		$k0 = sprintf('/license/%s/%s', $this->_lic, $this->_obj);
-		$rdb->set(sprintf('%s/stat', $k0), $s, [ 'ex' => 3600 ]);
-		$rdb->set(sprintf('%s/stat/time', $k0), date(\DateTimeInterface::RFC3339), [ 'ex' => 3600 ]);
-
 	}
 }
