@@ -7,7 +7,8 @@ namespace OpenTHC\Bong\CCRS;
 
 class Response {
 
-	public $time = '';
+	public $ccrs_timestamp = '';
+	public $mail_timestamp = '';
 
 	public $type = '';
 
@@ -39,21 +40,25 @@ class Response {
 				if (preg_match('/file (\w+)_\w+_(\w+)_(\w+)\.csv you submitted has been processed/', $message_body, $m)) {
 					$this->req_type = $m[1];
 					$this->req_ulid = $m[2];
-					$this->time = $m[3];
+					$this->ccrs_timestamp = $m[3];
 				}
 			} elseif (preg_match('/CCRS errors for file: (\w+)_\w+_(\w+)_(\w+)\.csv/', $s, $m)) {
 				$this->type = 'ccrs-failure-data';
 				$this->req_type = $m[1];
 				$this->req_ulid = $m[2];
-				$this->time = $m[3];
+				$this->ccrs_timestamp = $m[3];
 			} elseif (preg_match('/CCRS Processing Error/', $s)) {
 				$this->type = 'ccrs-failure-full';
-				// Manifest Generated: Manifest_AF0E72B77C_01HW35G8M5G3T4CRA55C09KAVS_2024422T826648.csv
+				if (preg_match('/The file (\w+)_\w+_(\w+)_(\w+)\.csv/', $message_body, $m)) {
+					$this->req_type = $m[1];
+					$this->req_uild = $m[2];
+					$this->ccrs_timestamp = $m[3];
+				}
 			} elseif (preg_match('/Manifest Generated: (Manifest)_\w+_(\w+)_(\w+)\.csv/', $s, $m)) {
 				$this->type = 'b2b-outgoing-manifest';
 				$this->req_type = $m[1];
 				$this->req_ulid = $m[2];
-				$this->time = $m[3];
+				$this->ccrs_timestamp = $m[3];
 			} else {
 				throw new \Exception('Cannot Match');
 			}
@@ -72,28 +77,49 @@ class Response {
 		}
 
 		foreach ($message_part_data as $part_key => $part) {
+
 			// echo "$part_key == {$part['content-type']} : {$part['content-name']}\n";
-			if ('application/octet-stream' == $part['content-type']) {
-				if (
-					preg_match('/^\w+_\w{6,10}_\d+T\d+\.csv$/', $part['content-name'])
-					|| preg_match('/^Strain_\d+T\d+\.csv$/', $part['content-name'])
-					|| preg_match('/^Manifest_(.+)_(\w+)\.pdf$/', $part['content-name']) // It's the Manifest PDF
-					) {
 
-					// echo "message: {$message['id']}; part: $part_key is file: {$part['content-name']}\n";
+			switch ($part['content-type']) {
+			case 'application/octet-stream':
 
-					$part_res = mailparse_msg_get_part($message_mime, $part_key);
-					$output_data = mailparse_msg_extract_part_file($part_res, $source_mail, null);
-					$this->res_file = sprintf('%s/var/ccrs-incoming/%s', APP_ROOT, $part['content-name']);
+				// echo "message: {$message['id']}; part: $part_key is file: {$part['content-name']}\n";
+				$part_res = mailparse_msg_get_part($message_mime, $part_key);
+				$output_data = mailparse_msg_extract_part_file($part_res, $source_mail, null);
+
+				if (preg_match('/^\w+_\w{6,10}_\d+T\d+\.csv$/', $part['content-name'])) {
+
+					$output_data = $this->csvPatch($output_data);
 					$output_size = file_put_contents($this->res_file, $output_data);
 					if (0 == $output_size) {
 						throw new \Exception('Failed to write Data File');
 					}
 
-					break; // foreach
+					$this->res_file = sprintf('%s/var/ccrs-incoming/%s', APP_ROOT, $part['content-name']);
+
+					break 2; // foreach
+
+				} elseif (preg_match('/^Manifest_(.+)_(\w+)\.pdf$/', $part['content-name'])) {
+
+					// It's the Manifest PDF
+
+					$output_size = file_put_contents($this->res_file, $output_data);
+					if (0 == $output_size) {
+						throw new \Exception('Failed to write Data File');
+					}
+
+					$this->res_file = sprintf('%s/var/ccrs-incoming/%s', APP_ROOT, $part['content-name']);
+
+					break 2; // foreach
 
 				}
+
+				break;
+
+			default:
+				throw new \Exception('Invalid Attachment [CCR-119]');
 			}
+
 		}
 
 		mailparse_msg_free($message_mime);
@@ -103,7 +129,15 @@ class Response {
 	public function isValid()
 	{
 		if (! preg_match('/^\w{26}$/', $this->req_ulid)) {
-			throw new \Exception('Invalid Request ULID');
+			throw new \Exception('Invalid Response; Missing Request ID [CCR-111]');
+		}
+
+		switch ($this->type) {
+		case 'b2b-outgoing-manifest':
+		case 'ccrs-failure-data':
+			if (empty($this->res_file)) {
+				throw new \Exception('Invalid Response; Missing Attachment [CCR-138]');
+			}
 		}
 
 		// if ( ! preg_match('//')) {
@@ -112,6 +146,33 @@ class Response {
 	}
 
 	protected function attachment_extract() {}
+
+	/**
+	 * Patch bullshit we find in these files
+	 */
+	// function _csv_file_patch(string $csv_file) : void
+	function csvPatch(string $csv_data) : string {
+
+		// Patch the WHOLE BLOB
+		// $csv_data = file_get_contents($csv_file);
+
+		// Fix some bullshit they put in the CSVs (Bug #38)
+		$csv_data = str_replace('Insert, Update or Delete', 'INSERT UPDATE or DELETE', $csv_data);
+		// $part_body = str_replace('Operation is invalid must be Insert,  Update or Delete'
+		// 	, 'Operation is invalid must be INSERT UPDATE or DELETE'
+		// 	, $part_body);
+
+		// This one always goes "comma space space CheckSum"
+		// $part_body = str_replace(',  CheckSum and', ': CheckSum and', $part_body);
+		// $part_body = preg_replace('/found, CheckSum/i', 'found: CheckSum', $part_body);
+
+		// words, comma spaces? "Checksum and"
+		$csv_data = preg_replace('/(\w+),\s+CheckSum and/', '$1: CheckSum and', $csv_data);
+
+		// file_put_contents($csv_file, $csv_data);
+		return $csv_data;
+
+	}
 
 	/**
 	 *
