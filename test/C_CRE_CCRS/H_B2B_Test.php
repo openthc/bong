@@ -24,7 +24,7 @@ class H_B2B_Test extends \OpenTHC\Bong\Test\C_CRE_CCRS\Base_Case
 			]
 		]);
 
-		$this->assertValidResponse($res, 201);
+		$this->assertValidAPIResponse($res, 201);
 
 	}
 
@@ -44,17 +44,17 @@ class H_B2B_Test extends \OpenTHC\Bong\Test\C_CRE_CCRS\Base_Case
 		];
 
 		$res = $this->cre->b2b()->create($b2b);
-		$this->assertValidResponse($res, 201);
+		$this->assertValidAPIResponse($res, 201);
 
 		$res = $this->cre->b2b()->create($b2b);
-		$this->assertValidResponse($res, 409);
+		$this->assertValidAPIResponse($res, 409);
 
 	}
 
 	function test_search()
 	{
 		$res = $cre->b2b()->search();
-		$this->assertValidResponse($res, 200);
+		$this->assertValidAPIResponse($res, 200);
 	}
 
 	function test_update()
@@ -73,10 +73,10 @@ class H_B2B_Test extends \OpenTHC\Bong\Test\C_CRE_CCRS\Base_Case
 		];
 
 		$res = $this->cre->b2b()->create($b2b);
-		$this->assertValidResponse($res, 201);
+		$this->assertValidAPIResponse($res, 201);
 
 		$res = $this->cre->b2b()->update($b2b);
-		$this->assertValidResponse($res, 409);
+		$this->assertValidAPIResponse($res, 409);
 
 		return $b2b;
 
@@ -88,7 +88,7 @@ class H_B2B_Test extends \OpenTHC\Bong\Test\C_CRE_CCRS\Base_Case
 	function test_delete($b2b)
 	{
 		$res = $this->cre->b2b()->delete($b2b['id']);
-		$this->assertValidResponse($res);
+		$this->assertValidAPIResponse($res);
 
 	}
 

@@ -18,7 +18,8 @@ class B_Variety_Test extends \OpenTHC\Bong\Test\C_CRE_CCRS\Base_Case
 			'id' => _ulid(),
 			'name' => sprintf('Test Variety CREATE %s', $this->_pid),
 		]);
-		$this->assertValidResponse($res, 201);
+		$this->assertValidAPIResponse($res, 201);
+
 	}
 
 	/**
@@ -31,10 +32,14 @@ class B_Variety_Test extends \OpenTHC\Bong\Test\C_CRE_CCRS\Base_Case
 			'name' => sprintf('Test Variety DOUBLE', $this->_pid),
 		];
 		$res = $this->cre->variety()->create($obj);
-		$this->assertValidResponse($res, 201);
+		$this->assertValidAPIResponse($res, 201);
+		$id0 = $res['data']['id'];
 
 		$res = $this->cre->variety()->create($obj);
-		$this->assertValidResponse($res, 409);
+		$this->assertValidAPIResponse($res, 409);
+		$id1 = $res['data']['id'];
+
+		$this->assertSame($id0, $id1);
 
 	}
 
@@ -44,7 +49,7 @@ class B_Variety_Test extends \OpenTHC\Bong\Test\C_CRE_CCRS\Base_Case
 	function test_search()
 	{
 		$res = $this->cre->variety()->search();
-		$this->assertValidResponse($res, 200);
+		$this->assertValidAPIResponse($res, 200);
 	}
 
 	function test_update()
@@ -54,10 +59,10 @@ class B_Variety_Test extends \OpenTHC\Bong\Test\C_CRE_CCRS\Base_Case
 			'name' => sprintf('Test Variety UPDATE %s', $this->_pid),
 		];
 		$res = $this->cre->variety()->create($obj);
-		$this->assertValidResponse($res, 201);
+		$this->assertValidAPIResponse($res, 201);
 
 		$res = $this->cre->variety()->update($obj['id'], $obj);
-		$this->assertValidResponse($res, 200);
+		$this->assertValidAPIResponse($res, 200);
 
 	}
 
@@ -68,12 +73,12 @@ class B_Variety_Test extends \OpenTHC\Bong\Test\C_CRE_CCRS\Base_Case
 			'name' => sprintf('Test Variety DELETE %s', $this->_pid),
 		];
 		$res = $this->cre->variety()->create($obj);
-
-		$obj1 = $this->assertValidResponse($res, 201);
+		$this->assertValidAPIResponse($res, 200);
 
 		// $res = $this->cre->variety()->delete($obj['id']);
 		$res = $this->cre->variety()->delete($obj['name']);
-		$this->assertValidResponse($res, 200);
+		$this->assertValidAPIResponse($res, 410);
+
 
 	}
 

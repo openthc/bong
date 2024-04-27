@@ -14,12 +14,19 @@ class D_Product_Test extends \OpenTHC\Bong\Test\C_CRE_CCRS\Base_Case
 	 */
 	function test_create()
 	{
-		$res = $this->cre->product()->create([
+		$obj0 = [
 			'id' => _ulid(),
 			'name' => sprintf('Test product CREATE %s', $this->_pid),
 			'type' => '018NY6XC00PTAF3TFBB51C8HX6',
-		]);
-		$this->assertValidResponse($res, 201);
+		];
+
+		$res = $this->cre->product()->create($obj0);
+		$res = $this->assertValidAPIResponse($res, 201);
+
+		$obj1 = $res['data'];
+
+		$this->assertSame($obj0['id'], $obj1['id']);
+
 	}
 
 	/**
@@ -33,10 +40,10 @@ class D_Product_Test extends \OpenTHC\Bong\Test\C_CRE_CCRS\Base_Case
 			'type' => '018NY6XC00PTAF3TFBB51C8HX6',
 		];
 		$res = $this->cre->product()->create($obj);
-		$this->assertValidResponse($res, 201);
+		$this->assertValidAPIResponse($res, 201);
 
 		$res = $this->cre->product()->create($obj);
-		$this->assertValidResponse($res, 409);
+		$this->assertValidAPIResponse($res, 409);
 
 	}
 
@@ -46,7 +53,7 @@ class D_Product_Test extends \OpenTHC\Bong\Test\C_CRE_CCRS\Base_Case
 	function test_search()
 	{
 		$res = $this->cre->product()->search();
-		$this->assertValidResponse($res, 200);
+		$this->assertValidAPIResponse($res, 200);
 	}
 
 	function test_update()
@@ -57,10 +64,10 @@ class D_Product_Test extends \OpenTHC\Bong\Test\C_CRE_CCRS\Base_Case
 			'type' => '018NY6XC00PTAF3TFBB51C8HX6',
 		];
 		$res = $this->cre->product()->create($obj);
-		$this->assertValidResponse($res, 201);
+		$this->assertValidAPIResponse($res, 201);
 
 		$res = $this->cre->product()->update($obj['id'], $obj);
-		$this->assertValidResponse($res, 200);
+		$this->assertValidAPIResponse($res, 200);
 
 	}
 
@@ -73,10 +80,10 @@ class D_Product_Test extends \OpenTHC\Bong\Test\C_CRE_CCRS\Base_Case
 		];
 		$res = $this->cre->product()->create($obj);
 
-		$obj = $this->assertValidResponse($res, 201);
+		$res = $this->assertValidAPIResponse($res, 201);
 
 		$res = $this->cre->product()->delete($obj['id']);
-		$this->assertValidResponse($res, 200);
+		$this->assertValidAPIResponse($res, 200);
 
 	}
 

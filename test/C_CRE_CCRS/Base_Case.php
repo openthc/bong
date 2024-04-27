@@ -7,7 +7,7 @@
 
 namespace OpenTHC\Bong\Test\C_CRE_CCRS;
 
-class Base_Case extends \OpenTHC\Bong\Test\Base_Case
+class Base_Case extends \OpenTHC\Bong\Test\Base
 {
 	/**
 	 *

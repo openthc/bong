@@ -10,9 +10,9 @@
  * SPDX-License-Identifier: MIT
  */
 
-namespace OpenTHC\Bong\Test\A_Core;
+namespace OpenTHC\Bong\Test\Unit;
 
-class B_CRE_Ping_Test extends \OpenTHC\Bong\Test\Base_Case
+class B_CRE_Ping_Test extends \OpenTHC\Bong\Test\Base
 {
 	/**
 	 * @test
@@ -23,20 +23,23 @@ class B_CRE_Ping_Test extends \OpenTHC\Bong\Test\Base_Case
 
 		foreach ($cre_list as $cre_conf) {
 
-			$cre_conf['company'] = getenv('OPENTHC_TEST_COMPANY_ID');
-			$cre_conf['contact'] = getenv('OPENTHC_TEST_CONTACT_ID');
-			// $cre_conf['license'] = getenv('OPENTHC_TEST_LICENSE');
-			$cre_conf['license'] = getenv('OPENTHC_TEST_LICENSE_ID');
-			$cre_conf['license-key'] = getenv('OPENTHC_TEST_LICENSE_SECRET');
-			$cre_conf['service'] = getenv('OPENTHC_TEST_BASE_SERVICE_ID');
-			// $cre_conf['service-key'] = getenv('OPENTHC_TEST_BASE_SERVICE_SK');
-			$cre_conf['service-sk'] = getenv('OPENTHC_TEST_BASE_SERVICE_SK');
+			$cre_conf['company'] = OPENTHC_TEST_COMPANY_ID;
+			$cre_conf['contact'] = OPENTHC_TEST_CONTACT_ID;
+			$cre_conf['license'] = OPENTHC_TEST_LICENSE_ID;
+			$cre_conf['license-key'] = OPENTHC_TEST_LICENSE_SECRET;
+			$cre_conf['service'] = OPENTHC_TEST_CLIENT_SERVICE_ID;
+			$cre_conf['service-sk'] = OPENTHC_TEST_CLIENT_SERVICE_SK;
 
 			$cre = \OpenTHC\CRE::factory($cre_conf);
 			$this->assertNotEmpty($cre);
 			$this->assertTrue($cre instanceof \OpenTHC\CRE\Base);
 
-			$res = $cre->setLicense($cre_conf['license']);
+			$res = $cre->setLicense([
+				'id' => $cre_conf['license'],
+				'code' => OPENTHC_TEST_LICENSE_CODE,
+				'guid' => OPENTHC_TEST_LICENSE_CODE,
+				'sk' => $cre_conf['license-key']
+			]);
 			$res = $cre->ping();
 
 			$this->assertIsArray($res);

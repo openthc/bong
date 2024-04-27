@@ -15,7 +15,7 @@ class C_Section_Test extends \OpenTHC\Bong\Test\C_CRE_CCRS\Base_Case
 			'id' => _ulid(),
 			'name' => sprintf('Test Section CREATE %s', $this->_pid),
 		]);
-		$this->assertValidResponse($res, 201);
+		$this->assertValidAPIResponse($res, 201);
 		$this->assertEquals(100, $res['data']['stat']);
 	}
 
@@ -26,18 +26,18 @@ class C_Section_Test extends \OpenTHC\Bong\Test\C_CRE_CCRS\Base_Case
 			'name' => sprintf('Test Section DOUBLE', $this->_pid),
 		];
 		$res = $this->cre->section()->create($obj);
-		$this->assertValidResponse($res, 201);
+		$this->assertValidAPIResponse($res, 201);
 		$this->assertEquals(100, $res['data']['stat']);
 
 		$res = $this->cre->section()->create($obj);
-		$this->assertValidResponse($res, 409);
+		$this->assertValidAPIResponse($res, 409);
 		$this->assertEquals(409, $res['data']['stat']);
 	}
 
 	function test_search()
 	{
 		$res = $this->cre->section()->search();
-		$this->assertValidResponse($res, 200);
+		$this->assertValidAPIResponse($res, 200);
 		$this->assertGreaterThan(2, count($res['data']));
 	}
 
@@ -48,11 +48,11 @@ class C_Section_Test extends \OpenTHC\Bong\Test\C_CRE_CCRS\Base_Case
 			'name' => sprintf('Test Section UPDATE %s', $this->_pid),
 		];
 		$res = $this->cre->section()->create($obj);
-		$this->assertValidResponse($res, 201);
+		$this->assertValidAPIResponse($res, 201);
 		$this->assertEquals(100, $res['data']['stat']);
 
 		$res = $this->cre->section()->update($obj['id'], $obj);
-		$this->assertValidResponse($res, 200);
+		$this->assertValidAPIResponse($res, 200);
 		$this->assertEquals(100, $res['data']['stat']);
 	}
 
@@ -64,10 +64,10 @@ class C_Section_Test extends \OpenTHC\Bong\Test\C_CRE_CCRS\Base_Case
 		];
 		$res = $this->cre->section()->create($obj);
 
-		$obj1 = $this->assertValidResponse($res, 201);
+		$obj1 = $this->assertValidAPIResponse($res, 201);
 
 		$res = $this->cre->section()->delete($obj['id']);
-		$this->assertValidResponse($res, 200);
+		$this->assertValidAPIResponse($res, 200);
 		$this->assertEquals(410, $res['data']['stat']);
 	}
 
@@ -78,11 +78,11 @@ class C_Section_Test extends \OpenTHC\Bong\Test\C_CRE_CCRS\Base_Case
 			'name' => sprintf('Test Section UPDATE_BEFORE_CREATE %s', $this->_pid),
 		];
 		$res = $this->cre->section()->update($obj['id'], $obj);
-		// $this->assertValidResponse($res, 201);
+		// $this->assertValidAPIResponse($res, 201);
 		$this->assertEquals(100, $res['data']['stat']);
 
 		$res = $this->cre->section()->update($obj['id'], $obj);
-		$this->assertValidResponse($res, 200);
+		$this->assertValidAPIResponse($res, 200);
 
 		// Now It Should be in the system with data object status 100
 		$this->assertEquals(100, $res['data']['stat']);
@@ -90,7 +90,7 @@ class C_Section_Test extends \OpenTHC\Bong\Test\C_CRE_CCRS\Base_Case
 		// Third Update
 		$obj['name'] = sprintf('Section UPDATE_BEFORE_CREATE_RENAME %s', $this->_pid);
 		$res = $this->cre->section()->update($obj['id'], $obj);
-		$this->assertValidResponse($res, 200);
+		$this->assertValidAPIResponse($res, 200);
 
 
 		// Now Pretend We've Uploaded to CCRS and are waiting on response
@@ -120,7 +120,7 @@ class C_Section_Test extends \OpenTHC\Bong\Test\C_CRE_CCRS\Base_Case
 			'name' => sprintf('Test Section CREATE_VERIFY %s', $this->_pid),
 		];
 		$res = $this->cre->section()->create($obj);
-		// $this->assertValidResponse($res, 201);
+		$this->assertValidAPIResponse($res, 201);
 		$this->assertEquals(100, $res['data']['stat']);
 
 		// Now Pretend We've Uploaded to CCRS and are waiting on response
@@ -133,7 +133,7 @@ class C_Section_Test extends \OpenTHC\Bong\Test\C_CRE_CCRS\Base_Case
 		// Now Call UPDATE with Same Info
 		// Now It Should be in the system with data object status 102
 		$res = $this->cre->section()->update($obj['id'], $obj);
-		$this->assertValidResponse($res, 200);
+		$this->assertValidAPIResponse($res, 200);
 		$this->assertEquals(102, $res['data']['stat']);
 
 		// CCRS Success
@@ -145,7 +145,7 @@ class C_Section_Test extends \OpenTHC\Bong\Test\C_CRE_CCRS\Base_Case
 		// Now Call UPDATE with Same Info
 		// Now It Should be in the system with data object status 102
 		$res = $this->cre->section()->update($obj['id'], $obj);
-		$this->assertValidResponse($res, 200);
+		$this->assertValidAPIResponse($res, 200);
 		$this->assertEquals(200, $res['data']['stat']);
 
 		// CCRS Verified
@@ -157,7 +157,7 @@ class C_Section_Test extends \OpenTHC\Bong\Test\C_CRE_CCRS\Base_Case
 		// Now Call UPDATE with Same Info
 		// Now It Should be in the system with data object status 102
 		$res = $this->cre->section()->update($obj['id'], $obj);
-		$this->assertValidResponse($res, 202);
+		$this->assertValidAPIResponse($res, 202);
 		$this->assertEquals(202, $res['data']['stat']);
 
 	}

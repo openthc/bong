@@ -12,7 +12,7 @@ class A_Auth_Test extends \OpenTHC\Bong\Test\C_CRE_CCRS\Base_Case
 	 */
 	function test_auth_config()
 	{
-		$x = getenv('OPENTHC_TEST_BASE');
+		$x = OPENTHC_TEST_ORIGIN;
 		$this->assertNotEmpty($x);
 	}
 
@@ -21,7 +21,7 @@ class A_Auth_Test extends \OpenTHC\Bong\Test\C_CRE_CCRS\Base_Case
 	 */
 	function test_auth_connect()
 	{
-		$x = getenv('OPENTHC_TEST_BASE');
+		$x = OPENTHC_TEST_ORIGIN;
 		$this->assertNotEmpty($x);
 	}
 
@@ -31,7 +31,7 @@ class A_Auth_Test extends \OpenTHC\Bong\Test\C_CRE_CCRS\Base_Case
 	 */
 	function test_auth_timeout()
 	{
-		$x = getenv('OPENTHC_TEST_BASE');
+		$x = OPENTHC_TEST_ORIGIN;
 		$this->assertNotEmpty($x);
 		// sleep(15 * 60);
 	}

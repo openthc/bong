@@ -7,7 +7,7 @@
 
 namespace OpenTHC\Bong\Test\C_CRE_CCRS;
 
-class CSV_Builder_Test extends \OpenTHC\Bong\Test\Base_Case
+class CSV_Builder_Test extends \OpenTHC\Bong\Test\Base
 {
 	protected $_api_code = null;
 

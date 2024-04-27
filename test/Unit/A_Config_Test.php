@@ -4,16 +4,16 @@
  * SPDX-License-Identifier: MIT
  */
 
-namespace OpenTHC\Bong\Test\A_Core;
+namespace OpenTHC\Bong\Test\Unit;
 
-class A_Config_Test extends \OpenTHC\Bong\Test\Base_Case
+class A_Config_Test extends \OpenTHC\Bong\Test\Base
 {
-	function test_env()
+	function test_defined()
 	{
-		$env_list = [
-			'OPENTHC_TEST_BASE',
-			'OPENTHC_TEST_BASE_SERVICE_ID',
-			'OPENTHC_TEST_BASE_SERVICE_SK',
+		$key_list = [
+			'OPENTHC_TEST_ORIGIN',
+			'OPENTHC_TEST_CLIENT_SERVICE_ID',
+			'OPENTHC_TEST_CLIENT_SERVICE_SK',
 			'OPENTHC_TEST_BIOTRACK_COMPANY',
 			'OPENTHC_TEST_BIOTRACK_PASSWORD',
 			'OPENTHC_TEST_BIOTRACK_USERNAME',
@@ -24,9 +24,9 @@ class A_Config_Test extends \OpenTHC\Bong\Test\Base_Case
 			'OPENTHC_TEST_METRC_SERVICE_KEY',
 		];
 
-		foreach ($env_list as $env) {
-			$val = getenv($env);
-			$this->assertNotEmpty($val, "$env is empty");
+		foreach ($key_list as $k) {
+			$this->assertTrue(defined($k), "CONST '$k' is not defined");
+			$this->assertNotEmpty(constant($k), "CONST '$k' is empty");
 		}
 
 	}
