@@ -19,7 +19,9 @@
 		"league/oauth2-client": "2.7.0",
 		"openthc/common": "dev-master",
 		"openthc/cre-adapter": "dev-master",
-		"opis/json-schema": "2.3.0"
+		"opis/json-schema": "2.3.0",
+		"google/cloud-pubsub": "^1.46",
+		"google/apiclient": "^2.14"
 	},
 	"require-dev": {
 		"phpstan/phpstan": "1.10.66",
