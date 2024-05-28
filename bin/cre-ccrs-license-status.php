@@ -98,15 +98,10 @@ function _cre_ccrs_license_status($cli_args)
 		switch ($lic['stat']) {
 			case 100:
 			case 102:
-			case 200:
-			case 202: // OK
-				echo "./bin/cre-ccrs.php verify --license={$lic['id']}  # stat={$lic['stat']}";
-				// Ping CRE
-				// echo "PING: https://bong.openthc.com/license/{$license['id']}\n";
-				// _license_verify_update_stat($dbc, $license, $license['stat']);
-				// continue;
+				echo "./bin/cre-ccrs.php license-verify --license={$lic['id']}  # stat={$lic['stat']}";
 				break;
-			case 203: // Non-Authoritative Information ??
+			case 200:
+			// case 202: // OK
 				break;
 			case 402: // Payment
 			case 403: // CCRS Authorization
@@ -114,12 +109,6 @@ function _cre_ccrs_license_status($cli_args)
 			case 500: // Some Error
 			case 666: // Dead
 				// Set the Objects to the Status of the License
-				if ($cli_args['--update-stat']) {
-					_cre_ccrs_license_status_update_stat($dbc, $lic, $lic['stat']);
-					$rdb->del(sprintf('/license/%s', $lic['id']));
-				} else {
-					echo "./bin/cre-ccrs.php license-status --license={$lic['id']} --update-stat  # stat={$lic['stat']}\n";
-				}
 				if (666 == $lic['stat']) {
 					echo "DELETE Dead Objects\n";
 					echo "./bin/license-delete.php {$lic['id']};\n";
@@ -139,6 +128,13 @@ function _cre_ccrs_license_status($cli_args)
 				echo "UNKNOWN LICENSE STATUS: {$lic['stat']}\n";
 		}
 
+		if ($cli_args['--update-stat']) {
+			_cre_ccrs_license_status_update_stat($dbc, $lic, $lic['stat']);
+			$rdb->del(sprintf('/license/%s', $lic['id']));
+		// } else {
+		// 	echo "./bin/cre-ccrs.php license-status --license={$lic['id']} --update-stat  # stat={$lic['stat']}\n";
+		}
+
 		echo "\n";
 
 	}
@@ -155,29 +151,29 @@ function _cre_ccrs_license_status_update_stat($dbc, $license, $stat)
 	$sql_list = [];
 
 	// B2B
-	$sql_list[] = 'UPDATE b2b_incoming_item SET stat = :s1, data = data #- \'{ "@result" }\' WHERE b2b_incoming_id IN (SELECT id FROM b2b_incoming WHERE target_license_id = :l0)';
-	$sql_list[] = 'UPDATE b2b_incoming SET stat = :s1, data = data #- \'{ "@result" }\' WHERE target_license_id = :l0';
+	$sql_list[] = 'UPDATE b2b_incoming_item SET stat = :s1, data = data #- \'{ "@result" }\' WHERE stat != :s1 AND b2b_incoming_id IN (SELECT id FROM b2b_incoming WHERE target_license_id = :l0)';
+	$sql_list[] = 'UPDATE b2b_incoming SET stat = :s1, data = data #- \'{ "@result" }\' WHERE stat != :s1 AND target_license_id = :l0';
 
 	// $sql_list[] = 'UPDATE b2b_outgoing_file SET stat = :s1 WHERE id IN (SELECT id FROM b2b_outgoing WHERE source_license_id = :l0)';
-	$sql_list[] = 'UPDATE b2b_outgoing_item SET stat = :s1, data = data #- \'{ "@result" }\' WHERE b2b_outgoing_id IN (SELECT id FROM b2b_outgoing WHERE source_license_id = :l0)';
-	$sql_list[] = 'UPDATE b2b_outgoing SET stat = :s1, data = data #- \'{ "@result" }\' WHERE source_license_id = :l0';
+	$sql_list[] = 'UPDATE b2b_outgoing_item SET stat = :s1, data = data #- \'{ "@result" }\' WHERE stat != :s1 AND b2b_outgoing_id IN (SELECT id FROM b2b_outgoing WHERE source_license_id = :l0)';
+	$sql_list[] = 'UPDATE b2b_outgoing SET stat = :s1, data = data #- \'{ "@result" }\' WHERE stat != :s1 AND source_license_id = :l0';
 
 	// B2C
-	$sql_list[] = 'UPDATE b2c_sale_item SET stat = :s1, data = data #- \'{ "@result" }\' WHERE b2c_sale_id IN (SELECT id FROM b2c_sale WHERE license_id = :l0)';
-	$sql_list[] = 'UPDATE b2c_sale SET stat = :s1, data = data #- \'{ "@result" }\' WHERE license_id = :l0';
+	$sql_list[] = 'UPDATE b2c_sale_item SET stat = :s1, data = data #- \'{ "@result" }\' WHERE stat != :s1 AND b2c_sale_id IN (SELECT id FROM b2c_sale WHERE license_id = :l0)';
+	$sql_list[] = 'UPDATE b2c_sale SET stat = :s1, data = data #- \'{ "@result" }\' WHERE stat != :s1 AND license_id = :l0';
 
 	// Lab Results
-	$sql_list[] = 'UPDATE lab_result_metric SET stat = :s1, data = data #- \'{ "@result" }\' WHERE lab_result_id IN (SELECT id FROM lab_result WHERE license_id = :l0)';
-	$sql_list[] = 'UPDATE lab_result SET stat = :s1, data = data #- \'{ "@result" }\' WHERE license_id = :l0';
+	$sql_list[] = 'UPDATE lab_result_metric SET stat = :s1, data = data #- \'{ "@result" }\' WHERE stat != :s1 AND lab_result_id IN (SELECT id FROM lab_result WHERE license_id = :l0)';
+	$sql_list[] = 'UPDATE lab_result SET stat = :s1, data = data #- \'{ "@result" }\' WHERE stat != :s1 AND license_id = :l0';
 
 	// Crop/Inventory
-	$sql_list[] = 'UPDATE crop SET stat = :s1, data = data #- \'{ "@result" }\' WHERE license_id = :l0';
-	$sql_list[] = 'UPDATE inventory SET stat = :s1, data = data #- \'{ "@result" }\' WHERE license_id = :l0';
-	$sql_list[] = 'UPDATE inventory_adjust SET stat = :s1, data = data #- \'{ "@result" }\' WHERE license_id = :l0';
+	$sql_list[] = 'UPDATE crop SET stat = :s1, data = data #- \'{ "@result" }\' WHERE stat != :s1 AND license_id = :l0';
+	$sql_list[] = 'UPDATE inventory SET stat = :s1, data = data #- \'{ "@result" }\' WHERE stat != :s1 AND license_id = :l0';
+	$sql_list[] = 'UPDATE inventory_adjust SET stat = :s1, data = data #- \'{ "@result" }\' WHERE stat != :s1 AND license_id = :l0';
 
-	$sql_list[] = 'UPDATE product SET stat = :s1, data = data #- \'{ "@result" }\' WHERE license_id = :l0';
-	$sql_list[] = 'UPDATE section SET stat = :s1, data = data #- \'{ "@result" }\' WHERE license_id = :l0';
-	$sql_list[] = 'UPDATE variety SET stat = :s1, data = data #- \'{ "@result" }\' WHERE license_id = :l0';
+	$sql_list[] = 'UPDATE product SET stat = :s1, data = data #- \'{ "@result" }\' WHERE stat != :s1 AND license_id = :l0';
+	$sql_list[] = 'UPDATE section SET stat = :s1, data = data #- \'{ "@result" }\' WHERE stat != :s1 AND license_id = :l0';
+	$sql_list[] = 'UPDATE variety SET stat = :s1, data = data #- \'{ "@result" }\' WHERE stat != :s1 AND license_id = :l0';
 
 	// $sql_list[] = 'UPDATE license SET stat = 666 WHERE id = :l0';
 
