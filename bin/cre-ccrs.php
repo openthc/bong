@@ -10,7 +10,7 @@ use OpenTHC\Bong\CRE;
 
 require_once(__DIR__ . '/../boot.php');
 
-openlog('openthc-bong', LOG_ODELAY | LOG_PERROR | LOG_PID, LOG_LOCAL0);
+openlog('openthc-bong', LOG_ODELAY | LOG_PID, LOG_LOCAL0);
 
 $doc = <<<DOC
 BONG CRE CCRS Upload Tool
@@ -19,10 +19,12 @@ Usage:
 
 Commands:
 	auth                  Authenticate to CCRS
-	csv-upload-create     from source data create the csv files in the upload queue
+	csv-upload-create     *alias
 	push                  Does upload-single for all the stuff in the queue
 	push-b2b-old          Push (or check-up on) the old B2B Laggards
+	upload-create         from source data create the csv files in the upload queue
 	upload-single         Uploads a Single Job
+	upload-status         Show Status of The Upload Thoughts
 	license-status        Show License Status
 	license-verify        Re-Init a License and try to Verify via magic Section
 	review                Review Data 400 Level Errors
@@ -37,15 +39,10 @@ $res = Docopt::handle($doc, [
 	'optionsFirst' => true,
 ]);
 $cli_args = $res->args;
-// var_dump($cli_args);
 
 switch ($cli_args['<command>']) {
 	case 'auth':
 		_cre_ccrs_auth($cli_args['<command-options>']);
-		break;
-	case 'csv-upload-create':
-		// require_once(APP_ROOT . '/lib/CRE/CCRS/CSV/Create.php');
-		_cre_ccrs_csv_upload_create($cli_args['<command-options>']);
 		break;
 	case 'license-status':
 		require_once(__DIR__ . '/cre-ccrs-license-status.php');
@@ -63,9 +60,18 @@ switch ($cli_args['<command>']) {
 		break;
 	case 'review':
 		_cre_ccrs_review($cli_args['<command-options>']);
+		// require_once(__DIR__ . '/cre-ccrs-review-inventory-variety.php');
+		break;
+	case 'upload-create':
+	case 'csv-upload-create':
+		// require_once(APP_ROOT . '/lib/CRE/CCRS/CSV/Create.php');
+		_cre_ccrs_csv_upload_create($cli_args['<command-options>']);
 		break;
 	case 'upload-single':
 		_cre_ccrs_upload_single($cli_args['<command-options>']);
+		break;
+	case 'upload-status':
+		_cre_ccrs_upload_status($cli_args['<command-options>']);
 		break;
 	default:
 		var_dump($cli_args);
@@ -225,7 +231,7 @@ function _cre_ccrs_csv_upload_create($cli_args)
 
 	$license_list = [];
 	if ('ALL' == $cli_args['--license']) {
-		$license_list = $dbc->fetchAll('SELECT id, code, name FROM license WHERE stat IN (100, 102, 200, 202)');
+		$license_list = $dbc->fetchAll('SELECT id, code, name FROM license WHERE stat IN (200, 202)');
 	} else {
 		// @todo Allow for a LIST of License IDs
 		$sql = 'SELECT id, code, name FROM license WHERE id = :l0';
@@ -234,10 +240,11 @@ function _cre_ccrs_csv_upload_create($cli_args)
 	}
 
 	foreach ($license_list as $license0) {
+
 		syslog(LOG_NOTICE, "cre-ccrs-upload-create for {$license0['id']} / {$license0['name']}");
+
 		$cmd = [];
 		$cmd[] = sprintf('%s/bin/cre-ccrs-upload.php', APP_ROOT);
-		$cmd[] = 'upload';
 		$cmd[] = sprintf('--license=%s', $license0['id']);
 		$cmd[] = sprintf('--object=%s', $cli_args['--object']);
 		if ( ! empty($cli_args['--force'])) {
@@ -246,6 +253,7 @@ function _cre_ccrs_csv_upload_create($cli_args)
 		$cmd[] = '2>&1';
 		$cmd = implode(' ', $cmd);
 		passthru($cmd);
+
 	}
 
 }
@@ -262,7 +270,7 @@ function _cre_ccrs_push($cli_args)
 	Pushes data from the Upload Queue into CCRS
 
 	Usage:
-		push [--upload-id=<ID>]
+		push [--license=<ID>] [--upload-id=<ID>]
 
 	DOC;
 
@@ -275,14 +283,22 @@ function _cre_ccrs_push($cli_args)
 	$dbc = _dbc();
 	// $dbc->query('BEGIN');
 
+	$arg = [];
 	$sql = <<<SQL
 	SELECT id, license_id, name, created_at
 	FROM log_upload
-	WHERE stat = 100
+	WHERE
+	  stat = 100
 	ORDER BY id ASC
-	LIMIT 120
+	LIMIT 100
 	SQL;
-	$res_upload = $dbc->fetchAll($sql);
+
+	if ( ! empty($cli_args['--license'])) {
+		$sql = str_replace('stat = 100', 'stat = 100 AND license_id = :l0', $sql);
+		$arg[':l0'] = $cli_args['--license'];
+	}
+
+	$res_upload = $dbc->fetchAll($sql, $arg);
 
 	if (0 == count($res_upload)) {
 		exit(0);
@@ -291,23 +307,33 @@ function _cre_ccrs_push($cli_args)
 	_cre_ccrs_auth([]);
 
 	foreach ($res_upload as $rec) {
+
+		$idx++;
+
 		$cli_args['<command-options>'] = [
 			'upload-id' => $rec['id']
 		];
 		$opt = [ 'upload-single', "--upload-id={$rec['id']}" ];
-		syslog(LOG_NOTICE, "cre-ccrs-push : {$rec['id']}");
 		$res = _cre_ccrs_upload_single($opt);
-		if (200 != $res['code']) {
-			var_dump($res);
-			exit(1);
+		switch ($res['code']) {
+			case 200:
+			case 204:
+				// OK
+				break;
+			default:
+				var_dump($res);
+				exit(1);
 		}
+
+		// go slow to not make their IDS trip up
+		sleep(1);
+		// usleep(1.5 * 1000 * 1000);
 
 		$dt0 = new \DateTime($rec['created_at']);
 		$dt1 = new \DateTime();
 		$ddX = $dt0->diff($dt1);
 		$tms = ($ddX->days * 86400) + ($ddX->h * 3600) + ($ddX->i * 60) + $ddX->s + $ddX->f;
 
-		echo "_stat_timer('openthc_bong_ccrs_upload_push_lag', $tms);\n";
 		_stat_timer('openthc_bong_ccrs_upload_push_lag', $tms);
 	}
 
@@ -356,6 +382,8 @@ function _cre_ccrs_upload_single($cli_args)
 		exit(1);
 	}
 
+	syslog(LOG_DEBUG, "cre-ccrs-upload-single {$req_ulid}");
+
 	$dbc = _dbc();
 	$rdb = \OpenTHC\Service\Redis::factory();
 
@@ -397,7 +425,11 @@ function _cre_ccrs_upload_single($cli_args)
 						':l0' => $req_ulid
 					]);
 
-					return(0);
+					return [
+						'code' => 204,
+						'data' => '',
+						'meta' => [],
+					];
 
 				}
 
@@ -417,8 +449,8 @@ function _cre_ccrs_upload_single($cli_args)
 				$ddX = $dt0->diff($dtS);
 
 				if ($ddX->days >= 1) {
-					$fix_target_email = true;
-					$fix_source_email = true;
+					$fix_target_email = sprintf('code+target-%s@openthc.com', $req_ulid);
+					$fix_source_email = sprintf('code+source-%s@openthc.com', $req_ulid);
 				}
 
 			}
@@ -427,7 +459,7 @@ function _cre_ccrs_upload_single($cli_args)
 				echo "fix_target_email = $fix_target_email\n";
 				$src['data'] = preg_replace(
 					'/DestinationLicenseeEmailAddress,(.+),,,,,,,,,,/',
-					sprintf('DestinationLicenseeEmailAddress,code+target-%s@openthc.com,,,,,,,,,,', $req_ulid),
+					sprintf('DestinationLicenseeEmailAddress,%s,,,,,,,,,,', $fix_target_email),
 					$src['data']);
 			}
 
@@ -435,7 +467,7 @@ function _cre_ccrs_upload_single($cli_args)
 				echo "fix_source_email = $fix_source_email\n";
 				$src['data'] = preg_replace(
 					'/OriginLicenseeEmailAddress,(.+),,,,,,,,,,/',
-					sprintf('OriginLicenseeEmailAddress,code+source-%s@openthc.com,,,,,,,,,,', $req_ulid),
+					sprintf('OriginLicenseeEmailAddress,%s,,,,,,,,,,', $fix_target_email),
 					$src['data']);
 			}
 
@@ -469,9 +501,6 @@ function _cre_ccrs_upload_single($cli_args)
 		$cfg['cookie-list'] = _cre_ccrs_auth_cookies();
 		$cre = new \OpenTHC\CRE\CCRS($cfg);
 
-		// go slow to not make their IDS trip up
-		sleep(2);
-
 		$res = $cre->upload($src);
 		switch ($res['code']) {
 			case 200:
@@ -483,7 +512,7 @@ function _cre_ccrs_upload_single($cli_args)
 						$log_stat = 102;
 						break;
 					case 102:
-						$log_stat = 422;
+						$log_stat = 104;
 						break;
 				}
 
@@ -507,7 +536,7 @@ function _cre_ccrs_upload_single($cli_args)
 				syslog(LOG_NOTICE, "Uploaded: {$res['meta']['created_at']}");
 
 				$license_id = $req['license_id'];
-				$upload_type = preg_match('/(B2B_INCOMING|B2B_OUTGOING|CROP|INVENTORY|INVENTORY_ADJUST|PRODUCT|SECTION|VARIETY) UPLOAD/', $src['data'], $m) ? $m[1] : null;
+				$upload_type = preg_match('/(B2B_INCOMING|B2B_OUTGOING|CROP|INVENTORY|INVENTORY_ADJUST|PRODUCT|SECTION|VARIETY) UPLOAD/', $req['name'], $m) ? $m[1] : null;
 				if (empty($upload_type)) {
 					if (preg_match('/ExternalManifestIdentifier,[^,]+,,,,,,,,,,/', $src['data'], $m)) {
 						// $upload_type = 'manifest';
@@ -527,7 +556,6 @@ function _cre_ccrs_upload_single($cli_args)
 				break;
 
 			case 302:
-
 				// Authentication has timed out
 				return [
 					'code' => 403,
@@ -576,8 +604,58 @@ function _cre_ccrs_license_verify($cli_args)
 	$dbc = _dbc();
 	$License = new \OpenTHC\Bong\License($dbc, $cli_args['--license']);
 
-	$V = new \OpenTHC\Bong\CRE\CCRS\License\Verify($dbc, $License);
-	$V->verify();
+	// $V = new \OpenTHC\Bong\CRE\CCRS\License\Verify($dbc, $License);
+	// $V->verify();
+	// $sc = new \Slim\Container();
+	// $C = new OpenTHC\Bong\Controller\License\Verify($sc);
+	// $C->__invoke(null, null, [ 'id' => $License['id'] ]);
+
+	$req_ulid = _ulid();
+	$req_code = "SECTION UPLOAD $req_ulid";
+
+	$csv_data = [];
+	$csv_data[] = [ '-canary-', $req_code, 'FALSE', '-canary-', '-canary-', date('m/d/Y'), '-canary-', date('m/d/Y'), 'UPDATE' ];
+	$csv_data[] = [
+		$License['code']
+		, 'OPENTHC SECTION PING'
+		, 'FALSE'
+		, 'OPENTHC SECTION PING'
+		, '-system-'
+		, date('m/d/Y')
+		, '-system-'
+		, date('m/d/Y')
+		, 'DELETE'
+	];
+
+	$cre_service_key = \OpenTHC\Config::get('cre/usa/wa/ccrs/service-key');
+	$csv_name = sprintf('Area_%s_%s.csv', $cre_service_key, $req_ulid);
+	$csv_head = explode(',', 'LicenseNumber,Area,IsQuarantine,ExternalIdentifier,CreatedBy,CreatedDate,UpdatedBy,UpdatedDate,Operation');
+	$col_size = count($csv_head);
+	$row_size = count($csv_data);
+	$csv_temp = fopen('php://temp', 'w');
+
+	// Output
+	\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'SubmittedBy',   'OpenTHC' ], $col_size, '')));
+	\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'SubmittedDate', date('m/d/Y') ], $col_size, '')));
+	\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'NumberRecords', $row_size ], $col_size, '')));
+	\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values($csv_head));
+	foreach ($csv_data as $row) {
+		\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, $row);
+	}
+	fseek($csv_temp, 0);
+
+	// Add to Database
+	$rec = [];
+	$rec['id'] = $req_ulid;
+	$rec['license_id'] = $License['id'];
+	$rec['name'] = $req_code;
+	$rec['source_data'] = json_encode([
+		'name' => $csv_name,
+		'data' => stream_get_contents($csv_temp)
+	]);
+
+	$dbc->insert('log_upload', $rec);
+
 
 	// Hard-Reset?
 	if ($cli_args['--reset']) {
