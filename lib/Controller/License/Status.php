@@ -60,7 +60,12 @@ class Status extends \OpenTHC\Bong\Controller\Base\Status
 		SQL;
 		$res = $dbc->fetchAll($sql);
 
-		$html = $this->render('license/status-full.php', [ 'license_list' => $res ]);
+		$html = $this->render('license/status-full.php', [
+			'Page' => [
+				'title' => 'License :: Status :: Full'
+			],
+			'license_list' => $res
+		]);
 
 		$RES = $RES->write($html);
 
