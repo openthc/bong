@@ -3,18 +3,22 @@
  *
  */
 
-namespace OpenTHC\Bong\CCRS;
+namespace OpenTHC\Bong\CRE\CCRS;
 
 class Response {
 
-	public $ccrs_timestamp = '';
-	public $mail_timestamp = '';
+	public $ccrs_datetime;
+	public $mail_datetime;
 
-	public $type = '';
+	public $type = ''; // ?? What?
 
+	// Request Object Type
 	public $req_type = '';
 
+	// Request ID
 	public $req_ulid = '';
+
+	public $res_body = ''; // Response HTML or Text body
 
 	public $res_file = '';
 
@@ -30,42 +34,81 @@ class Response {
 
 		// $mime_part = mailparse_msg_get_part($message_mime, 0); // resource
 		$message_head = mailparse_msg_get_part_data($message_mime);
-		$message_body = mailparse_msg_extract_part_file($message_mime, $source_mail, null);
 
+		$this->res_body = mailparse_msg_extract_part_file($message_mime, $source_mail, null);
+
+		$csv_time = '';
 		if ( ! empty($message_head['headers']['subject'])) {
 			$s = $message_head['headers']['subject'];
 			// echo "Subject: {$s}\n";
 			if (preg_match('/CCRS Processing Successful/', $s)) {
 				$this->type = 'ccrs-success';
-				if (preg_match('/file (\w+)_\w+_(\w+)_(\w+)\.csv you submitted has been processed/', $message_body, $m)) {
+				if (preg_match('/file (\w+)_\w+_(\w+)_(\w+)\.csv you submitted has been processed/', $this->res_body, $m)) {
 					$this->req_type = $m[1];
 					$this->req_ulid = $m[2];
-					$this->ccrs_timestamp = $m[3];
+					$csv_time = $m[3];
 				}
 			} elseif (preg_match('/CCRS errors for file: (\w+)_\w+_(\w+)_(\w+)\.csv/', $s, $m)) {
 				$this->type = 'ccrs-failure-data';
 				$this->req_type = $m[1];
 				$this->req_ulid = $m[2];
-				$this->ccrs_timestamp = $m[3];
-			} elseif (preg_match('/CCRS Processing Error/', $s)) {
+				$csv_time = $m[3];
+			} elseif (preg_match('/CCRS Processing Error: (\w+)_\w+_(\w+)_(\w+)\.csv/', $s, $m)) {
 				$this->type = 'ccrs-failure-full';
-				if (preg_match('/The file (\w+)_\w+_(\w+)_(\w+)\.csv/', $message_body, $m)) {
-					$this->req_type = $m[1];
-					$this->req_uild = $m[2];
-					$this->ccrs_timestamp = $m[3];
-				}
+				$this->req_type = $m[1];
+				$this->req_ulid = $m[2];
+				$csv_time = $m[3];
 			} elseif (preg_match('/Manifest Generated: (Manifest)_\w+_(\w+)_(\w+)\.csv/', $s, $m)) {
 				$this->type = 'b2b-outgoing-manifest';
 				$this->req_type = $m[1];
 				$this->req_ulid = $m[2];
-				$this->ccrs_timestamp = $m[3];
+				$csv_time = $m[3];
 			} else {
 				throw new \Exception('Cannot Match');
 			}
 		}
 
-		// $RES->ccrs_time =
-		// $RES->email_time = new \DateTime($message_head['headers']['date'], $tz0);
+		// from function csv_file_date(string $csv_file) in cre-adapter/lib/CCRS.php which is buggy on TZ
+		// https://github.com/openthc/ccrs/issues/69
+		if ( ! empty($csv_time)) {
+			$dt0 = null;
+			$tz0 = new \DateTimeZone('America/Los_Angeles');
+			if (strlen($csv_time) <= 15) {
+				// $csv_time = $csv_time . '000';
+				$dt0 = \DateTime::createFromFormat('Ymd\TGis', $csv_time, $tz0);
+			} else {
+				$dt0 = \DateTime::createFromFormat('Ymd\TGisv', $csv_time, $tz0);
+			}
+			if ( ! empty($dt0)) {
+				$this->ccrs_datetime = $dt0;
+				// var_dump($csv_time);
+				// exit;
+			}
+		}
+
+		// Sometimes their time thing is bullshit
+		// https://github.com/openthc/ccrs/issues/44
+		$this->mail_datetime = null;
+		try {
+			$this->mail_datetime = new \DateTime($message_head['headers']['date']);
+			// $dt1 = new \DateTime($RES->time, $tz0);
+			// var_dump($dt1);
+		} catch (\Exception $e) {
+			$this->mail_datetime = new \DateTime();
+		}
+
+		// $dt1 = clone $dt0;
+		// try {
+		// 	// Sometimes their time thing is bullshit
+		// 	// https://github.com/openthc/ccrs/issues/44
+		// 	$dt1 = new \DateTime($res_time, $tz0);
+		// 	// var_dump($dt1);
+		// } catch (\Exception $e) {
+		// 	// Ignore
+		// 	$dt1 = new \DateTime($message_head['headers']['date'], $tz0);
+		// 	// var_dump($dt1);
+		// }
+
 
 		// Inflate the parts
 		$message_part_data = [];
@@ -79,6 +122,9 @@ class Response {
 		foreach ($message_part_data as $part_key => $part) {
 
 			// echo "$part_key == {$part['content-type']} : {$part['content-name']}\n";
+			if ('attachment' != $part['content-disposition']) {
+				continue;
+			}
 
 			switch ($part['content-type']) {
 			case 'application/octet-stream':
@@ -86,16 +132,18 @@ class Response {
 				// echo "message: {$message['id']}; part: $part_key is file: {$part['content-name']}\n";
 				$part_res = mailparse_msg_get_part($message_mime, $part_key);
 				$output_data = mailparse_msg_extract_part_file($part_res, $source_mail, null);
+				$this->res_file = sprintf('%s/var/ccrs-incoming/%s', APP_ROOT, $part['content-name']);
 
-				if (preg_match('/^\w+_\w{6,10}_\d+T\d+\.csv$/', $part['content-name'])) {
+				// Match Filename
+				// note: Strain response file has unique pattern
+				if (preg_match('/^\w+_\w{6,10}_\d+T\d+\.csv$/', $part['content-name'])
+					|| preg_match('/^Strain_\d+T\d+\.csv$/', $part['content-name'])) {
 
 					$output_data = $this->csvPatch($output_data);
 					$output_size = file_put_contents($this->res_file, $output_data);
 					if (0 == $output_size) {
 						throw new \Exception('Failed to write Data File');
 					}
-
-					$this->res_file = sprintf('%s/var/ccrs-incoming/%s', APP_ROOT, $part['content-name']);
 
 					break 2; // foreach
 
@@ -107,8 +155,6 @@ class Response {
 					if (0 == $output_size) {
 						throw new \Exception('Failed to write Data File');
 					}
-
-					$this->res_file = sprintf('%s/var/ccrs-incoming/%s', APP_ROOT, $part['content-name']);
 
 					break 2; // foreach
 
@@ -150,7 +196,6 @@ class Response {
 	/**
 	 * Patch bullshit we find in these files
 	 */
-	// function _csv_file_patch(string $csv_file) : void
 	function csvPatch(string $csv_data) : string {
 
 		// Patch the WHOLE BLOB
