@@ -21,7 +21,10 @@ class Inventory extends \OpenTHC\Module\Base
 		$a->post('', 'OpenTHC\Bong\Controller\Inventory\Create');
 
 		// Adjust Data
-		// $a->get('/adjust', '\OpenTHC\Bong\Controller\InventoryAdjust\Status');
+		$a->get('/adjust', '\OpenTHC\Bong\Controller\InventoryAdjust\Status');
+
+		// Export
+		$a->get('/export', 'OpenTHC\Bong\Controller\Inventory\Export');
 
 		// Status
 		$a->get('/status', 'OpenTHC\Bong\Controller\Inventory\Status');
@@ -37,7 +40,10 @@ class Inventory extends \OpenTHC\Module\Base
 			return _from_cre_file('lot/delete.php', $REQ, $RES, $ARG);
 		});
 
-		// Adjust
+		// View Adjustment Data
+		$a->get('{id}/adjust', 'OpenTHC\Bong\Controller\Inventory\Adjust');
+
+		// Make Adjustment
 		$a->post('/{id}/adjust', 'OpenTHC\Bong\Controller\Inventory\Adjust');
 
 		//	// Combine Inventory to a new Type

@@ -17,7 +17,7 @@ class Company extends \OpenTHC\Module\Base
 		$a->get('', function($REQ, $RES, $ARG) {
 
 			$dbc = $REQ->getAttribute('dbc');
-			$res = $dbc->fetchAll('SELECT id, hash, updated_at FROM company ORDER BY updated_at DESC');
+			$res = $dbc->fetchAll('SELECT id, name, hash, updated_at FROM company ORDER BY id');
 
 			return $RES->withJSON($res);
 

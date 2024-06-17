@@ -15,12 +15,10 @@ class Crop extends \OpenTHC\Module\Base
 		$a->get('', 'OpenTHC\Bong\Controller\Crop\Search');
 
 		// Create
-		$a->post('', function($REQ, $RES, $ARG) {
-			return $RES->withJSON(array(
-				'status' => 'failure',
-				'detail' => 'Not Implemented [LMP-024]'
-			), 501);
-		});
+		$a->post('', 'OpenTHC\Bong\Controller\Crop\Create');
+
+		// Export
+		$a->get('/export', 'OpenTHC\Bong\Controller\Crop\Export');
 
 		// Status
 		$a->get('/status', 'OpenTHC\Bong\Controller\Crop\Status');
