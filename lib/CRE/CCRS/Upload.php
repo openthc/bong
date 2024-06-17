@@ -37,19 +37,33 @@ class Upload
 		$k1 = sprintf('%s/stat', $this->_obj);
 
 		$tmp_stat = intval($rdb->hget($k0, sprintf('%s/stat', $this->_obj)));
-		$tmp_time = intval($rdb->hget($k0, sprintf('%s/stat/time', $this->_obj)));
+		$tmp_time = $rdb->hget($k0, sprintf('%s/stat/time', $this->_obj));
 
 		if (empty($tmp_time)) {
 			$tmp_stat = 100;
-		} else {
-			// Make Times and Compare for TTL?
+		}
+
+		$max_age = 86400; // 24 hours
+		$max_age = 60 * 60 * 8; // 8 hours
+		switch ($tmp_stat) {
+		case 102:
+			$max_age = 60 * 30; // 30 minutes
+			break;
+		}
+
+		$age = 0;
+		$t0 = time();
+		$t1 = strtotime($tmp_time);
+		$age = $t0 - $t1;
+		if ($age > $max_age) {
+			$tmp_stat = 100;
 		}
 
 		if ($this->_force) {
 			$tmp_stat = 100;
 		}
 
-		syslog(LOG_DEBUG, "license:{$this->_lic}/$k1={$tmp_stat}");
+		syslog(LOG_DEBUG, "license:{$this->_lic}/$k1={$tmp_stat};age=$age");
 
 		return $tmp_stat;
 	}
