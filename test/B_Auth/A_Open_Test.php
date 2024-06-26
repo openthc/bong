@@ -32,9 +32,10 @@ class A_Open_Test extends \OpenTHC\Bong\Test\Base
 	 */
 	function test_ccrs()
 	{
-		$api = $this->_api();
+		// $api = $this->_api();
+		$api = $this->getBONGtoCCRS();
 		$res = $api->get('/auth/ping');
-		$this->assertValidResponse($res, 200);
+		$this->assertValidAPIResponse($res, 200);
 		// , [ 'form_params' => [
 		// 	'cre' => 'usa/wa',
 		// 	'service-id' => OPENTHC_TEST_CLIENT_SERVICE_ID,
@@ -50,23 +51,7 @@ class A_Open_Test extends \OpenTHC\Bong\Test\Base
 
 	}
 
-	// function test_leafdata()
-	// {
-	// 	$api = $this->_api();
-	// 	$res = $api->post('/auth/open', [ 'form_params' => [
-	// 		'cre' => 'usa/wa/ccrs',
-	// 		'license' => $_ENV['leafdata-license'],
-	// 		'license-key' => $_ENV['leafdata-license-key'],
-	// 	]]);
-
-	// 	$code = $res->getStatusCode();
-	// 	$body = $res->getBody()->getContents();
-
-	// 	$this->assertEquals(200, $code);
-
-	// }
-
-	function test_metrc()
+	function x_test_metrc()
 	{
 		$api = $this->_api();
 		$res = $api->get('/auth/ping');

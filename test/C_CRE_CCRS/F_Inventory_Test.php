@@ -20,13 +20,14 @@ class F_Inventory_Test extends \OpenTHC\Bong\Test\C_CRE_CCRS\Base_Case
 	 */
 	function test_create()
 	{
-		$res = $this->cre->inventory()->create([
+		$obj = [
 			'id' => _ulid(),
 			'name' => sprintf('Test inventory CREATE %s', $this->_pid),
-			'section' => [ 'id' => $this->section_id ],
-			'variety' => [ 'id' => $this->variety_id ],
-			'product' => [ 'id' => $this->product_id ],
-		]);
+			'section' => [ 'id' => $this->section_id, 'name' => 'TEST SECTION' ],
+			'variety' => [ 'id' => $this->variety_id, 'name' => 'TEST VARIETY' ],
+			'product' => [ 'id' => $this->product_id, 'name' => 'TEST PRODUCT' ],
+		];
+		$res = $this->cre->inventory()->create($obj);
 		$this->assertValidAPIResponse($res, 201);
 	}
 
@@ -38,9 +39,9 @@ class F_Inventory_Test extends \OpenTHC\Bong\Test\C_CRE_CCRS\Base_Case
 		$obj = [
 			'id' => _ulid(),
 			'name' => sprintf('Test inventory DOUBLE', $this->_pid),
-			'section' => [ 'id' => $this->section_id ],
-			'variety' => [ 'id' => $this->variety_id ],
-			'product' => [ 'id' => $this->product_id ],
+			'section' => [ 'id' => $this->section_id, 'name' => 'TEST SECTION' ],
+			'variety' => [ 'id' => $this->variety_id, 'name' => 'TEST VARIETY' ],
+			'product' => [ 'id' => $this->product_id, 'name' => 'TEST PRODUCT' ],
 		];
 		$res = $this->cre->inventory()->create($obj);
 		$this->assertValidAPIResponse($res, 201);
@@ -64,9 +65,9 @@ class F_Inventory_Test extends \OpenTHC\Bong\Test\C_CRE_CCRS\Base_Case
 		$obj = [
 			'id' => _ulid(),
 			'name' => sprintf('Test inventory UPDATE %s', $this->_pid),
-			'section' => [ 'id' => $this->section_id ],
-			'variety' => [ 'id' => $this->variety_id ],
-			'product' => [ 'id' => $this->product_id ],
+			'section' => [ 'id' => $this->section_id, 'name' => 'TEST SECTION' ],
+			'variety' => [ 'id' => $this->variety_id, 'name' => 'TEST VARIETY' ],
+			'product' => [ 'id' => $this->product_id, 'name' => 'TEST PRODUCT' ],
 		];
 		$res = $this->cre->inventory()->create($obj);
 		$this->assertValidAPIResponse($res, 201);
@@ -80,17 +81,20 @@ class F_Inventory_Test extends \OpenTHC\Bong\Test\C_CRE_CCRS\Base_Case
 	{
 		$obj = [
 			'id' => _ulid(),
-			'name' => sprintf('Test inventory DELETE %s', $this->_pid),
-			'section' => [ 'id' => $this->section_id ],
-			'variety' => [ 'id' => $this->variety_id ],
-			'product' => [ 'id' => $this->product_id ],
+			'name' => sprintf('Inventory DELETE %s', $this->_pid),
+			'section' => [ 'id' => $this->section_id, 'name' => 'TEST SECTION' ],
+			'variety' => [ 'id' => $this->variety_id, 'name' => 'TEST VARIETY' ],
+			'product' => [ 'id' => $this->product_id, 'name' => 'TEST PRODUCT' ],
 		];
 		$res = $this->cre->inventory()->create($obj);
-
-		$obj = $this->assertValidAPIResponse($res, 201);
+		$this->assertValidAPIResponse($res, 201);
+		$obj = $res['data'];
 
 		$res = $this->cre->inventory()->delete($obj['id']);
 		$this->assertValidAPIResponse($res, 200);
+
+		$res = $this->cre->inventory()->delete($obj['id']);
+		$this->assertValidAPIResponse($res, 410);
 
 	}
 

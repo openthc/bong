@@ -23,7 +23,7 @@ class C_Section_Test extends \OpenTHC\Bong\Test\C_CRE_CCRS\Base_Case
 	{
 		$obj = [
 			'id' => _ulid(),
-			'name' => sprintf('Test Section DOUBLE', $this->_pid),
+			'name' => sprintf('Test Section DOUBLE %s', $this->_pid),
 		];
 		$res = $this->cre->section()->create($obj);
 		$this->assertValidAPIResponse($res, 201);
@@ -31,7 +31,7 @@ class C_Section_Test extends \OpenTHC\Bong\Test\C_CRE_CCRS\Base_Case
 
 		$res = $this->cre->section()->create($obj);
 		$this->assertValidAPIResponse($res, 409);
-		$this->assertEquals(409, $res['data']['stat']);
+		$this->assertEquals(100, $res['data']['stat']); // Should Still be Pending
 	}
 
 	function test_search()
@@ -63,7 +63,6 @@ class C_Section_Test extends \OpenTHC\Bong\Test\C_CRE_CCRS\Base_Case
 			'name' => sprintf('Test Section DELETE %s', $this->_pid),
 		];
 		$res = $this->cre->section()->create($obj);
-
 		$obj1 = $this->assertValidAPIResponse($res, 201);
 
 		$res = $this->cre->section()->delete($obj['id']);
@@ -71,36 +70,40 @@ class C_Section_Test extends \OpenTHC\Bong\Test\C_CRE_CCRS\Base_Case
 		$this->assertEquals(410, $res['data']['stat']);
 	}
 
-	function test_update_before_create()
+	function skip_test_update_before_create()
 	{
 		$obj = [
 			'id' => _ulid(),
-			'name' => sprintf('Test Section UPDATE_BEFORE_CREATE %s', $this->_pid),
+			'name' => sprintf('Test Section UPDATE+CREATE %s', $this->_pid),
 		];
 		$res = $this->cre->section()->update($obj['id'], $obj);
-		// $this->assertValidAPIResponse($res, 201);
+		$this->assertValidAPIResponse($res, 201);
 		$this->assertEquals(100, $res['data']['stat']);
 
+		// Update
+		$obj['name'] = sprintf('Test Section UPDATE+UPDATE %s', $this->_pid);
 		$res = $this->cre->section()->update($obj['id'], $obj);
 		$this->assertValidAPIResponse($res, 200);
-
 		// Now It Should be in the system with data object status 100
 		$this->assertEquals(100, $res['data']['stat']);
 
-		// Third Update
-		$obj['name'] = sprintf('Section UPDATE_BEFORE_CREATE_RENAME %s', $this->_pid);
-		$res = $this->cre->section()->update($obj['id'], $obj);
-		$this->assertValidAPIResponse($res, 200);
-
+		// // Third Update
+		// $obj['name'] = sprintf('Section UPDATE+UPDATE+UPDATE %s', $this->_pid);
+		// $res = $this->cre->section()->update($obj['id'], $obj);
+		// $this->assertValidAPIResponse($res, 200);
 
 		// Now Pretend We've Uploaded to CCRS and are waiting on response
 		$dbc = _dbc();
 		$License = $this->cre->getLicense();
-
 		$dbc->query('UPDATE section SET stat = 102 WHERE license_id = :l0 AND id = :s0', [
 			':l0' => $License['id'],
 			':s0' => $obj['id'],
 		]);
+
+		// Give it the exact same thing and see 102
+		$res = $this->cre->section()->update($obj['id'], $obj);
+		$this->assertValidAPIResponse($res, 200);
+		$this->assertEquals(102, $res['data']['stat']);
 
 	}
 

@@ -29,7 +29,7 @@ class B_Variety_Test extends \OpenTHC\Bong\Test\C_CRE_CCRS\Base_Case
 	{
 		$obj = [
 			'id' => _ulid(),
-			'name' => sprintf('Test Variety DOUBLE', $this->_pid),
+			'name' => sprintf('Test Variety DOUBLE %s', $this->_pid),
 		];
 		$res = $this->cre->variety()->create($obj);
 		$this->assertValidAPIResponse($res, 201);
@@ -73,12 +73,15 @@ class B_Variety_Test extends \OpenTHC\Bong\Test\C_CRE_CCRS\Base_Case
 			'name' => sprintf('Test Variety DELETE %s', $this->_pid),
 		];
 		$res = $this->cre->variety()->create($obj);
+		$this->assertValidAPIResponse($res, 201);
+
+		$obj = $res['data'];
+
+		$res = $this->cre->variety()->delete($obj['id']);
 		$this->assertValidAPIResponse($res, 200);
 
-		// $res = $this->cre->variety()->delete($obj['id']);
-		$res = $this->cre->variety()->delete($obj['name']);
+		$res = $this->cre->variety()->delete($obj['id']);
 		$this->assertValidAPIResponse($res, 410);
-
 
 	}
 

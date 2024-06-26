@@ -53,7 +53,7 @@ class H_B2B_Test extends \OpenTHC\Bong\Test\C_CRE_CCRS\Base_Case
 
 	function test_search()
 	{
-		$res = $cre->b2b()->search();
+		$res = $this->cre->b2b()->search();
 		$this->assertValidAPIResponse($res, 200);
 	}
 

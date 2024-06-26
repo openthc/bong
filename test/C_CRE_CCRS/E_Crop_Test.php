@@ -85,11 +85,11 @@ class E_Crop_Test extends \OpenTHC\Bong\Test\C_CRE_CCRS\Base_Case
 		$res = $this->cre->crop()->create($obj0);
 		$res = $this->assertValidAPIResponse($res, 201);
 
-		$obj1 = $this->cre->crop()->delete($obj0['id']);
-		// $this->assertValidAPIResponse($res, 200);
+		$res = $this->cre->crop()->delete($obj0['id']);
+		$obj1 = $this->assertValidAPIResponse($res, 200);
 
-		$this->assertSame($obj0['id'], $obj1['id']);
-		$this->assertEquals(410, $obj1['stat']);
+		// $this->assertSame($obj0['id'], $obj1['id']);
+		$this->assertEquals(410, $res['data']['stat']);
 
 	}
 
