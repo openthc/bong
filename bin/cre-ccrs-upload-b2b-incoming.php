@@ -104,7 +104,7 @@ function _cre_ccrs_upload_b2b_incoming($cli_args)
 
 		$rec = [
 			$x['data']['@source']['source']['code'], // FromLicenseNumber
-			$x['data']['@source']['target']['code'] // ToLicenseNumber
+			$x['data']['@source']['target']['code'] ?: $License['code']  // ToLicenseNumber
 			, $x['b2b_incoming_item_data']['@source']['source_lot']['id'] //   ['origin_lot_id'] // FromInventoryExternalIdentifier
 			, $x['b2b_incoming_item_data']['@source']['target_lot']['id'] //   ['target_lot_id'] // ToInventoryExternalIdentifier
 			, $x['b2b_incoming_item_data']['@source']['unit_count'] // Quantity
@@ -127,17 +127,17 @@ function _cre_ccrs_upload_b2b_incoming($cli_args)
 	}
 
 	$req_ulid = _ulid();
-	$req_data = [ '-canary-', '-canary-', "B2B_INCOMING UPLOAD $req_ulid", '-canary-', 0, date('m/d/Y'), '-canary-', '-system-', date('m/d/Y'), '', '', 'UPDATE' ];
-	array_unshift($csv_data, $req_data);
+	// $req_data = [ '-canary-', '-canary-', "B2B_INCOMING UPLOAD $req_ulid", '-canary-', 0, date('m/d/Y'), '-canary-', '-system-', date('m/d/Y'), '', '', 'UPDATE' ];
+	// array_unshift($csv_data, $req_data);
 
 	$csv_head = explode(',', 'FromLicenseNumber,ToLicenseNumber,FromInventoryExternalIdentifier,ToInventoryExternalIdentifier,Quantity,TransferDate,ExternalIdentifier,CreatedBy,CreatedDate,UpdatedBy,UpdatedDate,Operation');
 	$csv_name = sprintf('InventoryTransfer_%s_%s.csv', $cre_service_key, $req_ulid);
 	$col_size = count($csv_head);
 	$csv_temp = fopen('php://temp', 'w');
 
-	\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'SubmittedBy',   'OpenTHC' ], $output_col, '')));
-	\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'SubmittedDate', date('m/d/Y') ], $output_col, '')));
-	\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'NumberRecords', $row_size ], $output_col, '')));
+	\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'SubmittedBy',   'OpenTHC' ], $col_size, '')));
+	\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'SubmittedDate', date('m/d/Y') ], $col_size, '')));
+	\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'NumberRecords', count($csv_data) ], $col_size, '')));
 	\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values($csv_head));
 	foreach ($csv_data as $row) {
 		\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, $row);
@@ -146,6 +146,8 @@ function _cre_ccrs_upload_b2b_incoming($cli_args)
 	// Upload
 	fseek($csv_temp, 0);
 
+	// fpassthru($csv_temp);
+	// return;
 	_upload_to_queue_only($License, $csv_name, $csv_temp);
 
 	$uphelp->setStatus(102);

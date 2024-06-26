@@ -10,7 +10,7 @@ use OpenTHC\Bong\CRE;
 
 require_once(__DIR__ . '/../boot.php');
 
-openlog('openthc-bong', LOG_ODELAY | LOG_PERROR | LOG_PID, LOG_LOCAL0);
+openlog('openthc-bong', LOG_ODELAY | LOG_PID, LOG_LOCAL0);
 
 $doc = <<<DOC
 BONG CRE CCRS Upload Tool
@@ -35,7 +35,7 @@ $obj_list = explode(',', $cli_args['--object']);
 
 // Check Parameters
 foreach ($obj_list as $obj) {
-	if ( ! preg_match('/^(section|variety|product|crop|inventory|inventory\-adjust|b2b\-incoming|b2b\-outgoing|b2b\-outgoing\-manifest)$/', $obj)) {
+	if ( ! preg_match('/^(section|variety|product|crop|crop\-finish|inventory|inventory\-adjust|b2b\-incoming|b2b\-outgoing|b2b\-outgoing\-manifest)$/', $obj)) {
 		echo "Cannot Match Object [CCU-058]\n";
 		exit(1);
 	}
@@ -47,17 +47,19 @@ foreach ($obj_list as $obj) {
 	switch ($obj) {
 		case 'product':
 			$csv = new \OpenTHC\Bong\CRE\CCRS\Product\CSV($License);
-			$csv->create();
+			$csv->create($cli_args['--force']);
 			break;
 		case 'section':
 			$csv = new \OpenTHC\Bong\CRE\CCRS\Section\CSV($License);
-			$csv->create();
+			$csv->create($cli_args['--force']);
 			break;
 		case 'variety':
 			$csv = new \OpenTHC\Bong\CRE\CCRS\Variety\CSV($License);
-			$csv->create();
+			// $csv->setForce($cli_args['--force']);
+			$csv->create($cli_args['--force']);
 			break;
 		default:
+
 			$obj_file = sprintf('%s/cre-ccrs-upload-%s.php', __DIR__, $obj);
 			require_once($obj_file);
 
@@ -89,10 +91,10 @@ function _load_license($dbc, $license_id, $object_table=null)
 		case 403:
 		case 500:
 		case 666:
-			$dbc->query("UPDATE {$object_table} SET stat = :s1 WHERE license_id = :l0 AND stat != :s1", [
-				':l0' => $license_id,
-				':s1' => $License['stat']
-			]);
+			// $dbc->query("UPDATE {$object_table} SET stat = :s1 WHERE license_id = :l0 AND stat != :s1", [
+			// 	':l0' => $license_id,
+			// 	':s1' => $License['stat']
+			// ]);
 			// Pass Thru
 		default:
 			echo "Invalid License:'$license_id' status:'{$License['stat']}'\n";

@@ -16,8 +16,13 @@ function _cre_ccrs_upload_inventory($cli_args)
 		'object' => 'inventory',
 		'force' => $cli_args['--force']
 	]);
-	if (202 == $uphelp->getStatus()) {
-		return 0;
+
+	// Only Create Upload if Needed
+	$obj_stat = $uphelp->getStatus();
+	switch ($obj_stat) {
+	case 102: // Pending
+	case 202: // Good
+		return;
 	}
 
 	$dbc = _dbc();
@@ -30,17 +35,14 @@ function _cre_ccrs_upload_inventory($cli_args)
 	$req_ulid = _ulid();
 
 	$csv_data = [];
-	$csv_data[] = [ '-canary-', '-canary-', '-canary-', '-canary-', '0', '0', '0', 'FALSE', "INVENTORY UPLOAD $req_ulid", '-canary-', date('m/d/Y'), '-canary-', date('m/d/Y'), 'UPDATE' ];
 
 	// Get Data
 	$sql = <<<SQL
 	SELECT *
 	FROM inventory
 	WHERE license_id = :l0
-	  AND stat IN (100, 102, 200, 400, 404, 410)
-	--   AND stat IN (400) AND inventory.data::text ILIKE '%Strain Name reported is not linked%'
-	ORDER BY stat ASC, updated_at ASC
-	LIMIT 2500
+	  AND stat IN (100, 102, 200, 404)
+	ORDER BY id
 	SQL;
 
 	$res_inventory = $dbc->fetchAll($sql, [ ':l0' => $License['id'] ]);
@@ -48,11 +50,6 @@ function _cre_ccrs_upload_inventory($cli_args)
 
 		$inv_data = json_decode($inv['data'], true);
 		$inv_source = $inv_data['@source'];
-
-		if (empty($inv_data['@version'])) {
-			// wtf /mbw 2023-142
-			//var_dump($inv); exit;
-		}
 
 		$dtC = new DateTime($inv['created_at']);
 		$dtC->setTimezone($tz0);
@@ -70,11 +67,12 @@ function _cre_ccrs_upload_inventory($cli_args)
 				]);
 				break;
 			case 102:
+				// Skip, 102 should resolve to a 200 or 400 level response
 				$cmd = 'INSERT';
 				break;
 			case 200:
 				$cmd = 'UPDATE';
-				$dbc->query('UPDATE inventory SET stat = 202 WHERE id = :s0', [
+				$dbc->query('UPDATE inventory SET stat = 202, data = data #- \'{ "@result" }\' WHERE id = :s0', [
 					':s0' => $inv['id'],
 				]);
 				break;
@@ -155,7 +153,7 @@ function _cre_ccrs_upload_inventory($cli_args)
 
 	// No Data, In Sync
 	$row_size = count($csv_data);
-	if ($row_size <= 1) {
+	if (0 == $row_size) {
 		$uphelp->setStatus(202);
 		return;
 	}

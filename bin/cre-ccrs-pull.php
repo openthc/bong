@@ -10,7 +10,7 @@ use \Edoceo\Radix\DB\SQL;
 
 require_once(__DIR__ . '/../boot.php');
 
-openlog('openthc-bong', LOG_ODELAY | LOG_PERROR | LOG_PID, LOG_LOCAL0);
+openlog('openthc-bong', LOG_ODELAY | LOG_PID, LOG_LOCAL0);
 
 $dbc = _dbc();
 
@@ -77,6 +77,8 @@ foreach ($message_file_list as $message_file)
 	// Should these all just pass back a RESULT object?
 
 	$upload_result = [];
+
+	// echo "\$RES->type == {$RES->type}\n";
 	switch ($RES->type) {
 		case 'ccrs-failure-full':
 			// NOthing To do?  What?
@@ -95,11 +97,18 @@ foreach ($message_file_list as $message_file)
 			throw new \Exception('Invalid Message Type');
 	}
 
+	// var_dump($upload_result);
+
+	$res_pull = '100';
+	if ( ! empty($upload_result['code'])) {
+		$res_pull = $upload_result['code'];
+	}
+
 	// Set Redis Success
 	$tab_name = _ccrs_object_name_map($RES->req_type);
 	$k0 = sprintf('/license/%s', $RES->license_id);
 	$rdb = \OpenTHC\Service\Redis::factory();
-	$rdb->hset($k0, sprintf('%s/pull', $tab_name), '1');
+	$rdb->hset($k0, sprintf('%s/pull', $tab_name), $res_pull);
 	$rdb->hset($k0, sprintf('%s/pull/time', $tab_name), date(\DateTimeInterface::RFC3339));
 
 	// Update Record in Database?
@@ -116,7 +125,6 @@ foreach ($message_file_list as $message_file)
 $file_list = glob(sprintf('%s/var/ccrs-incoming/*.csv', APP_ROOT));
 foreach ($file_list as $file) {
 	// Patch Text Errors?
-	_csv_file_patch($file);
 	if (preg_match('/(\w+)_\w+_(\w+)_(\w+)\.csv/', $file, $m)) {
 		$RES = new \OpenTHC\Bong\CRE\CCRS\Response('');
 		$RES->req_type = $m[1];
@@ -149,6 +157,9 @@ function _ccrs_object_name_map($t) : string {
 		return 'b2b/outgoing';
 	case 'STRAIN':
 		return 'variety';
+	case 'INVENTORYTRANSFER':
+		return 'b2b/incoming';
+		break;
 	case 'INVENTORY':
 	case 'PRODUCT';
 		return strtolower($t);
@@ -165,8 +176,6 @@ function _ccrs_object_name_map($t) : string {
 function _ccrs_pull_success($RES, $message_file) { //
 
 	global $dbc, $tz0, $dt0;
-
-	// var_dump($RES); exit;
 
 	$message_full = file_get_contents($message_file);
 
@@ -202,14 +211,18 @@ function _ccrs_pull_success($RES, $message_file) { //
 		throw new \Exception("Cannot archive incoming email");
 	}
 
+	return [
+		'code' => 200,
+	];
+
 }
 
 
 /**
  *
  */
-function _ccrs_pull_failure_data($RES, string $message_file) : int
-{
+function _ccrs_pull_failure_data($RES, string $message_file) : array  {
+
 	_csv_file_incoming($RES, $RES->res_file);
 
 	$message_file_done = sprintf('%s/var/ccrs-incoming-mail-done/%s', APP_ROOT, basename($message_file));
@@ -233,7 +246,9 @@ function _ccrs_pull_failure_data($RES, string $message_file) : int
 	]);
 */
 
-	return 1;
+	return [
+		'code' => 400,
+	];
 }
 
 /**
@@ -283,8 +298,8 @@ function _ccrs_pull_failure_full($RES, string $message_file) : int
 /**
  * Pull the Manifest PDF File into BONG
  */
-function _ccrs_pull_manifest_file(string $message_file, string $output_file) : int
-{
+function _ccrs_pull_manifest_file(string $message_file, string $output_file) : array {
+
 	global $dbc;
 
 	echo "_ccrs_pull_manifest_file($message_file, $output_file)\n";
@@ -390,7 +405,9 @@ function _ccrs_pull_manifest_file(string $message_file, string $output_file) : i
 
 	unlink($output_file);
 
-	return 1;
+	return [
+		'code' => 200,
+	];
 
 }
 
@@ -538,6 +555,8 @@ function _csv_file_incoming($RES, string $csv_file) : bool
 			$lic_data = $dbc->fetchRow('SELECT * FROM license WHERE code = :l0', [ ':l0' => $lic_code ]);
 
 		} elseif ($lic_code != $csv_line['LicenseNumber']) {
+
+			echo "'{$lic_code}' != '{$csv_line['LicenseNumber']}'\n";
 
 			throw new \Exception('SWITCHING LICENSE [BCC-218]');
 

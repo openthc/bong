@@ -580,6 +580,54 @@ function _cre_ccrs_upload_single($cli_args)
 	];
 }
 
+/**
+ * Upload a Single Item from the Log_Upload Records
+ */
+function _cre_ccrs_upload_status($cli_args) {
+
+	$doc = <<<DOC
+	BONG CRE CCRS Upload Status
+	Usage:
+		upload-status [--license=<LIST>] [--object=<LIST>]
+
+	Options:
+		--license=<LIST>      comma-list of license
+		--object=<LIST>       comma-list of objects [default: section,variety,product,crop,inventory,inventory-adjust,b2b-incoming,b2b-outgoing]
+	DOC;
+
+	$res = Docopt::handle($doc, [
+		'argv' => $cli_args,
+	]);
+	$cli_args = $res->args;
+
+	$dbc = _dbc();
+	$rdb = \OpenTHC\Service\Redis::factory();
+
+	$license_list = [];
+	if (empty($cli_args['--license'])) {
+		$license_list = $dbc->fetchAll('SELECT id, code, name FROM license WHERE stat IN (200, 202)');
+	} else {
+		// @todo Allow for a LIST of License IDs
+		$sql = 'SELECT id, code, name FROM license WHERE id = :l0';
+		$arg = [ ':l0' => $cli_args['--license'] ];
+		$license_list = $dbc->fetchAll($sql, $arg);
+	}
+
+	foreach ($license_list as $license0) {
+
+		echo "License: {$license0['id']} {$license0['code']} {$license0['name']}\n";
+
+		$stat = $rdb->hgetall(sprintf('/license/%s', $license0['id']));
+		ksort($stat);
+		// foreach ($stat as $s )
+		// var_dump($stat);
+		// exit;
+
+
+	}
+
+}
+
 
 /**
  *

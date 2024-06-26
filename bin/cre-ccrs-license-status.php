@@ -100,13 +100,13 @@ function _cre_ccrs_license_status($cli_args)
 			case 102:
 				echo "./bin/cre-ccrs.php license-verify --license={$lic['id']}  # stat={$lic['stat']}";
 				break;
-			case 200:
-			// case 202: // OK
+			case 200: // OK
+			case 202: // OK
 				break;
 			case 402: // Payment
 			case 403: // CCRS Authorization
 			case 410: // GONE
-			case 500: // Some Error
+			// case 500: // Some Error
 			case 666: // Dead
 				// Set the Objects to the Status of the License
 				if (666 == $lic['stat']) {
@@ -154,7 +154,7 @@ function _cre_ccrs_license_status_update_stat($dbc, $license, $stat)
 	$sql_list[] = 'UPDATE b2b_incoming_item SET stat = :s1, data = data #- \'{ "@result" }\' WHERE stat != :s1 AND b2b_incoming_id IN (SELECT id FROM b2b_incoming WHERE target_license_id = :l0)';
 	$sql_list[] = 'UPDATE b2b_incoming SET stat = :s1, data = data #- \'{ "@result" }\' WHERE stat != :s1 AND target_license_id = :l0';
 
-	// $sql_list[] = 'UPDATE b2b_outgoing_file SET stat = :s1 WHERE id IN (SELECT id FROM b2b_outgoing WHERE source_license_id = :l0)';
+	// $sql_list[] = 'UPDATE b2b_outgoing_file SET stat = :s1 WHERE stat != :s1 AND id IN (SELECT id FROM b2b_outgoing WHERE stat != :s1 AND source_license_id = :l0)';
 	$sql_list[] = 'UPDATE b2b_outgoing_item SET stat = :s1, data = data #- \'{ "@result" }\' WHERE stat != :s1 AND b2b_outgoing_id IN (SELECT id FROM b2b_outgoing WHERE source_license_id = :l0)';
 	$sql_list[] = 'UPDATE b2b_outgoing SET stat = :s1, data = data #- \'{ "@result" }\' WHERE stat != :s1 AND source_license_id = :l0';
 
