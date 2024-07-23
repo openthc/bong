@@ -35,10 +35,8 @@ class Inventory extends \OpenTHC\Module\Base
 		// Update
 		$a->post('/{id}', 'OpenTHC\Bong\Controller\Inventory\Update');
 
-		// Delete Item
-		$a->delete('/{id}', function($REQ, $RES, $ARG) {
-			return _from_cre_file('lot/delete.php', $REQ, $RES, $ARG);
-		});
+		// Delete
+		$a->delete('/{id}', 'OpenTHC\Bong\Controller\Inventory\Delete');
 
 		// View Adjustment Data
 		$a->get('{id}/adjust', 'OpenTHC\Bong\Controller\Inventory\Adjust');
