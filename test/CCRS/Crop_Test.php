@@ -5,9 +5,9 @@
  * SPDX-License-Identifier: MIT
  */
 
-namespace OpenTHC\Bong\Test\C_CRE_CCRS;
+namespace OpenTHC\Bong\Test\CCRS;
 
-class E_Crop_Test extends \OpenTHC\Bong\Test\C_CRE_CCRS\Base_Case
+class Crop_Test extends \OpenTHC\Bong\Test\CCRS\Base_Case
 {
 	private $section_id = '01HFMY1YWFMSTACZFB8HAQG99H';
 

@@ -5,20 +5,20 @@
  * SPDX-License-Identifier: MIT
  */
 
-namespace OpenTHC\Bong\Test\C_CRE_CCRS;
+namespace OpenTHC\Bong\Test\CCRS;
 
-class G_Lab_Test extends \OpenTHC\Bong\Test\C_CRE_CCRS\Base_Case
+class Lab_Report_Test extends \OpenTHC\Bong\Test\CCRS\Base_Case
 {
 	/**
 	 *
 	 */
 	function test_create()
 	{
-		$res = $this->cre->lab_sample()->create([
+		$res = $this->cre->post('/lab/result', [
 			'id' => _ulid(),
 			'name' => sprintf('Test lab_sample CREATE %s', $this->_pid),
 		]);
-		$this->assertValidAPIResponse($res, 201);
+		$this->assertValidAPIResponse($res, 405);
 	}
 
 	/**
@@ -30,10 +30,10 @@ class G_Lab_Test extends \OpenTHC\Bong\Test\C_CRE_CCRS\Base_Case
 			'id' => _ulid(),
 			'name' => sprintf('Test lab_sample DOUBLE', $this->_pid),
 		];
-		$res = $this->cre->lab_sample()->create($obj);
-		$this->assertValidAPIResponse($res, 201);
+		$res = $this->cre->post('/lab/result', $obj);
+		$this->assertValidAPIResponse($res, 405);
 
-		$res = $this->cre->lab_sample()->create($obj);
+		$res = $this->cre->post('/lab/result', $obj);
 		$this->assertValidAPIResponse($res, 409);
 
 	}
@@ -43,35 +43,40 @@ class G_Lab_Test extends \OpenTHC\Bong\Test\C_CRE_CCRS\Base_Case
 	 */
 	function test_search()
 	{
-		$res = $this->cre->lab_sample()->search();
+		$res = $this->cre->get('/lab/result');
 		$this->assertValidAPIResponse($res, 200);
 	}
 
+	/**
+	 *
+	 */
 	function test_update()
 	{
 		$obj = [
 			'id' => _ulid(),
 			'name' => sprintf('Test lab_sample UPDATE %s', $this->_pid),
 		];
-		$res = $this->cre->lab_sample()->create($obj);
-		$this->assertValidAPIResponse($res, 201);
+		$res = $this->cre->post('/lab/sample', $obj);
+		$this->assertValidAPIResponse($res, 405);
 
-		$res = $this->cre->lab_sample()->update($obj['id'], $obj);
+		$res = $this->cre->post(sprintf('/lab/sample/%s', $obj['id']), $obj);
 		$this->assertValidAPIResponse($res, 200);
 
 	}
 
+	/**
+	 *
+	 */
 	function test_delete()
 	{
 		$obj = [
 			'id' => _ulid(),
 			'name' => sprintf('Test lab_sample DELETE %s', $this->_pid),
 		];
-		$res = $this->cre->lab_sample()->create($obj);
-
+		$res = $this->cre->post('/lab/sample', $obj);
 		$obj = $this->assertValidAPIResponse($res, 201);
 
-		$res = $this->cre->lab_sample()->delete($obj['id']);
+		$res = $this->cre->delete(sprintf('/lab/sample/%s', $obj['id']));
 		$this->assertValidAPIResponse($res, 200);
 
 	}

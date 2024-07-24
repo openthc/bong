@@ -6,7 +6,7 @@
 
 namespace OpenTHC\Bong\Test\Unit;
 
-class A_Config_Test extends \OpenTHC\Bong\Test\Base
+class Config_Test extends \OpenTHC\Bong\Test\Base
 {
 	function test_defined()
 	{
@@ -20,8 +20,6 @@ class A_Config_Test extends \OpenTHC\Bong\Test\Base
 			'OPENTHC_TEST_CCRS_COMPANY_ID',
 			'OPENTHC_TEST_CCRS_LICENSE_ID',
 			'OPENTHC_TEST_LICENSE_KEY',
-			'OPENTHC_TEST_METRC_LICENSE_KEY',
-			'OPENTHC_TEST_METRC_SERVICE_KEY',
 		];
 
 		foreach ($key_list as $k) {

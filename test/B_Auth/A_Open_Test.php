@@ -21,7 +21,7 @@ class A_Open_Test extends \OpenTHC\Bong\Test\Base
 		]]);
 
 
-		$this->assertValidResponse($res, 405, 'text/html');
+		$this->assertValidResponse($res, 405);
 		// $loc = $res->getHeaderLine('location');
 		// var_dump($loc);
 

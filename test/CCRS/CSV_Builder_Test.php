@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: MIT
  */
 
-namespace OpenTHC\Bong\Test\C_CRE_CCRS;
+namespace OpenTHC\Bong\Test\CCRS;
 
 class CSV_Builder_Test extends \OpenTHC\Bong\Test\Base
 {

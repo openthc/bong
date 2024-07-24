@@ -12,7 +12,7 @@
 
 namespace OpenTHC\Bong\Test\Unit;
 
-class B_CRE_Ping_Test extends \OpenTHC\Bong\Test\Base
+class CRE_Ping_Test extends \OpenTHC\Bong\Test\Base
 {
 	/**
 	 * @test

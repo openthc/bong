@@ -5,9 +5,9 @@
  * SPDX-License-Identifier: MIT
  */
 
-namespace OpenTHC\Bong\Test\C_CRE_CCRS;
+namespace OpenTHC\Bong\Test\CCRS;
 
-class I_B2C_Test extends \OpenTHC\Bong\Test\C_CRE_CCRS\Base_Case
+class B2C_Test extends \OpenTHC\Bong\Test\CCRS\Base_Case
 {
 	function test_create()
 	{

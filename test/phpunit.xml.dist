@@ -7,7 +7,7 @@
 	xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/9.3/phpunit.xsd"
 	backupGlobals="false"
 	backupStaticAttributes="false"
-	bootstrap="boot.php"
+	bootstrap="../boot.php"
 	cacheResult="false"
 	colors="false"
 	convertErrorsToExceptions="true"
@@ -17,17 +17,15 @@
 	stopOnError="true"
 	stopOnFailure="true"
 	stopOnRisky="true"
-	timeoutForSmallTests="1"
-	timeoutForMediumTests="10"
-	timeoutForLargeTests="60"
+	timeoutForSmallTests="2"
+	timeoutForMediumTests="8"
+	timeoutForLargeTests="32"
 	verbose="false"
 	>
 
-	<coverage />
-
 	<php>
 
-		<const name="OPENTHC_TEST_ORIGIN" value="https://lab.openthc.example.com" />
+		<const name="OPENTHC_TEST_ORIGIN" value="https://bong.openthc.example.com" />
 
 		<!-- If defined, it will spew debug -->
 		<!-- <const name="OPENTHC_TEST_HTTP_DEBUG" value="0" /> -->
@@ -39,22 +37,28 @@
 		<const name="OPENTHC_TEST_COMPANY_ID" value="" />
 		<const name="OPENTHC_TEST_LICENSE_ID" value="" />
 
-		<const name="OPENTHC_TEST_METRC_SERVICE_KEY" value="" />
-		<const name="OPENTHC_TEST_METRC_LICENSE_KEY" value="" />
-
-
 	</php>
 
 	<testsuites>
 		<testsuite name="All">
 			<directory>Unit</directory>
 			<directory>B_Auth</directory>
-			<directory>C_CRE_CCRS</directory>
+			<directory>CCRS</directory>
 			<directory>BioTrack2014</directory>
 			<!-- <directory>BioTrack2022</directory> -->
 			<!-- <directory>Metrc2014</directory> -->
 			<!-- <directory>Metrc2022</directory> -->
 		</testsuite>
 	</testsuites>
+
+	<!-- https://docs.phpunit.de/en/10.5/code-coverage.html -->
+	<coverage>
+		<!-- https://docs.phpunit.de/en/10.5/configuration.html#the-report-element -->
+		<report>
+			<text outputFile="OUTPUT-converage.txt" />
+			<!-- html -->
+			<!-- xml -->
+		</report>
+	</coverage>
 
 </phpunit>

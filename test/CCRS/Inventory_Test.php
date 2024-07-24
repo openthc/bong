@@ -5,9 +5,9 @@
  * SPDX-License-Identifier: MIT
  */
 
-namespace OpenTHC\Bong\Test\C_CRE_CCRS;
+namespace OpenTHC\Bong\Test\CCRS;
 
-class F_Inventory_Test extends \OpenTHC\Bong\Test\C_CRE_CCRS\Base_Case
+class Inventory_Test extends \OpenTHC\Bong\Test\CCRS\Base_Case
 {
 	private $product_id = '010PENTHC09GQ455NJ9RG2WQ2T';
 

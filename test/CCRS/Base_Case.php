@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: MIT
  */
 
-namespace OpenTHC\Bong\Test\C_CRE_CCRS;
+namespace OpenTHC\Bong\Test\CCRS;
 
 class Base_Case extends \OpenTHC\Bong\Test\Base
 {
