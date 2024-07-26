@@ -50,8 +50,9 @@ class Search extends \OpenTHC\Bong\Controller\Base\Search
 		}
 
 		$res = [];
-		$res['sql'] = $sql;
 		$res['data'] = $dbc->fetchAll($sql, $sql_param);
+		$res['meta'] = [];
+		$res['meta']['sql'] = $sql;
 
 		$want_type = strtolower(trim(strtok($_SERVER['HTTP_ACCEPT'], ';')));
 		switch ($want_type) {
