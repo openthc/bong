@@ -97,8 +97,6 @@ foreach ($message_file_list as $message_file)
 			throw new \Exception('Invalid Message Type');
 	}
 
-	// var_dump($upload_result);
-
 	$res_pull = '100';
 	if ( ! empty($upload_result['code'])) {
 		$res_pull = $upload_result['code'];
