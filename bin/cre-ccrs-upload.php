@@ -27,6 +27,17 @@ DOC;
 $res = Docopt::handle($doc);
 $cli_args = $res->args;
 
+// Lock
+$sync_lock_txt = implode('/', [ __FILE__, $cli_args['--license'] ]);
+$sync_lock_key = crc32($sync_lock_txt);
+$sync_lock_sem = sem_get($sync_lock_key, 1, 0666, true);
+$sync_lock_ack = sem_acquire($sync_lock_sem, true);
+if (empty($sync_lock_ack)) {
+	echo "LOCK: $sync_lock_txt\n";
+	exit(0);
+}
+
+
 $dbc = _dbc();
 $License = _load_license($dbc, $cli_args['--license']);
 
