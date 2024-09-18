@@ -489,10 +489,6 @@ function _csv_file_incoming($RES, string $csv_file) : bool
 			break;
 	}
 
-	// Some
-	$b2b_incoming_item_list = [];
-	$b2b_outgoing_item_list = [];
-
 	// Spin the CSV File
 	while ($csv_line = fgetcsv($csv_pipe)) {
 
@@ -610,9 +606,8 @@ function _csv_file_incoming($RES, string $csv_file) : bool
 					$rec_data = json_decode($rec_data, true);
 				}
 
-				$b2b_incoming_item_list[] = $csv_line['@id'];
-
 				break;
+
 			case 'b2b_outgoing_item':
 
 				$rec_data = $dbc->fetchOne("SELECT data FROM {$tab_name} WHERE id = :pk", [
@@ -627,8 +622,6 @@ function _csv_file_incoming($RES, string $csv_file) : bool
 				} else {
 					$rec_data = json_decode($rec_data, true);
 				}
-
-				$b2b_outgoing_item_list[] = $csv_line['@id'];
 
 				break;
 
@@ -727,10 +720,6 @@ function _csv_file_incoming($RES, string $csv_file) : bool
 	switch ($tab_name) {
 		case 'b2b_incoming_item':
 
-			// $b2b_incoming_item_list
-			// var_dump($b2b_incoming_item_list);
-			// exit;
-
 			// var_dump($err_list);
 			// var_dump($rec_data);
 			// exit;
@@ -739,11 +728,15 @@ function _csv_file_incoming($RES, string $csv_file) : bool
 
 			$sql = <<<SQL
 			UPDATE b2b_incoming
-			SET stat = (SELECT coalesce(max(stat), 100) FROM b2b_incoming_item WHERE b2b_incoming_item.b2b_incoming_id = b2b_incoming.id)
+			SET stat = (
+				SELECT coalesce(max(stat), 100)
+				FROM b2b_incoming_item
+				WHERE b2b_incoming_item.b2b_incoming_id = b2b_incoming.id
+			)
 			WHERE b2b_incoming.target_license_id = :l0 AND b2b_incoming.stat != 202
 			SQL;
 
-			// $ret = $dbc->query($sql, [ ':l0' => $RES->license_id ]);
+			$ret = $dbc->query($sql, [ ':l0' => $RES->license_id ]);
 
 			echo "UPDATED B2B INCOMING: $ret\n";
 
@@ -763,7 +756,9 @@ function _csv_file_incoming($RES, string $csv_file) : bool
 			WHERE b2b_outgoing.source_license_id = :l0 AND b2b_outgoing.stat != 202
 			SQL;
 
-			// $ret = $dbc->query($sql, [ ':l0' => $RES->license_id ]);
+			$ret = $dbc->query($sql, [ ':l0' => $RES->license_id ]);
+
+			echo "UPDATED B2B OUTGOING: $ret\n";
 
 			break;
 	}

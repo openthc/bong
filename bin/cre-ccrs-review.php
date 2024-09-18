@@ -163,6 +163,11 @@ function _eval_b2b_incoming($dbc, $License)
 				break;
 			case 'FromInventoryExternalIdentifier is required':
 			case 'FromLicenseNumber is required':
+			case 'FromLicenseNumber must be numeric':
+			case 'Invalid From LicenseNumber':
+			case 'Invalid FromInventoryExternalIdentifier':
+			case 'Invalid ToInventoryExternalIdentifier':
+			case 'ToInventoryExternalIdentifier is required':
 			case 'ToLicenseNumber is required':
 				$cmd = _sync_command($License, 'b2b-incoming', $rec['b2b_incoming_id']);
 				echo "$cmd\n";
@@ -226,10 +231,15 @@ function _eval_b2b_outgoing($dbc, $License)
 
 			case 'Invalid SaleDetail':
 			case 'InventoryExternalIdentifier or PlantExternalIdentifier is required':
+			case 'Quantity is required':
+			case 'SaleDetailExternalIdentifier not found':
 			case 'SaleExternalIdentifier not found':
+
 				$cmd = _sync_command($License, 'b2b-outgoing', $rec['b2b_outgoing_id']);
 				echo "$cmd\n";
+
 				break;
+
 			default:
 				var_dump($rec);
 				echo "FAIL: _eval_b2b_outgoing UNHANDLED '{$err}'\n";
