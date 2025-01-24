@@ -12,6 +12,13 @@ require_once(__DIR__ . '/../boot.php');
 
 openlog('openthc-bong', LOG_ODELAY | LOG_PID, LOG_LOCAL0);
 
+// Lock
+$lock = new \OpenTHC\CLI\Lock(implode('/', [ __FILE__, $cli_args['--license'] ]));
+if ( ! $lock->create()) {
+	syslog(LOG_DEBUG, 'Lock: Failed to Create');
+	exit(0);
+}
+
 $dbc = _dbc();
 
 // The Compliance Engine
@@ -22,6 +29,7 @@ $dt0 = new \DateTime('now', $tz0);
 
 // Process incoming message queue
 $message_file_list = glob(sprintf('%s/var/ccrs-incoming-mail/*.txt', APP_ROOT));
+syslog(LOG_DEBUG, sprintf('Import Message File Count: %d', count($message_file_list)) );
 foreach ($message_file_list as $message_file)
 {
 	echo "message: $message_file\n";
@@ -729,7 +737,7 @@ function _csv_file_incoming($RES, string $csv_file) : bool
 			$sql = <<<SQL
 			UPDATE b2b_incoming
 			SET stat = (
-				SELECT coalesce(max(stat), 100)
+				SELECT coalesce(max(b2b_incoming_item.stat), 100)
 				FROM b2b_incoming_item
 				WHERE b2b_incoming_item.b2b_incoming_id = b2b_incoming.id
 			)
