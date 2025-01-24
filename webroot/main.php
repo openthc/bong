@@ -21,6 +21,21 @@ $con = $app->getContainer();
 // $con['response'] = function($c) {
 // 	return new \OpenTHC\HTTP\Response();
 // };
+$con['notAllowedHandler'] = function($c) {
+	return function ($REQ, $RES) {
+		$RES = new \Slim\Http\Response(405);
+		$RES = $RES->withProtocolVersion('1.1');
+		return $RES->withJSON(array(
+			'data' => [],
+			'meta' => [
+				'note' => 'HTTP Method Not Allowed',
+			],
+		));
+	};
+};
+$con['response'] = function($c) {
+	return new \OpenTHC\HTTP\Response();
+};
 
 // Authentication
 $app->group('/auth', 'OpenTHC\Bong\Module\Auth')
@@ -210,13 +225,6 @@ $app->post('/upload', 'OpenTHC\Bong\Controller\Upload:outgoing');
 $app->post('/upload/incoming', 'OpenTHC\Bong\Controller\Upload:incoming');
 $app->post('/upload/outgoing', 'OpenTHC\Bong\Controller\Upload:outgoing');
 $app->get('/upload/log', 'OpenTHC\Bong\Controller\Upload:log');
-
-
-// Custom Middleware?
-$f = sprintf('%s/Custom/boot.php', APP_ROOT);
-if (is_file($f)) {
-	require_once($f);
-}
 
 
 // Run the App
