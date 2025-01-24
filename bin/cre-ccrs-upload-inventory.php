@@ -26,7 +26,7 @@ function _cre_ccrs_upload_inventory($cli_args)
 	}
 
 	$dbc = _dbc();
-	$License = _load_license($dbc, $cli_args['--license']);
+	$License = \OpenTHC\Bong\License::load($dbc, $cli_args['--license']);
 
 	$tz0 = new DateTimezone(\OpenTHC\Config::get('cre/usa/wa/ccrs/tz'));
 	$cre_service_key = \OpenTHC\Config::get('cre/usa/wa/ccrs/service-key');
@@ -92,6 +92,9 @@ function _cre_ccrs_upload_inventory($cli_args)
 			// 	break;
 			case 410:
 				$cmd = 'DELETE';
+				$dbc->query('UPDATE inventory SET stat = 410202, data = data #- \'{ "@result" }\' WHERE id = :s0', [
+					':s0' => $inv['id'],
+				]);
 				break;
 			case 666:
 				// $cmd = 'DELETE';
@@ -174,8 +177,10 @@ function _cre_ccrs_upload_inventory($cli_args)
 	fseek($csv_temp, 0);
 
 	// Upload
-	_upload_to_queue_only($License, $csv_name, $csv_temp);
+	OpenTHC\Bong\CRE\CCRS\Upload::enqueue($License, $csv_name, $csv_temp);
 
 	$uphelp->setStatus(102);
+
+	return $req_ulid;
 
 }

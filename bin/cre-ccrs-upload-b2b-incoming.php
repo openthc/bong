@@ -10,6 +10,14 @@ use OpenTHC\Bong\CRE;
 
 function _cre_ccrs_upload_b2b_incoming($cli_args)
 {
+	// Lock
+	$key = implode('/', [ __FILE__, $cli_args['--license'] ]);
+	$lock = new \OpenTHC\CLI\Lock($key);
+	if ( ! $lock->create()) {
+		syslog(LOG_DEBUG, sprintf('LOCK: "%s" Failed', $key));
+		return 0;
+	}
+
 	// Check Cache
 	$uphelp = new \OpenTHC\Bong\CRE\CCRS\Upload([
 		'license' => $cli_args['--license'],
@@ -40,7 +48,8 @@ function _cre_ccrs_upload_b2b_incoming($cli_args)
 	FROM b2b_incoming
 	JOIN b2b_incoming_item ON b2b_incoming.id = b2b_incoming_item.b2b_incoming_id
 	WHERE b2b_incoming.target_license_id = :l0
-	  AND b2b_incoming_item.stat IN (100, 102, 200)
+	  AND b2b_incoming_item.stat IN (100, 102, 200, 404)
+	LIMIT 1000
 	SQL;
 	$res_b2b_incoming_item = $dbc->fetchAll($sql, [ ':l0' => $License['id'] ]);
 
@@ -103,8 +112,8 @@ function _cre_ccrs_upload_b2b_incoming($cli_args)
 
 
 		$rec = [
-			$x['data']['@source']['source']['code'], // FromLicenseNumber
-			$x['data']['@source']['target']['code'] ?: $License['code']  // ToLicenseNumber
+			$x['data']['@source']['source']['code'] // FromLicenseNumber
+			, $License['code'] // ToLicenseNumber
 			, $x['b2b_incoming_item_data']['@source']['source_lot']['id'] //   ['origin_lot_id'] // FromInventoryExternalIdentifier
 			, $x['b2b_incoming_item_data']['@source']['target_lot']['id'] //   ['target_lot_id'] // ToInventoryExternalIdentifier
 			, $x['b2b_incoming_item_data']['@source']['unit_count'] // Quantity

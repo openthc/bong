@@ -23,13 +23,13 @@ class CSV
  	/**
 	 *
 	 */
-	function create()
+	function create($force=false)
 	{
 		// Check Cache
 		$uphelp = new \OpenTHC\Bong\CRE\CCRS\Upload([
 			'license' => $this->_License['id'],
 			'object' => 'product',
-			// 'force' => $cli_args['--force']
+			'force' => $force
 		]);
 
 		if (202 == $uphelp->getStatus()) {
@@ -47,6 +47,8 @@ class CSV
 		SELECT *
 		FROM product
 		WHERE license_id = :l0
+		  AND stat IN (100, 102, 200, 404)
+		ORDER BY id
 		SQL;
 
 		$res_product = $dbc->fetchAll($sql, [ ':l0' => $this->_License['id'] ]);
@@ -78,6 +80,7 @@ class CSV
 			$cmd = '';
 			switch ($product['stat']) {
 				case 100:
+				case 404:
 					$cmd = 'INSERT';
 					$dbc->query('UPDATE product SET stat = 102, data = data #- \'{ "@result" }\' WHERE id = :s0', [
 						':s0' => $product['id'],
@@ -85,6 +88,9 @@ class CSV
 					break;
 				case 102:
 					$cmd = 'INSERT';
+					$dbc->query('UPDATE product SET stat = 200, data = data #- \'{ "@result" }\' WHERE id = :s0', [
+						':s0' => $product['id'],
+					]);
 					break;
 				case 200:
 					$cmd = 'UPDATE';
@@ -92,14 +98,7 @@ class CSV
 						':s0' => $product['id'],
 					]);
 					break;
-				case 202:
-					// Ignore
-					$dbc->query('UPDATE product SET data = data #- \'{ "@result" }\' WHERE id = :x0', [
-						':x0' => $product['id'],
-					]);
-					break;
 				case 400:
-				case 404:
 					// $cmd = 'INSERT';
 					// $dbc->query('UPDATE product SET stat = 100, data = data #- \'{ "@result" }\' WHERE id = :s0', [
 					// 	':s0' => $product['id'],
@@ -109,7 +108,7 @@ class CSV
 					// Ignore
 					break;
 				case 410:
-					// $cmd = 'DELETE';
+					// $cmd = 'DELETE'; ?
 					// continue 2; // foreach
 					break;
 				case 540:
@@ -209,9 +208,6 @@ class CSV
 		}
 
 		$req_ulid = _ulid();
-
-		$req_data = [ '-canary-', '-canary-', '-canary-', "PRODUCT UPLOAD $req_ulid", '', '0', '-canary-', '-canary-', date('m/d/Y'), '-canary-', date('m/d/Y'), 'UPDATE' ];
-		array_unshift($csv_data, $req_data);
 
 		$api_code = \OpenTHC\Config::get('cre/usa/wa/ccrs/service-key');
 		$csv_name = sprintf('Product_%s_%s.csv', $api_code, $req_ulid);

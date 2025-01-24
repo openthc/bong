@@ -58,7 +58,7 @@ function _cre_ccrs_upload_crop($cli_args)
 	]);
 
 	// 200 => 202
-	$dbc->query('UPDATE crop SET stat = 202 WHERE license_id = :l0 AND stat = 200', [
+	$dbc->query('UPDATE crop SET stat = 202, data = data #- \'{ "@result" }\' WHERE license_id = :l0 AND stat = 200', [
 		':l0' => $License['id'],
 	]);
 

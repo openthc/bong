@@ -28,15 +28,12 @@ $res = Docopt::handle($doc);
 $cli_args = $res->args;
 
 // Lock
-$sync_lock_txt = implode('/', [ __FILE__, $cli_args['--license'] ]);
-$sync_lock_key = crc32($sync_lock_txt);
-$sync_lock_sem = sem_get($sync_lock_key, 1, 0666, true);
-$sync_lock_ack = sem_acquire($sync_lock_sem, true);
-if (empty($sync_lock_ack)) {
-	echo "LOCK: $sync_lock_txt\n";
-	exit(0);
+$key = implode('/', [ __FILE__, $cli_args['--license'] ]);
+$lock = new \OpenTHC\CLI\Lock($key);
+if ( ! $lock->create()) {
+	syslog(LOG_DEBUG, sprintf('LOCK: "%s" Failed', $key));
+	return 0;
 }
-
 
 $dbc = _dbc();
 $License = _load_license($dbc, $cli_args['--license']);
@@ -147,7 +144,6 @@ function _upload_to_queue_only(array $License, string $csv_name, $csv_data)
 		'body' => $csv_data // this resource is closed by Guzzle
 	];
 
-	// if (getenv('OPENTHC_BONG_DUMP)'))
 	if ( ! empty($_SERVER['argv'])) {
 		$argv = implode(' ', $_SERVER['argv']);
 		if (strpos($argv, '--dump')) {

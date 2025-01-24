@@ -10,6 +10,14 @@ use OpenTHC\Bong\CRE;
 
 function _cre_ccrs_upload_b2b_outgoing($cli_args)
 {
+	// Lock
+	$key = implode('/', [ __FILE__, $cli_args['--license'] ]);
+	$lock = new \OpenTHC\CLI\Lock($key);
+	if ( ! $lock->create()) {
+		syslog(LOG_DEBUG, sprintf('LOCK: "%s" Failed', $key));
+		return 0;
+	}
+
 	// Check Cache
 	$uphelp = new \OpenTHC\Bong\CRE\CCRS\Upload([
 		'license' => $cli_args['--license'],
@@ -51,17 +59,15 @@ function _cre_ccrs_upload_b2b_outgoing($cli_args)
 	FROM b2b_outgoing
 	JOIN license AS source_license ON b2b_outgoing.source_license_id = source_license.id
 	WHERE b2b_outgoing.source_license_id = :l0
-	  AND  b2b_outgoing.stat IN (100, 102, 200, 400)
+	  AND  b2b_outgoing.stat IN (100, 102, 200, 404)
 	ORDER BY b2b_outgoing.id
-	LIMIT 100
+	LIMIT 1000
 	SQL;
 
 	$arg = [ ':l0' => $License['id'] ];
 
 	$res_b2b_outgoing = $dbc->fetchAll($sql, $arg);
 	foreach ($res_b2b_outgoing as $b2b) {
-
-		echo "{$b2b['id']} = {$b2b['stat']}\n";
 
 		$dtC = new DateTime($b2b['created_at'], $tz0);
 		$dtU = new DateTime($b2b['updated_at'], $tz0);
@@ -173,6 +179,7 @@ function _cre_ccrs_upload_b2b_outgoing($cli_args)
 				// continue;
 				// throw new \Exception('Invalid B2b Missing Quantity [UBO-140]');
 			}
+			// Price
 			// if (0 == strlen($rec[7])) {
 			// 	// var_dump($src_b2b);
 			// 	// var_dump($src_b2b_item);
@@ -221,7 +228,6 @@ function _cre_ccrs_upload_b2b_outgoing($cli_args)
 
 	$row_size = count($csv_data);
 	if ($row_size <= 1) {
-		echo "No Data to Upload\n";
 		$uphelp->setStatus(202);
 		return;
 	}

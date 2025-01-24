@@ -225,7 +225,14 @@ function _cre_ccrs_csv_upload_create($cli_args)
 		'argv' => $cli_args,
 	]);
 	$cli_args = $res->args;
-	// var_dump($cli_args);
+
+	// Lock
+	$key = implode('/', [ __FILE__, $cli_args['--license'] ]);
+	$lock = new \OpenTHC\CLI\Lock($key);
+	if ( ! $lock->create()) {
+		syslog(LOG_DEBUG, sprintf('LOCK: "%s" Failed', $key));
+		return 0;
+	}
 
 	$dbc = _dbc();
 
@@ -310,9 +317,6 @@ function _cre_ccrs_push($cli_args)
 
 		$idx++;
 
-		$cli_args['<command-options>'] = [
-			'upload-id' => $rec['id']
-		];
 		$opt = [ 'upload-single', "--upload-id={$rec['id']}" ];
 		$res = _cre_ccrs_upload_single($opt);
 		switch ($res['code']) {
@@ -347,7 +351,7 @@ function _cre_ccrs_review($cli_args)
 	$doc = <<<DOC
 	BONG CRE CCRS Data Review
 	Usage:
-		review [--license=<LICENSE>]
+		review [--license=<LICENSE>] [--object=<LIST>]
 	DOC;
 
 	$res = Docopt::handle($doc, [
