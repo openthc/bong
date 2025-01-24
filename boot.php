@@ -89,3 +89,60 @@ function _set_option($dbc, $key, $val)
 		]);
 	}
 }
+
+/**
+ *
+ */
+function _date_diff_in_minutes($dt0, $dt1) : float {
+
+	$ddX = $dt0->diff($dt1);
+	$tms = ($ddX->days * 86400) + ($ddX->h * 3600) + ($ddX->i * 60) + $ddX->s + $ddX->f;
+	$tms = ceil($tms / 60);
+
+	return $tms;
+
+}
+
+/**
+ * Date Age Helper
+ */
+function _date_diff_in_seconds($dt0, $dt1) : float {
+
+	// $dt0 = new \DateTime($rec['created_at']);
+	// $dt1 = new \DateTime();
+	$ddX = $dt0->diff($dt1);
+	$tms = ($ddX->days * 86400) + ($ddX->h * 3600) + ($ddX->i * 60) + $ddX->s + $ddX->f;
+
+	return $tms;
+
+}
+
+function _nice_date($x0) {
+
+	if (empty($x0)) {
+		return '-';
+	}
+
+	$x1 = null;
+	if (is_string($x0)) {
+		try {
+			$x1 = new \DateTime($x0);
+		} catch (\Exception $e) {
+			return $x0;
+		}
+	}
+
+	// $dt0 = new \DateTime();
+	// Diff? strtotime integer diff?
+	$xM = _date_diff_in_minutes(new \DateTime(), $x1);
+
+	$t0 = time();
+	$t1 = intval($x1->format('s'));
+
+	$a0 = $t0 - $t1;
+	if ($a0 < 900) {
+		return sprintf('%d m ago', ($a0 / 60));
+	}
+
+	return sprintf('<span title="%s Minutes Ago">%s</span>', $xM, $x1->format('Y-m-d H:i:s'));
+}
