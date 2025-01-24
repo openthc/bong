@@ -42,7 +42,7 @@ if ('status-cache' == $_GET['view']) {
 
 
 <section>
-	<h2>Cache Object Status</h2>
+	<h2>Object Status :: Cache</h2>
 	<div hx-get="?view=status-cache" hx-trigger="load delay:30s, every 30s, queue:none">
 	<?php
 	require_once(__DIR__ . '/single-status-cache.php');
@@ -57,7 +57,7 @@ if ( ! empty($data['object-status'])) {
 ?>
 	<hr>
 
-	<h2>Database Object Status</h2>
+	<h2>Object Status :: Database</h2>
 	<section>
 		<h3>Section Information</h3>
 		<?= _htmx_delay_load(sprintf('/section/status?license=%s', $data['id'])) ?>
@@ -103,10 +103,11 @@ if ( ! empty($data['object-status'])) {
 ?>
 </div>
 
-
+<!--
 <div class="mb-2">
 	<pre><?= __h(print_r($data, true)) ?></pre>
 </div>
+-->
 
 </div>
 
