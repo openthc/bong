@@ -53,11 +53,16 @@ class Response {
 				$this->req_type = $m[1];
 				$this->req_ulid = $m[2];
 				$csv_time = $m[3];
-			} elseif (preg_match('/CCRS Processing Error: (\w+)_\w+_(\w+)_(\w+)\.csv/', $s, $m)) {
+			} elseif (preg_match('/CCRS Processing Error: (\w+)_\w+_(\w+)_\w+\.csv/', $s, $m)) {
 				$this->type = 'ccrs-failure-full';
 				$this->req_type = $m[1];
 				$this->req_ulid = $m[2];
 				$csv_time = $m[3];
+			} elseif (preg_match('/CCRS Processing Error: (\w+)_\w+_(\w+)\.csv/', $s, $m)) {
+				$this->type = 'ccrs-failure-full';
+				$this->req_type = $m[1];
+				$this->req_ulid = $m[2];
+				// $csv_time = $m[3];
 			} elseif (preg_match('/Manifest Generated: (Manifest)_\w+_(\w+)_(\w+)\.csv/', $s, $m)) {
 				$this->type = 'b2b-outgoing-manifest';
 				$this->req_type = $m[1];
