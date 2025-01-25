@@ -7,21 +7,33 @@
 
 $dbc = _dbc();
 
+$obj_want_list = [ 'variety', 'section', 'product', 'crop', 'inventory' ];
+if ( ! empty($cli_args['--object'])) {
+	$obj_want_list = explode(',', $cli_args['--object']);
+}
+
 // If License then Filter, Else Any/All
 $license_list = _load_license_list($dbc, $cli_args);
 foreach ($license_list as $License) {
 
 	echo "# License: {$License['id']} / {$License['code']} / {$License['name']}\n";
 
-	_eval_object($dbc, $License, 'section');
-	_eval_object($dbc, $License, 'variety');
-	_eval_object($dbc, $License, 'product');
-	_eval_object($dbc, $License, 'crop');
+	$obj_eval_list = [ 'variety', 'section', 'product', 'crop', 'inventory' ];
+	foreach ($obj_eval_list as $obj) {
+		if (in_array($obj, $obj_want_list)) {
+			_eval_object($dbc, $License, $obj);
+		}
+	}
+
 	// _eval_object($dbc, $License, 'crop_finish');
-	_eval_object($dbc, $License, 'inventory');
 	// _eval_object($dbc, $License, 'inventory_adjust');
-	_eval_b2b_outgoing($dbc, $License);
-	_eval_b2b_incoming($dbc, $License);
+	if (in_array('b2b-outgoing', $obj_want_list)) {
+		_eval_b2b_outgoing($dbc, $License);
+	}
+
+	if (in_array('b2b-incoming', $obj_want_list)) {
+		_eval_b2b_incoming($dbc, $License);
+	}
 }
 
 
