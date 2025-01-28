@@ -163,9 +163,13 @@ ALTER TABLE public.company OWNER TO openthc_bong;
 
 CREATE TABLE public.contact (
     id character varying(64) NOT NULL,
+    license_id character varying(64) NOT NULL,
+    flag integer DEFAULT 0 NOT NULL,
+    stat integer DEFAULT 100 NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone,
     hash character varying(64),
+    name text,
     data jsonb
 );
 
@@ -184,8 +188,8 @@ CREATE TABLE public.crop (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone,
     hash character varying(64),
-    data jsonb,
-    name text
+    name text,
+    data jsonb
 );
 
 
@@ -218,8 +222,8 @@ CREATE TABLE public.inventory (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone,
     hash character varying(64),
-    data jsonb,
-    name text
+    name text,
+    data jsonb
 );
 
 
@@ -238,8 +242,8 @@ CREATE TABLE public.inventory_adjust (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone,
     hash character varying(64),
-    data jsonb,
-    name text
+    name text,
+    data jsonb
 );
 
 
@@ -276,6 +280,7 @@ CREATE TABLE public.lab_result_metric (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone,
     hash character varying(64),
+    name text
     data jsonb
 );
 
@@ -291,10 +296,11 @@ CREATE TABLE public.license (
     company_id character varying(26) NOT NULL,
     stat integer DEFAULT 100 NOT NULL,
     code text NOT NULL,
-    name text NOT NULL,
-    hash text,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone
+    hash character varying(64),,
+    name text NOT NULL,
+    data jsonb
 );
 
 
@@ -342,13 +348,13 @@ ALTER TABLE public.log_delta OWNER TO postgres;
 
 CREATE TABLE public.log_upload (
     id character varying(64) NOT NULL,
+    license_id character varying(26) NOT NULL,
+    stat integer DEFAULT 100 NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone,
     name text,
     source_data jsonb,
     result_data jsonb,
-    stat integer DEFAULT 100 NOT NULL,
-    updated_at timestamp with time zone,
-    license_id character varying(26),
     req_info jsonb,
     res_info jsonb
 );
@@ -368,8 +374,8 @@ CREATE TABLE public.product (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone,
     hash character varying(64),
-    data jsonb,
     name text
+    data jsonb
 );
 
 
@@ -387,8 +393,8 @@ CREATE TABLE public.section (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone,
     hash character varying(64),
-    data jsonb,
-    name text
+    name text,
+    data jsonb
 );
 
 
@@ -436,8 +442,8 @@ CREATE TABLE public.variety (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone,
     hash character varying(64),
-    data jsonb,
-    name text
+    name text,
+    data jsonb
 );
 
 
@@ -452,6 +458,7 @@ CREATE TABLE public.vehicle (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone,
     hash character varying(64),
+    name text,
     data jsonb
 );
 
