@@ -23,13 +23,13 @@ class CSV
 	/**
 	 *
 	 */
-	function create()
+	function create($force=false)
 	{
 		// Check Cache
 		$uphelp = new \OpenTHC\Bong\CRE\CCRS\Upload([
 			'license' => $this->_License['id'],
 			'object' => 'section',
-			// 'force' => $cli_args['--force']
+			'force' => $force
 		]);
 
 		if (202 == $uphelp->getStatus()) {
@@ -46,10 +46,11 @@ class CSV
 		// Get Data
 		$csv_data = [];
 		$sql = <<<SQL
-		SELECT section.*, license.code AS license_code
+		SELECT section.*
 		FROM section
-		JOIN license ON section.license_id = license.id
-		AND license.id = :l0
+		WHERE license.id = :l0
+		  AND stat IN (100, 102, 200, 404)
+		ORDER BY id
 		SQL;
 		$arg = [ ':l0' => $this->_License['id'] ];
 
@@ -68,24 +69,23 @@ class CSV
 			switch ($section['stat']) {
 				case 100:
 				case 404:
-					$cmd = 'INSERT'; // Moves to 404 via CCRS Response
+					$cmd = 'INSERT';
 					$dbc->query('UPDATE section SET stat = 102, data = data #- \'{ "@result" }\' WHERE id = :s0', [
 						':s0' => $section['id'],
 					]);
 					break;
 				case 102:
 					$cmd = 'INSERT';
+					$dbc->query('UPDATE section SET stat = 200, data = data #- \'{ "@result" }\' WHERE id = :s0', [
+						':s0' => $section['id'],
+					]);
 					break;
 				case 200:
-					// Move to 202 -- will get error from CCRS if NOT Good
 					$cmd = 'UPDATE';
 					$sql = 'UPDATE section SET stat = 202, data = data #- \'{ "@result" }\' WHERE id = :s0';
 					$dbc->query($sql, [
 						':s0' => $section['id'],
 					]);
-					break;
-				case 202:
-					// Ignore
 					break;
 				case 400:
 				case 403:
