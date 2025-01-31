@@ -23,13 +23,13 @@ class CSV
 	/**
 	 *
 	 */
-	function create()
+	function create($force=false)
 	{
 		// Check Cache
 		$uphelp = new \OpenTHC\Bong\CRE\CCRS\Upload([
-			'license' => $this->_License['id'], //  $cli_args['--license'],
+			'license' => $this->_License['id'],
 			'object' => 'variety',
-			// 'force' => $cli_args['--force']
+			'force' => $force
 		]);
 
 		// Maybe only do if STAT == 100?
@@ -57,6 +57,8 @@ class CSV
 		SELECT id, name, stat, data
 		FROM variety
 		WHERE license_id = :l0
+		AND stat IN (100, 102, 200, 404)
+		ORDER BY id
 		SQL;
 
 		$res_variety = $dbc->fetchAll($sql, [
@@ -89,6 +91,10 @@ class CSV
 						, 'Hybrid'
 						, '-system-'
 						, date('m/d/Y')
+					]);
+
+					$dbc->query('UPDATE variety SET stat = 200, data = data #- \'{ "@result" }\' WHERE id = :s0', [
+						':s0' => $variety['id'],
 					]);
 
 					break;
