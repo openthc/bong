@@ -3,6 +3,14 @@
 Interfaces with multiple Cannabis APIs (BioTrack, CCRS, Leafdata, Metrc).
 Normalizes to the OpenTHC API interfaces and data-models.
 
+```mermaid
+sequenceDiagram
+    App->>+Bong: Create Object (100)
+    Bong->>+CRE: Upload Object (102)
+    CRE-->>-Bong: Success (202)
+    Bong-->>-App: Success (202)
+```
+
 
 ## Install
 
