@@ -23,8 +23,11 @@ class Company extends \OpenTHC\Module\Base
 
 		});
 
+		$a->post('', 'OpenTHC\Bong\Controller\Company\Create');
+
 		// Single
 		$a->get('/{id}', 'OpenTHC\Bong\Controller\Company\Single');
+		// $a->post('{id}', 'OpenTHC\Bong\Controller\Company\Update');
 
 	}
 }
