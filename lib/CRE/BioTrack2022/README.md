@@ -1,5 +1,5 @@
-# BioTrack v2022 API
+# BioTrack 2022
 
-This is the one in use by BioTrack in Florida and soon New York.
+It's a unique API used in [New Mexico](https://wiki.openthc.org/USA/NM).
 
-- https://api.licensee.fl.biotr.ac/documentation/index.html
+- [Documentation](https://documenter.getpostman.com/view/15944043/UVktqDR2)
