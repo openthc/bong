@@ -23,12 +23,15 @@ $cfg['database'] = [
 $cfg['openthc'] = [
 	'app' => [
 		'id' => '',
-		'origin' => 'https://app.openthc.example.com/',
+		'origin' => 'https://app.openthc.example.com',
 		'secret' => '',
+	],
+	'dir' => [
+		'origin' => 'https://dir.openthc.example.com',
 	],
 	'bong' => [
 		'id' => '', // from openthc_auth.auth_service
-		'origin' => 'https://bong.openthc.example.com/',
+		'origin' => 'https://bong.openthc.example.com',
 		'secret' => '',
 		'system' => [
 			// IDS from openthc_auth database
@@ -36,6 +39,10 @@ $cfg['openthc'] = [
 			'contact' => '',
 			'license' => '',
 		]
+	],
+	'sso' => [
+		'origin' => 'https://sso.openthc.example.com',
+		'secret' => '',
 	]
 ];
 
