@@ -148,10 +148,11 @@ ALTER TABLE public.base_option OWNER TO openthc_bong;
 
 CREATE TABLE public.company (
     id character varying(26) NOT NULL,
-    name text,
-    hash character varying(64),
+    stat integer DEFAULT 100 NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone
+    hash character varying(64),
+    name text
 );
 
 
@@ -280,7 +281,7 @@ CREATE TABLE public.lab_result_metric (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone,
     hash character varying(64),
-    name text
+    name text NOT NULL,
     data jsonb
 );
 
@@ -297,8 +298,8 @@ CREATE TABLE public.license (
     stat integer DEFAULT 100 NOT NULL,
     code text NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
-    updated_at timestamp with time zone
-    hash character varying(64),,
+    updated_at timestamp with time zone,
+    hash character varying(64),
     name text NOT NULL,
     data jsonb
 );
@@ -311,7 +312,7 @@ ALTER TABLE public.license OWNER TO openthc_bong;
 --
 
 CREATE TABLE public.log_audit (
-    id character varying(64) NOT NULL,
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
     company_id character varying(64) NOT NULL,
     license_id character varying(64) NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
@@ -374,7 +375,7 @@ CREATE TABLE public.product (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone,
     hash character varying(64),
-    name text
+    name text,
     data jsonb
 );
 
@@ -455,6 +456,7 @@ ALTER TABLE public.variety OWNER TO openthc_bong;
 
 CREATE TABLE public.vehicle (
     id character varying(64) NOT NULL,
+    license_id character varying(64) NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone,
     hash character varying(64),
