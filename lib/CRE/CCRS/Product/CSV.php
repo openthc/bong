@@ -31,7 +31,6 @@ class CSV
 			'object' => 'product',
 			'force' => $force
 		]);
-
 		if (202 == $uphelp->getStatus()) {
 			return;
 		}
@@ -64,7 +63,7 @@ class CSV
 				continue;
 			}
 			if ('018NY6XC00PR0DUCTTYPE00001' == $product_source['type']) {
-				$dbc->query('UPDATE product SET stat = 546 WHERE id = :p0', [
+				$dbc->query('UPDATE product SET stat = 540 WHERE id = :p0', [
 					':p0' => $product['id']
 				]);
 				continue;

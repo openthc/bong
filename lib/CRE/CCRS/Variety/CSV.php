@@ -31,17 +31,8 @@ class CSV
 			'object' => 'variety',
 			'force' => $force
 		]);
-
-		// Maybe only do if STAT == 100?
-		// Only Create Upload if Data is "FRESH"
-		$x = $uphelp->getStatus();
-		switch ($x) {
-			// case 102: // Processing
-			case 202: // Done
-				return;
-				break;
-			default:
-				// Needs some Update
+		if (202 == $uphelp->getStatus()) {
+			return;
 		}
 
 		$dbc = _dbc();

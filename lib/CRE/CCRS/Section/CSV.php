@@ -31,7 +31,6 @@ class CSV
 			'object' => 'section',
 			'force' => $force
 		]);
-
 		if (202 == $uphelp->getStatus()) {
 			return;
 		}
