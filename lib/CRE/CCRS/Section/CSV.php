@@ -48,7 +48,7 @@ class CSV
 		$sql = <<<SQL
 		SELECT section.*
 		FROM section
-		WHERE license.id = :l0
+		WHERE license_id = :l0
 		  AND stat IN (100, 102, 200, 404)
 		ORDER BY id
 		SQL;
