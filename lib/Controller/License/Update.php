@@ -30,11 +30,19 @@ class Update extends \OpenTHC\Bong\Controller\Base\Update
 
 		switch ($_POST['a']) {
 			case 'license-cache-clear':
-				$this->post_cache_clear($License);
-				return $RES->withRedirect(sprintf('/license/%s', $License['id']));
+				return $this->post_cache_clear($RES, $License);
 				break;
 			case 'license-error-reset':
 				return $this->error_reset($RES, $dbc, $License);
+				break;
+			case 'license-export':
+				// Create and execute a script to upload their stuff
+				// /opt/openthc/bong/bin/cre-ccrs.php upload-create --license "$license_id"
+				$cmd = [];
+				$cmd[] = sprintf('%s/bin/cre-ccrs.php', APP_ROOT);
+				$cmd[] = 'upload-create';
+				$cmd[] = sprintf('--license %s', escapeshellarg($license_id));
+				// /opt/openthc/bong/bin/cre-ccrs.php push --license "$license_id"
 				break;
 			case 'license-verify':
 				$req_ulid = $this->post_verify($dbc, $License);
@@ -86,7 +94,7 @@ class Update extends \OpenTHC\Bong\Controller\Base\Update
 	 */
 	function error_reset($RES, $dbc, $License) {
 
-		$stat_in = 'stat (400, 402, 403)';
+		$stat_in = 'stat IN (400, 402, 403)';
 		$sql_update = 'UPDATE %s SET stat = 100 WHERE license_id = :l0 AND %s';
 
 		$sql_list = [];
@@ -105,8 +113,8 @@ class Update extends \OpenTHC\Bong\Controller\Base\Update
 
 		$sql_list[] = "UPDATE b2b_outgoing SET stat = 100 WHERE source_license_id = :l0 AND $stat_in";
 		$sql_list[] = <<<SQL
-		UPDATE b2b_outgoing_item SET stat = 100 WHERE b2b_incoming_id IN (
-			SELECT id FROM b2b_incoming WHERE target_license_id = :l0 AND $stat_in
+		UPDATE b2b_outgoing_item SET stat = 100 WHERE b2b_outgoing_id IN (
+			SELECT id FROM b2b_outgoing WHERE source_license_id = :l0 AND $stat_in
 		)
 		SQL;
 
@@ -124,10 +132,28 @@ class Update extends \OpenTHC\Bong\Controller\Base\Update
 	/**
 	 *
 	 */
-	function post_cache_clear($License)
+	function post_cache_clear($RES, $License)
 	{
 		$rdb = \OpenTHC\Service\Redis::factory();
-		$d0 = $rdb->del(sprintf('/license/%s', $License['id']));
+
+		$license_key = sprintf('/license/%s', $License['id']);
+
+		$rec = $rdb->hgetall($license_key);
+		ksort($rec);
+		// __exit_text($rec);
+
+		// Clear only Stat, saves times and push/pull info
+		foreach ($rec as $k => $v) {
+			if ('stat' == basename($k)) {
+				$rdb->hset($license_key, $k, '0');
+			}
+		}
+
+		// Clear All
+		// $d0 = $rdb->del($license_key);
+
+		return $RES->withRedirect(sprintf('/license/%s', $License['id']));
+
 	}
 
 	function post_verify($dbc, $License)
