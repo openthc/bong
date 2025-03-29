@@ -8,53 +8,28 @@ set -o errtrace
 set -o nounset
 set -o pipefail
 
-BIN_SELF=$(readlink -f "$0")
-APP_ROOT=$(dirname "$BIN_SELF")
+APP_ROOT=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
-action="${1:-}"
-shift
+cd "$APP_ROOT"
 
-case "$action" in
-# Install or Update the System
-install|update)
+composer install --no-ansi --no-progress --classmap-authoritative
 
-	composer install --no-ansi --no-dev --no-progress --quiet --classmap-authoritative
+npm install --no-audit --no-fund --package-lock-only
 
-	npm install
+php <<PHP
+<?php
+require_once(__DIR__ . '/boot.php');
 
-	./make.sh vendor-web
+\OpenTHC\Make::install_bootstrap();
+\OpenTHC\Make::install_fontawesome();
+\OpenTHC\Make::install_jquery();
 
-	;;
+PHP
 
-# Get the CSS and JS Assets
-vendor-web)
+# lodash
+mkdir -p webroot/vendor/lodash/
+cp node_modules/lodash/lodash.min.js webroot/vendor/lodash/
 
-	. vendor/openthc/common/lib/lib.sh
-
-	copy_bootstrap
-	copy_fontawesome
-	copy_jquery
-
-
-	# lodash
-	mkdir -p webroot/vendor/lodash/
-	cp node_modules/lodash/lodash.min.js webroot/vendor/lodash/
-
-	# htmx
-	mkdir -p webroot/vendor/htmx
-	cp node_modules/htmx.org/dist/htmx.min.js webroot/vendor/htmx/
-
-	;;
-
-# Help, the default target
-*)
-
-	echo
-	echo "You must supply a make command"
-	echo
-	awk '/^# [A-Z].+/ { h=$0 }; /^[a-z]+.+\)/ { printf " \033[0;49;31m%-15s\033[0m%s\n", gensub(/\)$/, "", 1, $$1), h }' "$BIN_SELF" |sort
-	echo
-
-	;;
-
-esac
+# htmx
+mkdir -p webroot/vendor/htmx
+cp node_modules/htmx.org/dist/htmx.min.js webroot/vendor/htmx/
