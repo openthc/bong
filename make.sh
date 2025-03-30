@@ -1,6 +1,8 @@
 #!/bin/bash
 #
-# Does make like things
+# Install Helper
+#
+# SPDX-License-Identifier: MIT
 #
 
 set -o errexit
@@ -18,12 +20,11 @@ npm install --no-audit --no-fund --package-lock-only
 
 php <<PHP
 <?php
-require_once(__DIR__ . '/boot.php');
-
+define('APP_ROOT', __DIR__);
+require_once(APP_ROOT . '/vendor/autoload.php');
 \OpenTHC\Make::install_bootstrap();
 \OpenTHC\Make::install_fontawesome();
 \OpenTHC\Make::install_jquery();
-
 PHP
 
 # lodash
