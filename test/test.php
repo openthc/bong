@@ -1,7 +1,7 @@
 #!/usr/bin/php
 <?php
 /**
- *
+ * OpenTHC Bong Test Runner
  */
 
 require_once(dirname(__DIR__) . '/boot.php');
@@ -9,7 +9,7 @@ require_once(dirname(__DIR__) . '/boot.php');
 // $arg = \OpenTHC\Docopt::parse($doc, ?$argv=[]);
 // Parse CLI
 $doc = <<<DOC
-OpenTHC BONG Test
+OpenTHC Bong Test
 
 Usage:
 	test [options]
@@ -19,13 +19,13 @@ Options:
 
 DOC;
 
-$arg = Docopt::handle($doc, [
-	'help' => false,
-	'optionsFirst' => true,
+$res = Docopt::handle($doc, [
+	'exit' => false,
+	'help' => true,
+	'optionsFirst' => false,
 ]);
-$cli_args = $arg->args;
+$cli_args = $res->args;
 // var_dump($cli_args);
-
 
 define('OPENTHC_TEST_OUTPUT_BASE', \OpenTHC\Test\Helper::output_path_init());
 
@@ -60,7 +60,19 @@ $tc = new OpenTHC\Test\Facade\PHPStan([
 
 
 // PHPUnit
-// $cfg = [];
+$cfg = [];
+$cfg['output'] = OPENTHC_TEST_OUTPUT_BASE;
+// Pick Config File
+$cfg_file_list = [];
+$cfg_file_list[] = sprintf('%s/phpunit.xml', __DIR__);
+$cfg_file_list[] = sprintf('%s/phpunit.xml.dist', __DIR__);
+foreach ($cfg_file_list as $f) {
+	if (is_file($f)) {
+		$cfg['--configuration'] = $f;
+		break;
+	}
+}
+
 // $tc = new OpenTHC\Test\Facade\PHPUnit($cfg);
 // $res = $tc->execute();
 // var_dump($res);
@@ -119,6 +131,8 @@ $output = sprintf('%s/phpunit.html', OPENTHC_TEST_OUTPUT_BASE);
 // Done
 \OpenTHC\Test\Helper::index_create($html);
 
+
+// Output Information
 $origin = \OpenTHC\Config::get('openthc/bong/origin');
 $output = str_replace(sprintf('%s/webroot/', APP_ROOT), '', OPENTHC_TEST_OUTPUT_BASE);
 

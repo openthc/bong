@@ -34,6 +34,8 @@ class Config_Test extends \OpenTHC\Bong\Test\Base
 	 */
 	function all_config()
 	{
+		// We Want these to come from the configuration YAML
+		// But for now they are in the \OpenTHC\Config::
 		$key_list = [
 			'cre/usa/wa/ccrs/tz',
 			'cre/usa/wa/ccrs/username',
@@ -42,7 +44,8 @@ class Config_Test extends \OpenTHC\Bong\Test\Base
 		];
 		foreach ($key_list as $k) {
 			$x = \OpenTHC\Config::get($k);
-			$this->assertEmpty($x, sprintf('%s should be empty', $k));
+			$this->assertNotEmpty($x, sprintf('%s should NOT be empty', $k));
+			// $this->assertEmpty($x, sprintf('%s should be empty', $k));
 		}
 
 		$key_list = [

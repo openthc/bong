@@ -48,6 +48,7 @@
 			<!-- <directory>BioTrack2022</directory> -->
 			<!-- <directory>Metrc2014</directory> -->
 			<!-- <directory>Metrc2022</directory> -->
+			<directory>Cannafax</directory>
 		</testsuite>
 	</testsuites>
 
