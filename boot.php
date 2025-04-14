@@ -19,7 +19,6 @@ if ( ! \OpenTHC\Config::init(APP_ROOT) ) {
 	_exit_html_fail('<h1>Invalid Application Configuration [ALB-035]</h1>', 500);
 }
 
-define('OPENTHC_SERVICE_ID', \OpenTHC\Config::get('openthc/bong/id'));
 define('OPENTHC_SERVICE_ORIGIN', \OpenTHC\Config::get('openthc/bong/origin'));
 
 
