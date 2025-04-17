@@ -28,105 +28,166 @@ function _cre_ccrs_upload_b2b_incoming($cli_args)
 		return 0;
 	}
 
-	$dbc = _dbc();
-
+	// Get CRE Configuration
 	$cfg = \OpenTHC\CRE::getConfig('usa/wa');
 	$tz0 = new DateTimezone($cfg['tz']);
 	$cre_service_key = $cfg['service-sk'];
+
+	$dbc = _dbc();
 
 	$License = _load_license($dbc, $cli_args['--license']);
 
 	// Get Data
 	$csv_data = [];
 
+	// Go By Transaction
 	$sql = <<<SQL
-	SELECT b2b_incoming.*,
-	b2b_incoming_item.id AS b2b_incoming_item_id,
-	b2b_incoming_item.name AS b2b_incoming_item_name,
-	b2b_incoming_item.data AS b2b_incoming_item_data,
-	b2b_incoming_item.stat AS b2b_incoming_item_stat
+	SELECT b2b_incoming.id AS id
+		, b2b_incoming.created_at
+		, b2b_incoming.updated_at
+		, b2b_incoming.data
+		, b2b_incoming.stat
 	FROM b2b_incoming
-	JOIN b2b_incoming_item ON b2b_incoming.id = b2b_incoming_item.b2b_incoming_id
 	WHERE b2b_incoming.target_license_id = :l0
-	  AND b2b_incoming_item.stat IN (100, 102, 200, 404)
-	LIMIT 1000
+	  AND b2b_incoming.stat IN (100, 102, 200, 404)
+	  -- AND b2b_incoming.created_at >= '2023-01-01' AND b2b_incoming.created_at < '2024-01-01'
+	  -- AND b2b_incoming.created_at >= '2024-01-01' AND b2b_incoming.created_at < '2025-01-01'
+	  AND b2b_incoming.created_at >= '2025-01-01' AND b2b_incoming.created_at < '2026-01-01'
+	ORDER BY b2b_incoming.id
+	LIMIT 100
 	SQL;
-	$res_b2b_incoming_item = $dbc->fetchAll($sql, [ ':l0' => $License['id'] ]);
 
-	foreach ($res_b2b_incoming_item as $x) {
+	$res_b2b_incoming = $dbc->fetchAll($sql, [ ':l0' => $License['id'] ]);
+	foreach ($res_b2b_incoming as $b2b) {
 
-		$x['data'] = json_decode($x['data'], true);
-		$x['b2b_incoming_item_data'] = json_decode($x['b2b_incoming_item_data'], true);
+		$res_b2b_incoming_stat = [];
 
-		$dtC = new \DateTime($x['created_at'], $tz0);
-		$dtC->setTimezone($tz0);
+		$dtC = new DateTime($b2b['created_at'], $tz0);
+		$dtU = new DateTime($b2b['updated_at'], $tz0);
 
-		$dtU = new \DateTime($x['updated_at'], $tz0);
-		$dtU->setTimezone($tz0);
+		$src_b2b = json_decode($b2b['data'], true);
+		$src_b2b = $src_b2b['@source'];
 
-		$cmd = '';
-		switch ($x['b2b_incoming_item_stat']) {
+		// Check Items
+		$sql = <<<SQL
+		SELECT b2b_incoming_item.*
+		FROM b2b_incoming_item
+		WHERE b2b_incoming_item.b2b_incoming_id = :b0
+		AND b2b_incoming_item.stat IN (100, 102, 200, 400, 404)
+		ORDER BY id
+		SQL;
+
+		$arg = [
+			':b0' => $b2b['id'],
+		];
+
+		$res_b2b_incoming_item = $dbc->fetchAll($sql, $arg);
+		foreach ($res_b2b_incoming_item as $b2b_incoming_item) {
+
+			$cmd = '';
+			switch ($b2b_incoming_item['stat']) {
 			case 100:
-				$cmd = 'INSERT'; // Moves to 404 via CCRS Response
+			case 404:
+				// INSERT & UPDATE stat to 102
+				$cmd = 'INSERT';
+				// $dbc->query('UPDATE b2b_incoming SET stat = 102, data = data #- \'{ "@result" }\' WHERE id = :s0', [
+				// 	':s0' => $b2b['id'],
+				// ]);
 				$dbc->query('UPDATE b2b_incoming_item SET stat = 102, data = data #- \'{ "@result" }\' WHERE id = :s0', [
-					':s0' => $x['b2b_incoming_item_id'],
+					':s0' => $b2b_incoming_item['id'],
 				]);
+				// $res_b2b_incoming_stat = 102;
 				break;
 			case 102:
+				// SECOND UPLOAD
 				$cmd = 'INSERT';
 				break;
 			case 200:
 				// Move to 202 -- will get error from CCRS if NOT Good
 				$cmd = 'UPDATE';
-				$dbc->query('UPDATE b2b_incoming_item SET stat = 202 WHERE id = :s0', [
-					':s0' => $x['b2b_incoming_item_id'],
+				$dbc->query('UPDATE b2b_incoming_item SET stat = 202, data = data #- \'{ "@result" }\' WHERE id = :s0', [
+					':s0' => $b2b_incoming_item['id'],
 				]);
+				// $res_b2b_incoming_stat = 202;
 				break;
-			case 202:
-				// Ignore
-				break;
+			// What to do here?
 			case 400:
-				// Recycle
-				$dbc->query('UPDATE b2b_incoming_item SET stat = 100, data = data #- \'{ "@result" }\' WHERE id = :s0', [
-					':s0' => $x['b2b_incoming_item_id'],
-				]);
-				break;
-			case 404:
-				// Try Insert and Recycle
-				$cmd = 'INSERT';
-				$dbc->query('UPDATE b2b_incoming_item SET stat = 100, data = data #- \'{ "@result" }\' WHERE id = :s0', [
-					':s0' => $x['b2b_incoming_item_id'],
-				]);
-				break;
-			case 410:
-				// $cmd = 'DELETE'; // Move to 666 ?
-				// continue 2; // foreach
+				// Ignore
+				// $dbc->query('UPDATE b2b_incoming_item SET stat = 100, data = data #- \'{ "@result" }\' WHERE id = :s0', [
+				// 	':s0' => $b2b_incoming_item['b2b_incoming_item_id'],
+				// ]);
 				break;
 			default:
-				throw new \Exception("Invalid B2B/Incoming/Item Status '{$x['b2b_incoming_item_stat']}'");
+				throw new \Exception("Invalid B2B/Incoming/Item Status '{$b2b_incoming_item['stat']}'");
+			}
+			// switch ($x['b2b_incoming_item_stat']) {
+			// 	case 400:
+			// 		// Recycle
+			// 		$dbc->query('UPDATE b2b_incoming_item SET stat = 100, data = data #- \'{ "@result" }\' WHERE id = :s0', [
+			// 			':s0' => $x['b2b_incoming_item_id'],
+			// 		]);
+			// 		break;
+			// 	case 410:
+			// 		// $cmd = 'DELETE'; // Move to 666 ?
+			// 		// continue 2; // foreach
+			// 		break;
+			// 	default:
+			// 		throw new \Exception("Invalid B2B/Incoming/Item Status '{$x['b2b_incoming_item_stat']}'");
+			// }
+
+
+			// Add to CSV
+			if (empty($cmd)) {
+				continue;
+			}
+
+			$src_b2b_item = json_decode($b2b_incoming_item['data'], true);
+			$src_b2b_item = $src_b2b_item['@source'];
+
+			$rec = [
+				$src_b2b['source']['code'] // FromLicenseNumber
+				, $License['code'] // ToLicenseNumber
+				, $src_b2b_item['source_lot']['id'] //   ['origin_lot_id'] // FromInventoryExternalIdentifier
+				, $src_b2b_item['target_lot']['id'] //   ['target_lot_id'] // ToInventoryExternalIdentifier
+				, $src_b2b_item['unit_count'] // Quantity
+				, $dtC->format('m/d/Y') // date('m/d/Y', strtotime($x['created_at']))
+				, $b2b_incoming_item['id'] // , sprintf('%s/%s', $x['b2b_sale_id'], $x['b2b_sale_item_id'])
+				, '-system-'
+				, $dtC->format('m/d/Y')
+				, '-system-'
+				, $dtU->format('m/d/Y')
+				, $cmd
+			];
+
+			$csv_data[] = $rec;
+
 		}
 
-		if (empty($cmd)) {
-			continue;
-		}
+		// Update B2B Incoming Object Status Here
+		$sql = <<<SQL
+		SELECT count(id) AS c, stat
+		FROM b2b_incoming_item
+		WHERE b2b_incoming_item.b2b_incoming_id = :b0
+		GROUP BY stat
+		SQL;
 
-
-		$rec = [
-			$x['data']['@source']['source']['code'] // FromLicenseNumber
-			, $License['code'] // ToLicenseNumber
-			, $x['b2b_incoming_item_data']['@source']['source_lot']['id'] //   ['origin_lot_id'] // FromInventoryExternalIdentifier
-			, $x['b2b_incoming_item_data']['@source']['target_lot']['id'] //   ['target_lot_id'] // ToInventoryExternalIdentifier
-			, $x['b2b_incoming_item_data']['@source']['unit_count'] // Quantity
-			, $dtC->format('m/d/Y') // date('m/d/Y', strtotime($x['created_at']))
-			, $x['b2b_incoming_item_id'] // , sprintf('%s/%s', $x['b2b_sale_id'], $x['b2b_sale_item_id'])
-			, '-system-'
-			, $dtC->format('m/d/Y')
-			, '-system-'
-			, $dtU->format('m/d/Y')
-			, $cmd
+		$arg = [
+			':b0' => $b2b['id'],
 		];
+		$res_b2b_incoming_item_stat = $dbc->fetchAll($sql, $arg);
+		switch (count($res_b2b_incoming_item_stat)) {
+		case 0: // Problem
+			break;
+		case 1: // Awesome
+			$stat = $res_b2b_incoming_item_stat[0]['stat'];
+			// echo "  UPDATE STAT {$b2b['stat']} => $stat\n";
+			$dbc->query('UPDATE b2b_incoming SET stat = :s1 WHERE id = :b0', [
+				':b0' => $b2b['id'],
+				':s1' => $stat,
+			]);
+			break;
+		}
 
-		$csv_data[] = $rec;
 	}
 
 	// No Data, In Sync
@@ -136,12 +197,12 @@ function _cre_ccrs_upload_b2b_incoming($cli_args)
 	}
 
 	$req_ulid = _ulid();
+	$csv_name = sprintf('InventoryTransfer_%s_%s.csv', $cre_service_key, $req_ulid);
+	$csv_head = explode(',', 'FromLicenseNumber,ToLicenseNumber,FromInventoryExternalIdentifier,ToInventoryExternalIdentifier,Quantity,TransferDate,ExternalIdentifier,CreatedBy,CreatedDate,UpdatedBy,UpdatedDate,Operation');
+	$col_size = count($csv_head);
 	// $req_data = [ '-canary-', '-canary-', "B2B_INCOMING UPLOAD $req_ulid", '-canary-', 0, date('m/d/Y'), '-canary-', '-system-', date('m/d/Y'), '', '', 'UPDATE' ];
 	// array_unshift($csv_data, $req_data);
 
-	$csv_head = explode(',', 'FromLicenseNumber,ToLicenseNumber,FromInventoryExternalIdentifier,ToInventoryExternalIdentifier,Quantity,TransferDate,ExternalIdentifier,CreatedBy,CreatedDate,UpdatedBy,UpdatedDate,Operation');
-	$csv_name = sprintf('InventoryTransfer_%s_%s.csv', $cre_service_key, $req_ulid);
-	$col_size = count($csv_head);
 	$csv_temp = fopen('php://temp', 'w');
 
 	\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'SubmittedBy',   'OpenTHC' ], $col_size, '')));
@@ -155,8 +216,6 @@ function _cre_ccrs_upload_b2b_incoming($cli_args)
 	// Upload
 	fseek($csv_temp, 0);
 
-	// fpassthru($csv_temp);
-	// return;
 	_upload_to_queue_only($License, $csv_name, $csv_temp);
 
 	$uphelp->setStatus(102);
