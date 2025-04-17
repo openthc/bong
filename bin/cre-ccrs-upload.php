@@ -51,6 +51,10 @@ foreach ($obj_list as $obj) {
 foreach ($obj_list as $obj) {
 
 	switch ($obj) {
+		case 'crop':
+			$csv = new \OpenTHC\Bong\CRE\CCRS\Crop\Export($License);
+			$csv->create($cli_args['--force']);
+			break;
 		case 'product':
 			$csv = new \OpenTHC\Bong\CRE\CCRS\Product\Export($License);
 			$csv->create($cli_args['--force']);
