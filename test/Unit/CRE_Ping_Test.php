@@ -26,7 +26,7 @@ class CRE_Ping_Test extends \OpenTHC\Bong\Test\Base
 			$cre_conf['company'] = $_ENV['OPENTHC_TEST_COMPANY_ID'];
 			$cre_conf['contact'] = $_ENV['OPENTHC_TEST_CONTACT_ID'];
 			$cre_conf['license'] = $_ENV['OPENTHC_TEST_LICENSE_ID'];
-			$cre_conf['license-key'] = $_ENV['OPENTHC_TEST_LICENSE_SECRET'];
+			$cre_conf['license-key'] = $_ENV['OPENTHC_TEST_LICENSE_SK'];
 			$cre_conf['service'] = $_ENV['OPENTHC_TEST_CLIENT_SERVICE_ID'];
 			$cre_conf['service-sk'] = $_ENV['OPENTHC_TEST_CLIENT_SERVICE_SK'];
 
@@ -34,12 +34,13 @@ class CRE_Ping_Test extends \OpenTHC\Bong\Test\Base
 			$this->assertNotEmpty($cre);
 			$this->assertTrue($cre instanceof \OpenTHC\CRE\Base);
 
-			$res = $cre->setLicense([
+			$arg = [
 				'id' => $cre_conf['license'],
 				'code' => $_ENV['OPENTHC_TEST_LICENSE_CODE'],
 				'guid' => $_ENV['OPENTHC_TEST_LICENSE_CODE'],
 				'sk' => $cre_conf['license-key']
-			]);
+			];
+			$res = $cre->setLicense($arg);
 			$res = $cre->ping();
 
 			$this->assertIsArray($res);

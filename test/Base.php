@@ -39,7 +39,7 @@ class Base extends \OpenTHC\Test\Base
 		$cfg['company'] = $_ENV['OPENTHC_TEST_COMPANY_ID'];
 		$cfg['license'] = $_ENV['OPENTHC_TEST_LICENSE_ID'];
 		// $cfg['license-id'] = $_ENV['OPENTHC_TEST_LICENSE_ID'];
-		// $cfg['license-key'] = $_ENV['OPENTHC_TEST_LICENSE_SECRET'];
+		// $cfg['license-key'] = $_ENV['OPENTHC_TEST_LICENSE_SK'];
 
 		$cre = \OpenTHC\CRE::factory($cfg);
 		// $cre = new \OpenTHC\CRE\OpenTHC($cfg);

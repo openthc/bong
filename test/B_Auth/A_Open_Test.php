@@ -42,7 +42,7 @@ class A_Open_Test extends \OpenTHC\Bong\Test\Base
 		// 	'service-sk' => $_ENV['OPENTHC_TEST_CLIENT_SERVICE_SK'], // v1
 		// 	'company' => $_ENV['OPENTHC_TEST_CCRS_COMPANY_ID'],
 		// 	'license' => $_ENV['OPENTHC_TEST_CCRS_LICENSE_ID'],
-		// 	'license-key' => $_ENV['OPENTHC_TEST_LICENSE_KEY'],
+		// 	'license-key' => $_ENV['OPENTHC_TEST_LICENSE_SK'],
 		// ]]);
 
 		// $this->assertValidResponse($res, 302, 'text/html');

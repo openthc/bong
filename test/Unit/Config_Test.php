@@ -8,18 +8,19 @@ namespace OpenTHC\Bong\Test\Unit;
 
 class Config_Test extends \OpenTHC\Bong\Test\Base
 {
-	function test_defined()
+	function test_env()
 	{
 		$key_list = [
 			'OPENTHC_TEST_ORIGIN',
 			'OPENTHC_TEST_CLIENT_SERVICE_ID',
 			'OPENTHC_TEST_CLIENT_SERVICE_SK',
+			'OPENTHC_TEST_LICENSE_CODE',
+			'OPENTHC_TEST_LICENSE_SK',
 			'OPENTHC_TEST_BIOTRACK_COMPANY',
 			'OPENTHC_TEST_BIOTRACK_PASSWORD',
 			'OPENTHC_TEST_BIOTRACK_USERNAME',
 			'OPENTHC_TEST_CCRS_COMPANY_ID',
 			'OPENTHC_TEST_CCRS_LICENSE_ID',
-			'OPENTHC_TEST_LICENSE_KEY',
 		];
 
 		foreach ($key_list as $key) {
