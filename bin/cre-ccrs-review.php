@@ -7,7 +7,7 @@
 
 $dbc = _dbc();
 
-$obj_want_list = [ 'variety', 'section', 'product', 'crop', 'inventory' ];
+$obj_want_list = [ 'variety', 'section', 'product', 'crop', 'inventory', 'b2b-outgoing', 'b2b-incoming' ];
 if ( ! empty($cli_args['--object'])) {
 	$obj_want_list = explode(',', $cli_args['--object']);
 }
@@ -46,7 +46,9 @@ function _eval_object($dbc, $License, string $obj)
 	SELECT id, data
 	FROM $obj
 	WHERE license_id = :l0
+		AND created_at >= '2025-01-01'
 		AND stat = 400
+		-- Filter to just find specific errors
 		-- AND data::text LIKE '%Invalid Area%'
 		-- AND data::text LIKE '%Invalid Product%'
 		-- AND data::text ILIKE '%["Strain is required", "Area is required", "Product is required", "Invalid Area", "Invalid Product"]%'
@@ -122,6 +124,9 @@ function _eval_object($dbc, $License, string $obj)
 
 				break;
 
+			case 'HarvestDate must be a date':
+				// Known errors w/no special case handling, just re-sync
+				break;
 			default:
 
 				echo "## NOT HANDLED: $err\n";
@@ -148,6 +153,7 @@ function _eval_b2b_incoming($dbc, $License)
 	FROM b2b_incoming
 	JOIN b2b_incoming_item ON b2b_incoming.id = b2b_incoming_item.b2b_incoming_id
 	WHERE b2b_incoming.target_license_id = :l0
+	  AND b2b_incoming.created_at >= '2025-01-01'
 	  AND b2b_incoming_item.stat IN (400, 404)
 	ORDER BY b2b_incoming.target_license_id, b2b_incoming_item.id
 	SQL;
@@ -178,12 +184,27 @@ function _eval_b2b_incoming($dbc, $License)
 			case 'FromLicenseNumber must be numeric':
 			case 'Invalid From LicenseNumber':
 			case 'Invalid FromInventoryExternalIdentifier':
-			case 'Invalid ToInventoryExternalIdentifier':
-			case 'ToInventoryExternalIdentifier is required':
 			case 'ToLicenseNumber is required':
 				$cmd = _sync_command($License, 'b2b-incoming', $rec['b2b_incoming_id']);
 				echo "$cmd\n";
 				break;
+			case 'Invalid ToInventoryExternalIdentifier':
+			case 'ToInventoryExternalIdentifier is required':
+
+				$inv_guid = $rec['data']['@source']['target_inventory']['id'] ?: $rec['data']['@source']['target_lot']['id'] ?: $rec['data']['@source']['source_lot']['id'];
+				if (empty($inv_guid)) {
+					print_r($rec);
+					echo "\n^^^^^ INVALID RECORD TYPE?\n";
+					exit;
+				}
+
+				$cmd = _sync_command($License, 'inventory', $inv_guid);
+				echo "$cmd\n";
+				$cmd = _sync_command($License, 'b2b-incoming', $rec['b2b_incoming_id']);
+				echo "$cmd\n";
+
+				break;
+
 			default:
 				var_dump($rec);
 				echo "FAIL: _eval_b2b_incoming UNHANDLED '{$err}'\n";
@@ -205,7 +226,8 @@ function _eval_b2b_outgoing($dbc, $License)
 	FROM b2b_outgoing
 	JOIN b2b_outgoing_item ON b2b_outgoing.id = b2b_outgoing_item.b2b_outgoing_id
 	WHERE b2b_outgoing.source_license_id = :l0
-	  AND b2b_outgoing_item.stat IN (400, 404)
+	  AND b2b_outgoing.created_at >= '2025-01-01'
+	  AND (b2b_outgoing.stat IN (400, 404) OR b2b_outgoing_item.stat IN (400, 404))
 	ORDER BY b2b_outgoing.source_license_id, b2b_outgoing_item.id
 	SQL;
 
@@ -217,11 +239,13 @@ function _eval_b2b_outgoing($dbc, $License)
 
 		$rec['data'] = json_decode($rec['data'], true);
 
+		// I don't think this one is used any more
 		$err = $rec['data']['@result']['data'][0];
 		if (empty($err)) {
+			// And it always has to pick this one
 			$err = $rec['data']['@result']['ErrorMessage'];
-			// var_dump($rec); exit;
 		}
+
 		switch ($err) {
 			case 'Invalid InventoryExternalIdentifier':
 				echo "## B2B OUTGOING ITEM\n";
@@ -255,10 +279,12 @@ function _eval_b2b_outgoing($dbc, $License)
 			default:
 				var_dump($rec);
 				echo "FAIL: _eval_b2b_outgoing UNHANDLED '{$err}'\n";
-				exit;
-				$dbc->query('UPDATE b2b_outgoing_item SET stat = 100 WHERE id = :bii0 AND stat != 100', [
-					':bii0' => $rec['id']
-				]);
+				$cmd = _sync_command($License, 'b2b-outgoing', $rec['b2b_outgoing_id']);
+				echo "$cmd\n";
+				// exit;
+				// $dbc->query('UPDATE b2b_outgoing_item SET stat = 100 WHERE id = :bii0 AND stat != 100', [
+				// 	':bii0' => $rec['id']
+				// ]);
 				// $dbc->query('UPDATE b2b_outgoing SET stat = 100 WHERE stat != 100 AND id = :bi0 AND source_license_id = :l0', [
 				// 	':l0' => $License['id'],
 				// 	':bi0' => $rec['b2b_outgoing_id'],
@@ -296,7 +322,7 @@ function _sync_command($License, string $obj, string $oid) {
 	$cmd[] = sprintf('--company=%s', $License['company_id']);
 	$cmd[] = sprintf('--license=%s', $License['id']);
 	$cmd[] = sprintf('--object=%s', escapeshellarg($obj));
-	$cmd[] = sprintf('--object-id=%s', escapeshellarg($oid)); // $rec['b2b_outgoing_id']);
+	$cmd[] = sprintf('--object-id=%s', escapeshellarg($oid));
 	$cmd[] = '--force';
 	$cmd = implode(' ', $cmd);
 
