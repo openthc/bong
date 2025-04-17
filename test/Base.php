@@ -15,7 +15,7 @@ class Base extends \OpenTHC\Test\Base
 	function _api(): object
 	{
 		$c = $this->getGuzzleClient([
-			'base_uri' => OPENTHC_TEST_ORIGIN
+			'base_uri' => $_ENV['OPENTHC_TEST_ORIGIN']
 		]);
 		return $c;
 	}
@@ -31,15 +31,15 @@ class Base extends \OpenTHC\Test\Base
 		$cfg['id'] = 'usa/wa';
 		$cfg['code'] = 'usa/wa';
 		$cfg['cre'] = 'usa/wa';
-		$cfg['server'] = OPENTHC_TEST_ORIGIN;
-		$cfg['service-id'] = OPENTHC_TEST_CLIENT_SERVICE_ID;
-		$cfg['service-sk'] = OPENTHC_TEST_CLIENT_SERVICE_SK; // v0
-		$cfg['service-key'] = OPENTHC_TEST_CLIENT_SERVICE_SK; // v1
-		$cfg['contact'] = OPENTHC_TEST_CONTACT_ID;
-		$cfg['company'] = OPENTHC_TEST_COMPANY_ID;
-		$cfg['license'] = OPENTHC_TEST_LICENSE_ID;
-		// $cfg['license-id'] = OPENTHC_TEST_LICENSE_ID;
-		// $cfg['license-key'] = OPENTHC_TEST_LICENSE_SECRET;
+		$cfg['server'] = $_ENV['OPENTHC_TEST_ORIGIN'];
+		$cfg['service-id'] = $_ENV['OPENTHC_TEST_CLIENT_SERVICE_ID'];
+		$cfg['service-sk'] = $_ENV['OPENTHC_TEST_CLIENT_SERVICE_SK']; // v0
+		$cfg['service-key'] = $_ENV['OPENTHC_TEST_CLIENT_SERVICE_SK']; // v1
+		$cfg['contact'] = $_ENV['OPENTHC_TEST_CONTACT_ID'];
+		$cfg['company'] = $_ENV['OPENTHC_TEST_COMPANY_ID'];
+		$cfg['license'] = $_ENV['OPENTHC_TEST_LICENSE_ID'];
+		// $cfg['license-id'] = $_ENV['OPENTHC_TEST_LICENSE_ID'];
+		// $cfg['license-key'] = $_ENV['OPENTHC_TEST_LICENSE_SECRET'];
 
 		$cre = \OpenTHC\CRE::factory($cfg);
 		// $cre = new \OpenTHC\CRE\OpenTHC($cfg);

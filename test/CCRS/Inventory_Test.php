@@ -131,7 +131,7 @@ class Inventory_Test extends \OpenTHC\Bong\Test\CCRS\Base_Case
 		// Execute this Script
 		require_once(APP_ROOT . '/bin/cre-ccrs-upload-inventory.php');
 		$req_ulid = _cre_ccrs_upload_inventory([
-			'--license' => OPENTHC_TEST_LICENSE_ID,
+			'--license' => $_ENV['OPENTHC_TEST_LICENSE_ID'],
 		]);
 		$this->assertNotEmpty($req_ulid);
 

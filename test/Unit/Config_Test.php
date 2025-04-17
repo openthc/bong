@@ -22,9 +22,9 @@ class Config_Test extends \OpenTHC\Bong\Test\Base
 			'OPENTHC_TEST_LICENSE_KEY',
 		];
 
-		foreach ($key_list as $k) {
-			$this->assertTrue(defined($k), "CONST '$k' is not defined");
-			$this->assertNotEmpty(constant($k), "CONST '$k' is empty");
+		foreach ($key_list as $key) {
+			$this->assertArrayHasKey($key, $_ENV);
+			$this->assertNotEmpty($_ENV[$key], sprintf('$_ENV missing "%s"', $key));
 		}
 
 	}
@@ -47,6 +47,9 @@ class Config_Test extends \OpenTHC\Bong\Test\Base
 			$this->assertNotEmpty($x, sprintf('%s should NOT be empty', $k));
 			// $this->assertEmpty($x, sprintf('%s should be empty', $k));
 		}
+
+		// $cfg = \OpenTHC\CRE::getClient('usa/wa');
+		// $cfg = \OpenTHC\CRE::getConfig('usa/wa');
 
 		$key_list = [
 			'tz',

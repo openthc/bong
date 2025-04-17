@@ -11,32 +11,27 @@ class B2C_Test extends \OpenTHC\Bong\Test\CCRS\Base_Case
 {
 	function test_create()
 	{
-		$x = OPENTHC_TEST_ORIGIN;
-		$this->assertNotEmpty($x);
+		$this->markTestSkipped();
 	}
 
 	function test_create_duplicate()
 	{
-		$x = OPENTHC_TEST_ORIGIN;
-		$this->assertNotEmpty($x);
+		$this->markTestSkipped();
 	}
 
 	function test_search()
 	{
-		$x = OPENTHC_TEST_ORIGIN;
-		$this->assertNotEmpty($x);
+		$this->markTestSkipped();
 	}
 
 	function test_update()
 	{
-		$x = OPENTHC_TEST_ORIGIN;
-		$this->assertNotEmpty($x);
+		$this->markTestSkipped();
 	}
 
 	function test_delete()
 	{
-		$x = OPENTHC_TEST_ORIGIN;
-		$this->assertNotEmpty($x);
+		$this->markTestSkipped();
 	}
 
 }

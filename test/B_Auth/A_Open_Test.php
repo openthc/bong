@@ -15,9 +15,9 @@ class A_Open_Test extends \OpenTHC\Bong\Test\Base
 		$api = $this->_api();
 		$res = $api->post('/auth/open', [ 'form_params' => [
 			'cre' => 'usa/nm',
-			'company' => OPENTHC_TEST_BIOTRACK_COMPANY,
-			'username' => OPENTHC_TEST_BIOTRACK_USERNAME,
-			'password' => OPENTHC_TEST_BIOTRACK_PASSWORD,
+			'company' => $_ENV['OPENTHC_TEST_BIOTRACK_COMPANY'],
+			'username' => $_ENV['OPENTHC_TEST_BIOTRACK_USERNAME'],
+			'password' => $_ENV['OPENTHC_TEST_BIOTRACK_PASSWORD'],
 		]]);
 
 
@@ -38,11 +38,11 @@ class A_Open_Test extends \OpenTHC\Bong\Test\Base
 		$this->assertValidAPIResponse($res, 200);
 		// , [ 'form_params' => [
 		// 	'cre' => 'usa/wa',
-		// 	'service-id' => OPENTHC_TEST_CLIENT_SERVICE_ID,
-		// 	'service-sk' => OPENTHC_TEST_CLIENT_SERVICE_SK, // v1
-		// 	'company' => OPENTHC_TEST_CCRS_COMPANY_ID,
-		// 	'license' => OPENTHC_TEST_CCRS_LICENSE_ID,
-		// 	'license-key' => OPENTHC_TEST_LICENSE_KEY,
+		// 	'service-id' => $_ENV['OPENTHC_TEST_CLIENT_SERVICE_ID'],
+		// 	'service-sk' => $_ENV['OPENTHC_TEST_CLIENT_SERVICE_SK'], // v1
+		// 	'company' => $_ENV['OPENTHC_TEST_CCRS_COMPANY_ID'],
+		// 	'license' => $_ENV['OPENTHC_TEST_CCRS_LICENSE_ID'],
+		// 	'license-key' => $_ENV['OPENTHC_TEST_LICENSE_KEY'],
 		// ]]);
 
 		// $this->assertValidResponse($res, 302, 'text/html');

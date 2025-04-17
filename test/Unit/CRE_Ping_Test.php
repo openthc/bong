@@ -23,12 +23,12 @@ class CRE_Ping_Test extends \OpenTHC\Bong\Test\Base
 
 		foreach ($cre_list as $cre_conf) {
 
-			$cre_conf['company'] = OPENTHC_TEST_COMPANY_ID;
-			$cre_conf['contact'] = OPENTHC_TEST_CONTACT_ID;
-			$cre_conf['license'] = OPENTHC_TEST_LICENSE_ID;
-			$cre_conf['license-key'] = OPENTHC_TEST_LICENSE_SECRET;
-			$cre_conf['service'] = OPENTHC_TEST_CLIENT_SERVICE_ID;
-			$cre_conf['service-sk'] = OPENTHC_TEST_CLIENT_SERVICE_SK;
+			$cre_conf['company'] = $_ENV['OPENTHC_TEST_COMPANY_ID'];
+			$cre_conf['contact'] = $_ENV['OPENTHC_TEST_CONTACT_ID'];
+			$cre_conf['license'] = $_ENV['OPENTHC_TEST_LICENSE_ID'];
+			$cre_conf['license-key'] = $_ENV['OPENTHC_TEST_LICENSE_SECRET'];
+			$cre_conf['service'] = $_ENV['OPENTHC_TEST_CLIENT_SERVICE_ID'];
+			$cre_conf['service-sk'] = $_ENV['OPENTHC_TEST_CLIENT_SERVICE_SK'];
 
 			$cre = \OpenTHC\CRE::factory($cre_conf);
 			$this->assertNotEmpty($cre);
@@ -36,8 +36,8 @@ class CRE_Ping_Test extends \OpenTHC\Bong\Test\Base
 
 			$res = $cre->setLicense([
 				'id' => $cre_conf['license'],
-				'code' => OPENTHC_TEST_LICENSE_CODE,
-				'guid' => OPENTHC_TEST_LICENSE_CODE,
+				'code' => $_ENV['OPENTHC_TEST_LICENSE_CODE'],
+				'guid' => $_ENV['OPENTHC_TEST_LICENSE_CODE'],
 				'sk' => $cre_conf['license-key']
 			]);
 			$res = $cre->ping();
