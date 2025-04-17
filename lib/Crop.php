@@ -27,7 +27,7 @@ class Crop
 		// $schema_spec['properties']['name'] = [ 'type' => 'string' ];
 		$schema_spec['properties']['section'] = [
 			'type' => 'object',
-			'required' => [ 'id', 'name' ],
+			'required' => [ 'id' ],
 			'properties' => [
 				'id' => [ 'type' => 'string' ],
 				'name' => [ 'type' => 'string' ],
@@ -35,7 +35,7 @@ class Crop
 		];
 		$schema_spec['properties']['variety'] = [
 			'type' => 'object',
-			'required' => [ 'id', 'name' ],
+			'required' => [ 'id' ],
 			'properties' => [
 				'id' => [ 'type' => 'string' ],
 				'name' => [ 'type' => 'string' ],
