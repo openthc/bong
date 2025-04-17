@@ -2,13 +2,6 @@
  * Simple Stylesheet for Pipe
  */
 
-* {
-	box-sizing: border-box;
-}
-h1, h2, h3, h4, h5, h6 {
-	margin: 0;
-	padding: 0;
-}
 pre {
 	background: #303030;
 	color: #f0f0f0;
@@ -63,6 +56,14 @@ table.diff th.new {
 table.diff th.old {
 	color: #cc0000;
 	text-align: right;
+}
+
+textarea {
+	font-family: monospace;
+	height: 22ex;
+	overflow-wrap: normal;
+	overflow-x: scroll;
+	white-space: pre;
 }
 
 /**
