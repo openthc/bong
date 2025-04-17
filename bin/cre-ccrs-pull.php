@@ -30,12 +30,25 @@ $message_file_list = glob(sprintf('%s/var/ccrs-incoming-mail/*.txt', APP_ROOT));
 syslog(LOG_DEBUG, sprintf('Import Message File Count: %d', count($message_file_list)) );
 foreach ($message_file_list as $message_file)
 {
-	echo "message: $message_file\n";
+	syslog(LOG_DEBUG, sprintf('message-file: %s', $message_file));
+
 	$RES = new \OpenTHC\Bong\CRE\CCRS\Response($message_file);
 	$RES->isValid();
 
 	// Should Write Result Blob Here
-	$REQ = $dbc->fetchRow('SELECT id, license_id, name, stat, res_info, result_data FROM log_upload WHERE id = :r0', [ ':r0' => $RES->req_ulid ]);
+	$arg = [ ':r0' => $RES->req_ulid ];
+	$sql = <<<SQL
+	SELECT id
+		, license_id
+		, created_at
+		, name
+		, stat
+		, res_info
+		, result_data
+	FROM log_upload
+	WHERE id = :r0
+	SQL;
+	$REQ = $dbc->fetchRow($sql, $arg);
 	if (empty($REQ['id'])) {
 		throw new \Exception('Invalid Response [CCP-119]');
 	}
@@ -78,7 +91,6 @@ foreach ($message_file_list as $message_file)
 	];
 
 	$dbc->update('log_upload', $update, [ 'id' => $RES->req_ulid ]);
-
 
 	// Should these all just pass back a RESULT object?
 
@@ -330,8 +342,7 @@ function _ccrs_pull_manifest_file(string $message_file, string $output_file) : a
 		':m0' => $manifest_id
 	]);
 	if (empty($b2b_outgoing['id'])) {
-		echo "Failed to Process: $message_file; Missing B2B Outgoing [CCP-186]\n";
-		exit(1);
+		throw new \Exception("Failed to Process: '$message_file'; Missing B2B Outgoing '$manifest_id' [CCP-186]");
 	}
 	$License = $dbc->fetchRow('SELECT id, company_id FROM license WHERE id = :l0', [
 		':l0' => $b2b_outgoing['source_license_id']

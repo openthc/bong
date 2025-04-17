@@ -17,7 +17,6 @@ Usage:
 
 Commands:
 	auth                  Authenticate to CCRS
-	csv-upload-create     *alias
 	push                  Does upload-single for all the stuff in the queue
 	push-b2b-old          Push (or check-up on) the old B2B Laggards
 	upload-create         from source data create the csv files in the upload queue
@@ -61,7 +60,6 @@ switch ($cli_args['<command>']) {
 		// require_once(__DIR__ . '/cre-ccrs-review-inventory-variety.php');
 		break;
 	case 'upload-create':
-	case 'csv-upload-create':
 		// require_once(APP_ROOT . '/lib/CRE/CCRS/CSV/Create.php');
 		_cre_ccrs_csv_upload_create($cli_args['<command-options>']);
 		break;
@@ -125,7 +123,7 @@ function _cre_ccrs_auth($cli_args)
 		switch ($res['code']) {
 			case 200:
 
-				echo "AUTH SUCCESS\n";
+				syslog(LOG_DEBUG, 'AUTH SUCCESS');
 
 				// Good
 				$out = [];
@@ -140,25 +138,30 @@ function _cre_ccrs_auth($cli_args)
 
 			case 302:
 
-				echo "AUTH FAILURE\n";
+				syslog(LOG_DEBUG, 'AUTH FAILURE [BCC-143]');
 
 				break;
 
 			default:
-				throw new \Exception('Invalid Response from CRE [CCA-049]');
+				syslog(LOG_DEBUG, 'Invalid Response from CRE [CCA-049]');
 		}
 
 	} elseif ( ! empty($cli_args['--refresh'])) {
 
 		// Needs Auth
-		$cookie_data = $cre->auth($cfg['username'], $cfg['password']);
+		try {
+			$cookie_data = $cre->auth($cfg['username'], $cfg['password']);
+		} catch (\Exception $e) {
+				var_dump($e);
+				syslog(LOG_DEBUG, 'AUTH FAILURE [BCC-158]');
+		}
 
 		// Save
 		$val = json_encode($cookie_data, JSON_PRETTY_PRINT);
 
 		$chk = $rdb->set('/cre/ccrs/auth-cookie-list', $val, 60 * 10);
 
-		echo "AUTH UPDATED\n";
+		syslog(LOG_DEBUG, 'AUTH UPDATED');
 
 	}
 
