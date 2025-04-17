@@ -33,7 +33,10 @@ class Status extends \OpenTHC\Controller\Base
 		ORDER BY 2
 		SQL;
 
-		if ( ! empty($_SESSION['License']['id'])) {
+		if ( ! empty($_GET['license'])) {
+			$sql_where[] = 'license_id = :l0';
+			$arg[':l0'] = $_GET['license'];
+		} elseif ( ! empty($_SESSION['License']['id'])) {
 			$sql_where[] = 'license_id = :l0';
 			$arg[':l0'] = $_SESSION['License']['id'];
 		}
@@ -58,9 +61,15 @@ class Status extends \OpenTHC\Controller\Base
 
 			default:
 
+				foreach ($res as $rec) {
+					$n = sprintf('<a href="/%s?stat=%d">%d</a>', $this->_tab_name, $rec['stat'], $rec['stat']);
+					$v = sprintf('<div><a href="/%s?q=%s">%s</a></div><div><small>%s</small></div>', $this->_tab_name, rawurlencode($rec['e']), $rec['c'], __h($rec['e']));
+					echo _stat_card($n, $v);
+				}
+
 				// echo date('Y-m-d H:i:s');
-				$tbody = $this->object_status_tbody($this->_tab_name, $res);
-				echo $this->object_status_table($tbody);
+				// $tbody = $this->object_status_tbody($this->_tab_name, $res);
+				// echo $this->object_status_table($tbody);
 
 		}
 

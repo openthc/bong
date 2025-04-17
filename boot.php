@@ -145,3 +145,20 @@ function _nice_date($x0) {
 
 	return sprintf('<span title="%s Minutes Ago">%s</span>', $xM, $x1->format('Y-m-d H:i:s'));
 }
+
+
+function _stat_card($name, $data)
+{
+	$html = [];
+	$html[] = '<div class="col-2 mb-2">';
+	$html[] = '<div class="card h-100">';
+	$html[] = '<div class="card-header text-center">';
+	$html[] = $name;
+	$html[] = '</div>';
+	$html[] = '<div class="card-body text-center">';
+	$html[] = $data;
+	$html[] = '</div>';
+	$html[] = '</div>';
+	$html[] = '</div>';
+	return implode('', $html);
+};

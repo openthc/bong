@@ -18,7 +18,7 @@ if ('status-cache' == $_GET['view']) {
 
 <div class="d-flex justify-content-between">
 	<div>
-		<h1>License :: <code><?= __h($data['code']) ?></code> <?= __h($data['name']) ?></h1>
+		<h1 data-blur="true">License :: <code><?= __h($data['code']) ?></code> <?= __h($data['name']) ?></h1>
 	</div>
 	<div>
 		<h2><?= $data['stat'] ?></h2>
@@ -28,6 +28,11 @@ if ('status-cache' == $_GET['view']) {
 
 <form method="post">
 <div class="mb-2">
+	<?php
+	if ( ! empty($data['company_profile_url'])) {
+		printf('<a class="btn btn-secondary" href="%s" target="_blank">CMP</a>', $data['company_profile_url']);
+	}
+	?>
 	<a class="btn btn-secondary" href="<?= sprintf('%s/license/%s', \OpenTHC\Config::get('openthc/dir/origin'), $data['id']) ?>" target="_blank"><i class="fa-regular fa-address-book"></i></a>
 	<a class="btn btn-primary" href="?object-status=show">Show Database Object Status</a>
 	<!-- <button class="btn btn-warning" name="a" value="license-object-status-update"> Update Object Status</button> -->
@@ -82,12 +87,12 @@ if ( ! empty($data['object-status'])) {
 		<h3>Inventory Information</h3>
 		<?= _htmx_delay_load(sprintf('/inventory/status?license=%s', $data['id'])) ?>
 	</section>
-
+<!--
 	<section>
 		<h3>Inventory Adjust Information</h3>
 		<?= _htmx_delay_load(sprintf('/inventory-adjust/status?license=%s', $data['id'])) ?>
 	</section>
-
+ -->
 	<section>
 		<h3>B2B Incoming Information</h3>
 		<?= _htmx_delay_load(sprintf('/b2b/incoming/status?license=%s', $data['id'])) ?>
@@ -135,8 +140,8 @@ function _apply_object_sync_status_style($val) : string {
 function _htmx_delay_load($url) : string {
 
 	$ret = [];
-	$ret[] = sprintf('<div hx-get="%s" hx-trigger="load delay:2s, every 30s, queue:all">', $url);
-	$ret[] = '<strong>Loading...</strong>';
+	$ret[] = sprintf('<div class="row" hx-get="%s" hx-trigger="load delay:2s, every 30s, queue:all">', $url);
+	$ret[] = '<strong><i class="fa-solid fa-arrows-rotate fa-spin"></i> Loading...</strong>';
 	$ret[] = '</div>';
 
 	return implode('', $ret);
