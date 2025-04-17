@@ -10,7 +10,7 @@ namespace OpenTHC\Bong\CRE\CCRS\Variety;
 use OpenTHC\CRE\CCRS;
 use OpenTHC\Bong\CRE;
 
-class CSV
+class Export
 {
 	/**
 	 *

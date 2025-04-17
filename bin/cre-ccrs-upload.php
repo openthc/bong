@@ -52,15 +52,15 @@ foreach ($obj_list as $obj) {
 
 	switch ($obj) {
 		case 'product':
-			$csv = new \OpenTHC\Bong\CRE\CCRS\Product\CSV($License);
+			$csv = new \OpenTHC\Bong\CRE\CCRS\Product\Export($License);
 			$csv->create($cli_args['--force']);
 			break;
 		case 'section':
-			$csv = new \OpenTHC\Bong\CRE\CCRS\Section\CSV($License);
+			$csv = new \OpenTHC\Bong\CRE\CCRS\Section\Export($License);
 			$csv->create($cli_args['--force']);
 			break;
 		case 'variety':
-			$csv = new \OpenTHC\Bong\CRE\CCRS\Variety\CSV($License);
+			$csv = new \OpenTHC\Bong\CRE\CCRS\Variety\Export($License);
 			// $csv->setForce($cli_args['--force']);
 			$csv->create($cli_args['--force']);
 			break;
