@@ -2073,12 +2073,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/openthc/cre-adapter.git",
-                "reference": "ee31208c93be7a2526056507d0853174808f6f76"
+                "reference": "7e0e30e65d67ad40e5db017c8bd5136eaf414ef3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/openthc/cre-adapter/zipball/ee31208c93be7a2526056507d0853174808f6f76",
-                "reference": "ee31208c93be7a2526056507d0853174808f6f76",
+                "url": "https://api.github.com/repos/openthc/cre-adapter/zipball/7e0e30e65d67ad40e5db017c8bd5136eaf414ef3",
+                "reference": "7e0e30e65d67ad40e5db017c8bd5136eaf414ef3",
                 "shasum": ""
             },
             "require": {
@@ -2086,7 +2086,7 @@
                 "openthc/common": "dev-main"
             },
             "require-dev": {
-                "phpstan/phpstan": "1.11.8",
+                "phpstan/phpstan": "2.1.8",
                 "phpunit/phpunit": "9.6.20"
             },
             "default-branch": true,
@@ -2112,7 +2112,7 @@
                 "issues": "https://github.com/openthc/cre-adapter/issues",
                 "source": "https://github.com/openthc/cre-adapter/tree/main"
             },
-            "time": "2025-04-14T19:53:15+00:00"
+            "time": "2025-04-16T22:15:12+00:00"
         },
         {
             "name": "opis/json-schema",
