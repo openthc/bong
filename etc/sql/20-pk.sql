@@ -118,6 +118,9 @@ ALTER TABLE ONLY public.log_upload
     ADD CONSTRAINT log_upload_pkey PRIMARY KEY (id);
 
 
+ALTER TABLE ONLY public.log_upload_detail
+    ADD CONSTRAINT log_upload_detail_pkey PRIMARY KEY (id);
+
 --
 -- Name: inventory_adjust lot_delta_pkey; Type: CONSTRAINT; Schema: public; Owner: openthc_bong
 --

@@ -364,6 +364,38 @@ CREATE TABLE public.log_upload (
 ALTER TABLE public.log_upload OWNER TO openthc_bong;
 
 --
+-- Name: log_upload; Type: TABLE; Schema: public; Owner: openthc_bong
+--
+
+CREATE TABLE public.log_upload_detail (
+    id character varying(64) NOT NULL,
+    source_data jsonb,
+    result_data jsonb,
+    req_info jsonb,
+    res_info jsonb
+);
+
+
+ALTER TABLE public.log_upload_detail OWNER TO openthc_bong;
+
+
+--
+-- Name: upload_object_action; Type: TABLE; Schema: public; Owner: openthc_bong
+--
+
+CREATE TABLE public.log_upload_object_action (
+    id character varying(26) NOT NULL,
+    upload_id character varying(26) NOT NULL,
+    object_id character varying(26) NOT NULL,
+    object_type character varying(64) NOT NULL,
+    action character varying(8) NOT NULL
+);
+
+
+ALTER TABLE public.log_upload_object_action OWNER TO openthc_bong;
+
+
+--
 -- Name: product; Type: TABLE; Schema: public; Owner: openthc_bong
 --
 
@@ -415,21 +447,6 @@ CREATE TABLE public.uom (
 
 
 ALTER TABLE public.uom OWNER TO postgres;
-
---
--- Name: upload_object_action; Type: TABLE; Schema: public; Owner: openthc_bong
---
-
-CREATE TABLE public.upload_object_action (
-    id character varying(26) NOT NULL,
-    upload_id character varying(26),
-    object_id character varying(26),
-    object_type character varying(64) NOT NULL,
-    action character varying(8) NOT NULL
-);
-
-
-ALTER TABLE public.upload_object_action OWNER TO openthc_bong;
 
 --
 -- Name: variety; Type: TABLE; Schema: public; Owner: openthc_bong
