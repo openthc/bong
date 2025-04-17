@@ -10,8 +10,6 @@ use OpenTHC\Bong\CRE;
 
 require_once(__DIR__ . '/../boot.php');
 
-openlog('openthc-bong', LOG_ODELAY | LOG_PID, LOG_LOCAL0);
-
 $doc = <<<DOC
 BONG CRE CCRS Upload Tool
 Usage:

@@ -10,8 +10,6 @@ use \Edoceo\Radix\DB\SQL;
 
 require_once(__DIR__ . '/../boot.php');
 
-openlog('openthc-bong', LOG_ODELAY | LOG_PID, LOG_LOCAL0);
-
 // Lock
 $lock = new \OpenTHC\CLI\Lock(implode('/', [ __FILE__, $cli_args['--license'] ]));
 if ( ! $lock->create()) {
