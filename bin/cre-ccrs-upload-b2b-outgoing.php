@@ -24,30 +24,21 @@ function _cre_ccrs_upload_b2b_outgoing($cli_args)
 		'object' => 'b2b/outgoing',
 		'force' => $cli_args['--force']
 	]);
-	// if (202 == $uphelp->getStatus()) {
-	// 	return 0;
-	// }
-	switch ($uphelp->getStatus()) {
-	case 102: // Pending, So Wait?
-		return;
-	case 202: // Status Good
-		break;
+	if (202 == $uphelp->getStatus()) {
+		return 0;
 	}
 
-	$dbc = _dbc();
+	// Get CRE Configuration
+	$cfg = \OpenTHC\CRE::getConfig('usa-wa');
+	$tz0 = new DateTimezone($cfg['tz']);
+	$cre_service_key = $cfg['service-sk'];
 
-	$tz0 = new DateTimezone(\OpenTHC\Config::get('cre/usa/wa/ccrs/tz'));
-	$cre_service_key = \OpenTHC\Config::get('cre/usa/wa/ccrs/service-key');
+	$dbc = _dbc();
 
 	$License = _load_license($dbc, $cli_args['--license']);
 
 	// CSV Data
-	$req_ulid = _ulid();
 	$csv_data = [];
-	// $csv_data[] = [ '-canary-', '-canary-', "B2B_OUTGOING UPLOAD $req_ulid", '-canary-', '0', '', '-canary-', '-system-', date('m/d/Y'), '', '', 'UPDATE' ];
-	$csv_head = explode(',', 'LicenseNumber,SoldToLicenseNumber,InventoryExternalIdentifier,PlantExternalIdentifier,SaleType,SaleDate,Quantity,UnitPrice,Discount,SalesTax,OtherTax,SaleExternalIdentifier,SaleDetailExternalIdentifier,CreatedBy,CreatedDate,UpdatedBy,UpdatedDate,Operation');
-	$csv_name = sprintf('Sale_%s_%s.csv', $cre_service_key, $req_ulid);
-	$col_size = count($csv_head);
 
 	// Go By Transaction
 	$sql = <<<SQL
@@ -57,9 +48,11 @@ function _cre_ccrs_upload_b2b_outgoing($cli_args)
 		, b2b_outgoing.data
 		, b2b_outgoing.stat
 	FROM b2b_outgoing
-	JOIN license AS source_license ON b2b_outgoing.source_license_id = source_license.id
 	WHERE b2b_outgoing.source_license_id = :l0
-	  AND  b2b_outgoing.stat IN (100, 102, 200, 404)
+	  AND b2b_outgoing.stat IN (100, 102, 200, 404)
+	  -- AND b2b_outgoing.created_at >= '2023-01-01' AND b2b_outgoing.created_at < '2024-01-01'
+	  -- AND b2b_outgoing.created_at >= '2024-01-01' AND b2b_outgoing.created_at < '2025-01-01'
+	  AND b2b_outgoing.created_at >= '2025-01-01' AND b2b_outgoing.created_at < '2026-01-01'
 	ORDER BY b2b_outgoing.id
 	LIMIT 1000
 	SQL;
@@ -96,7 +89,7 @@ function _cre_ccrs_upload_b2b_outgoing($cli_args)
 			$src_b2b_item = json_decode($b2b_outgoing_item['data'], true);
 			$src_b2b_item = $src_b2b_item['@source'];
 
-
+			$cmd = '';
 			switch ($b2b_outgoing_item['stat']) {
 			case 100:
 			case 404:
@@ -226,16 +219,21 @@ function _cre_ccrs_upload_b2b_outgoing($cli_args)
 
 	}
 
-	$row_size = count($csv_data);
-	if ($row_size <= 1) {
+	// No Data, In Sync
+	if (empty($csv_data)) {
 		$uphelp->setStatus(202);
 		return;
 	}
 
+	$req_ulid = _ulid();
+	$csv_name = sprintf('Sale_%s_%s.csv', $cre_service_key, $req_ulid);
+	$csv_head = explode(',', 'LicenseNumber,SoldToLicenseNumber,InventoryExternalIdentifier,PlantExternalIdentifier,SaleType,SaleDate,Quantity,UnitPrice,Discount,SalesTax,OtherTax,SaleExternalIdentifier,SaleDetailExternalIdentifier,CreatedBy,CreatedDate,UpdatedBy,UpdatedDate,Operation');
+	$col_size = count($csv_head);
+
 	$csv_temp = fopen('php://temp', 'w');
 	\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'SubmittedBy',   'OpenTHC' ], $col_size, '')));
 	\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'SubmittedDate', date('m/d/Y') ], $col_size, '')));
-	\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'NumberRecords', $row_size ], $col_size, '')));
+	\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'NumberRecords', count($csv_data) ], $col_size, '')));
 	\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values($csv_head));
 	foreach ($csv_data as $row) {
 		\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, $row);
