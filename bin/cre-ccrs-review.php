@@ -227,7 +227,8 @@ function _eval_b2b_outgoing($dbc, $License)
 	JOIN b2b_outgoing_item ON b2b_outgoing.id = b2b_outgoing_item.b2b_outgoing_id
 	WHERE b2b_outgoing.source_license_id = :l0
 	  AND b2b_outgoing.created_at >= '2025-01-01'
-	  AND (b2b_outgoing.stat IN (400, 404) OR b2b_outgoing_item.stat IN (400, 404))
+	--   AND (b2b_outgoing.stat IN (400, 404)
+	  AND b2b_outgoing_item.stat IN (400, 404)
 	ORDER BY b2b_outgoing.source_license_id, b2b_outgoing_item.id
 	SQL;
 
@@ -261,6 +262,9 @@ function _eval_b2b_outgoing($dbc, $License)
 				// Upload Inventory
 				$oid = $rec['data']['@source']['inventory']['id'] ?: $rec['data']['@source']['lot']['id'];
 				$cmd = _sync_command($License, 'inventory', $oid);
+				echo "$cmd\n";
+
+				$cmd = _sync_command($License, 'b2b-outgoing', $rec['b2b_outgoing_id']);
 				echo "$cmd\n";
 
 				break;
