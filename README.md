@@ -1,14 +1,14 @@
 # Basic Object Normalization Gateway
 
-Interfaces with multiple Cannabis APIs (BioTrack, CCRS, Leafdata, Metrc).
+Interfaces with multiple Cannabis APIs (BioTrack, CCRS, Metrc).
 Normalizes to the OpenTHC API interfaces and data-models.
 
 ```mermaid
 sequenceDiagram
     App->>+Bong: Create Object (100)
     Bong->>+CRE: Upload Object (102)
-    CRE-->>-Bong: Success (202)
-    Bong-->>-App: Success (202)
+    CRE-->>-Bong: Success (201)
+    Bong-->>-App: Success (201)
 ```
 
 
@@ -16,8 +16,8 @@ sequenceDiagram
 
 1. Clone this Repository to somewhere clever `git clone $REPO /opt/openthc/bong`
 1. Update the Apache Config (use `etc/apache2-example.conf` as a template)
-1. Create the Base Database from `etc/00-schema.sql` and add the triggers.
-1. Configure in `etc/config.php`
+1. Create the Base Database from `etc/sql/*.sql` and add the triggers.
+1. Configure in `etc/config.php` from `etc/config-example.php`
 
 
 ## Connect
