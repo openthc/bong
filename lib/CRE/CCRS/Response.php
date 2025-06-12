@@ -1,6 +1,8 @@
 <?php
 /**
+ * CCRS Response Handler
  *
+ * SPDX-License-Identifier: MIT
  */
 
 namespace OpenTHC\Bong\CRE\CCRS;
@@ -239,6 +241,7 @@ class Response {
 			case 'Area is required':
 			case 'Area name is over 75 characters':
 			case 'CreatedDate must be a date':
+			case 'Created Date cannot be a date past submission date for Insert':
 			case 'DestinationLicenseeEmailAddress is required':
 			case 'DestinationLicenseePhone is required':
 			case 'DestinationLicenseePhone must not exceed 14 characters':
@@ -252,6 +255,7 @@ class Response {
 			case 'FromLicenseNumber is required':
 			case 'FromLicenseNumber must be numeric':
 			case 'HarvestDate must be a date':
+			case 'If Useable Cannabis is selected Unit Weight Gram cannot be Zero':
 			case 'InitialQuantity is required':
 			case 'InitialQuantity must be numeric':
 			case 'Invalid Adjustment Reason':
@@ -291,15 +295,18 @@ class Response {
 			case 'Name is over 50 characters': // Variety
 			case 'Name is over 75 characters':
 			case 'Name is required':
+			case 'Only Medical Sales Excise tax can be 0':
 			case 'Operation is invalid must be INSERT UPDATE or DELETE':
 			case 'OriginLicenseeEmailAddress is required':
 			case 'OriginLicenseePhone is required':
 			case 'OriginLicenseePhone must not exceed 14 characters':
+			case 'OriginLicenseNumber is required':
 			case 'OriginLicenseNumber must be numeric':
 			case 'Product is required':
 			case 'Quantity is required':
 			case 'Quantity must be numeric':
 			case 'QuantityOnHand must be numeric':
+			case 'QuantityOnHand is greater than InitialQuantity':
 			case 'SaleDetailExternalIdentifier is required':
 			case 'SaleExternalIdentifier is required':
 			case 'SoldToLicenseNumber required for wholesale':
@@ -309,9 +316,11 @@ class Response {
 			case 'ToLicenseNumber is required':
 			case 'ToLicenseNumber must be numeric':
 			case 'TotalCost must be numeric':
+			case 'Total Cost cannot equal zero':
 			case 'UnitPrice is required':
 			case 'UnitPrice must be numeric':
 			case 'UpdatedBy is required for Update or Delete Operations':
+			case 'Updated Date cannot be a date past submission date for Update':
 			case 'UpdatedDate is required for Update or Delete Operations':
 			case 'UpdatedDate must be a date for Update and Delete operations':
 			case 'VehicleColor is required':
