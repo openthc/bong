@@ -10,6 +10,8 @@ use \Edoceo\Radix\DB\SQL;
 
 require_once(__DIR__ . '/../boot.php');
 
+openlog('openthc-bong', LOG_ODELAY | LOG_PERROR | LOG_PID, LOG_LOCAL0);
+
 // Lock
 $lock = new \OpenTHC\CLI\Lock(implode('/', [ __FILE__, $cli_args['--license'] ]));
 if ( ! $lock->create()) {
@@ -26,7 +28,12 @@ $tz0 = new DateTimezone($cfg['tz']);
 $dt0 = new \DateTime('now', $tz0);
 
 // Process incoming message queue
-$message_file_list = glob(sprintf('%s/var/ccrs-incoming-mail/*.txt', APP_ROOT));
+$message_path = sprintf('%s/var/ccrs-incoming-mail/*.txt', APP_ROOT);
+$x = getenv('IMPORT_FAIL');
+if ( ! empty($x)) {
+	$message_path = sprintf('%s/var/ccrs-incoming-fail/*.txt', APP_ROOT);
+}
+$message_file_list = glob($message_path);
 syslog(LOG_DEBUG, sprintf('Import Message File Count: %d', count($message_file_list)) );
 foreach ($message_file_list as $message_file)
 {
@@ -106,7 +113,7 @@ foreach ($message_file_list as $message_file)
 			$upload_result = _ccrs_pull_failure_data($RES, $message_file);
 			break;
 		case 'b2b-outgoing-manifest':
-			$upload_result = _ccrs_pull_manifest_file($message_file, $RES->res_file);
+			$upload_result = _ccrs_pull_manifest_file($message_file, $RES);
 			break;
 		case 'ccrs-success':
 			$upload_result = _ccrs_pull_success($RES, $message_file, $message_head, $message_body);
@@ -146,13 +153,29 @@ foreach ($file_list as $file) {
 		$RES->req_type = $m[1];
 		$RES->req_ulid = $m[2];
 		$RES->res_file = $file;
-		$RES->ccrs_timestamp = $m[3];
+		$RES->ccrs_datetime = $m[3];
+		_csv_file_incoming($RES, $file);
+	} elseif (preg_match('/(\w+)_\w+_(\w+)\.csv/', $file, $m)) {
+
+	// } elseif (preg_match('/Area_\w+_(\w+)\.csv/', $file, $m)) {
+	//	// This was a odd one that showed up, was missing the upload ID in the filename
+	//	// Which is usually present
+	//	// Exception: Cannot match file "/opt/openthc/bong/var/ccrs-incoming/Area_AF0E72B77C_20250215T174846049.csv"'
+	//  // Exception: Cannot match file "/opt/openthc/bong/var/ccrs-incoming/InventoryTransfer_AF0E72B77C_20250317T100653185.csv"
+	//	// And that file was a test upload
+		$RES = new \OpenTHC\Bong\CRE\CCRS\Response('');
+		$RES->req_type = $m[1];
+		$RES->req_ulid = '';
+		$RES->res_file = $file;
+		$RES->ccrs_datetime = $m[2];
 		_csv_file_incoming($RES, $file);
 	} elseif (preg_match('/Manifest\w+_\w+_(\w+)\.csv/', $file)) {
 		$RES = new \OpenTHC\Bong\CRE\CCRS\Response('');
 		$RES->res_file = $file;
-		$RES->ccrs_timestamp = $m[1];
+		$RES->ccrs_datetime = $m[1];
 		_csv_file_incoming($RES, $file);
+	} else {
+		throw new \Exception(sprintf('Cannot match file "%s"', $file));
 	}
 }
 
@@ -226,6 +249,9 @@ function _ccrs_pull_success($RES, $message_file) { //
 	if ( ! rename($message_file, $message_file_done)) {
 		throw new \Exception("Cannot archive incoming email");
 	}
+
+	// Get some Time Stats
+
 
 	return [
 		'code' => 200,
@@ -314,10 +340,11 @@ function _ccrs_pull_failure_full($RES, string $message_file) : int
 /**
  * Pull the Manifest PDF File into BONG
  */
-function _ccrs_pull_manifest_file(string $message_file, string $output_file) : array {
+function _ccrs_pull_manifest_file(string $message_file, $RES) : array {
 
 	global $dbc;
 
+	$output_file = $RES->res_file;
 	echo "_ccrs_pull_manifest_file($message_file, $output_file)\n";
 
 	if (empty($output_file)) {
@@ -342,11 +369,35 @@ function _ccrs_pull_manifest_file(string $message_file, string $output_file) : a
 		':m0' => $manifest_id
 	]);
 	if (empty($b2b_outgoing['id'])) {
+		syslog(LOG_NOTICE, "Manifest '$manifest_id' from attachment filename not found");
+		// var_dump($RES);
+		$src = $dbc->fetchOne('SELECT source_data FROM log_upload WHERE id = :r0', [
+			':r0' => $RES->req_ulid
+		]);
+		// $src = json_decode($src);
+		// $src_data = $src->data;
+		// var_dump($src_data);
+		if (preg_match('/ExternalManifestIdentifier,(\w+),,,/', $src, $m)) {
+			// var_dump($m);
+			$manifest_id = $m[1];
+			$b2b_outgoing = $dbc->fetchRow('SELECT id, source_license_id FROM b2b_outgoing WHERE id = :m0', [
+				':m0' => $manifest_id
+			]);
+		}
+	}
+	if (empty($b2b_outgoing['id'])) {
+		$message_file_fail = str_replace('/ccrs-incoming-mail/', '/ccrs-incoming-fail/', $message_file);
+		// rename($message_file, $message_file_fail);
+		// var_dump($RES);
+		// exit;
 		throw new \Exception("Failed to Process: '$message_file'; Missing B2B Outgoing '$manifest_id' [CCP-186]");
 	}
+
+
 	$License = $dbc->fetchRow('SELECT id, company_id FROM license WHERE id = :l0', [
 		':l0' => $b2b_outgoing['source_license_id']
 	]);
+
 
 	// Update b2b_outgoing with some stat or flag?
 	$sql = <<<SQL
@@ -371,7 +422,7 @@ function _ccrs_pull_manifest_file(string $message_file, string $output_file) : a
 	$message_data = file_get_contents($message_file);
 	if (preg_match('/Manifest_\w+_(\w+)_\d+T\d+\.csv/', $message_data, $m)) {
 
-		$req_ulid = $m[1];
+		// $req_ulid = $m[1];
 
 		// Need to Trap the Email Here Too
 		$sql = <<<SQL
@@ -379,7 +430,7 @@ function _ccrs_pull_manifest_file(string $message_file, string $output_file) : a
 		WHERE id = :r0
 		SQL;
 		$res = $dbc->query($sql, [
-			':r0' => $req_ulid,
+			':r0' => $RES->req_ulid,
 			':d0' => json_encode([
 				'type' => '',
 				'data' => '',
@@ -643,6 +694,7 @@ function _csv_file_incoming($RES, string $csv_file) : bool
 				break;
 
 			default:
+
 				$rec_data = $dbc->fetchOne("SELECT data FROM {$tab_name} WHERE license_id = :l0 AND id = :pk", [
 					':l0' => $RES->license_id,
 					':pk' => $csv_line['@id']
@@ -682,7 +734,14 @@ function _csv_file_incoming($RES, string $csv_file) : bool
 					':d1' => json_encode($rec_data)
 				];
 				$chk = $dbc->query($sql, $arg);
-				if (1 != $chk) {
+				switch ($chk) {
+				case 0:
+					// No Record to Update?
+					break;
+				case 1:
+					// OK
+					break;
+				default:
 					var_dump($csv_line);
 					var_dump($rec_data);
 					echo "FAIL: $chk != 1; ";
@@ -792,17 +851,15 @@ function _csv_file_incoming($RES, string $csv_file) : bool
 		];
 		$dbc->query($sql, $arg);
 
-		// Update the Other License Records
-		$sql = 'UPDATE variety SET stat = 403 WHERE license_id = :l0 AND stat != 403';
-		$dbc->query($sql, $arg);
+		// Update the Other Object Records
+		// $sql = 'UPDATE variety SET stat = 403 WHERE license_id = :l0 AND stat != 403';
+		// $dbc->query($sql, $arg);
 
-		// Update the Other License Records
-		$sql = 'UPDATE section SET stat = 403 WHERE license_id = :l0 AND stat != 403';
-		$dbc->query($sql, $arg);
+		// $sql = 'UPDATE section SET stat = 403 WHERE license_id = :l0 AND stat != 403';
+		// $dbc->query($sql, $arg);
 
-		// Update the Other License Records
-		$sql = 'UPDATE product SET stat = 403 WHERE license_id = :l0 AND stat != 403';
-		$dbc->query($sql, $arg);
+		// $sql = 'UPDATE product SET stat = 403 WHERE license_id = :l0 AND stat != 403';
+		// $dbc->query($sql, $arg);
 
 	} else {
 
