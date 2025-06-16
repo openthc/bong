@@ -9,11 +9,6 @@ class BioTrack2024 extends \OpenTHC\Bong\CRE\Base
 {
 	protected $base_url = 'https://licensee-api.sandbox-ny.biotr.ac/';
 
-	function __construct($cfg)
-	{
-
-	}
-
 	/**
 	 *
 	 */
@@ -44,5 +39,12 @@ class BioTrack2024 extends \OpenTHC\Bong\CRE\Base
 		return new BioTrack2024\Section($this);
 	}
 
+	/**
+	 *
+	 */
+	function vehicle()
+	{
+		return new BioTrack2024\Vehicle($this);
+	}
 
 }
