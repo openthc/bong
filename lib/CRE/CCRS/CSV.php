@@ -107,7 +107,7 @@ class CSV
 				break;
 			case 'B2B/OUTGOING': // OpenTHC Name
 				$this->_csv_type = 'Sale';
-				$this->_col_list = explode(',', 'LicenseNumber,SoldToLicenseNumber,InventoryExternalIdentifier,PlantExternalIdentifier,SaleType,SaleDate,Quantity,UnitPrice,Discount,SalesTax,OtherTax,SaleExternalIdentifier,SaleDetailExternalIdentifier,CreatedBy,CreatedDate,UpdatedBy,UpdatedDate,Operation');
+				$this->_col_list = explode(',', 'LicenseNumber,SoldToLicenseNumber,InventoryExternalIdentifier,PlantExternalIdentifier,SaleType,SaleDate,Quantity,UnitPrice,Discount,RetailsSalesTax,CannabisExciseTax,SaleExternalIdentifier,SaleDetailExternalIdentifier,CreatedBy,CreatedDate,UpdatedBy,UpdatedDate,Operation');
 				break;
 			// case 'B2B/OUTGOING/NOTICE': // OpenTHC Name
 			// case 'MANIFEST': // CCRS Name
