@@ -132,7 +132,7 @@ class Export
 		$csv_name = $csv->getName();
 		$csv_temp = $csv->getData('stream');
 
-		_upload_to_queue_only($this->_License, $csv_name, $csv_temp);
+		\OpenTHC\Bong\CRE\CCRS\Upload::enqueue($this->_License, $csv_name, $csv_temp);
 
 		$uphelp->setStatus(102);
 	}

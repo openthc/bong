@@ -28,12 +28,7 @@ class Export
 			'object' => 'crop',
 			'force' => $force
 		]);
-
-		// Only Create Upload if Needed
-		$obj_stat = $uphelp->getStatus();
-		switch ($obj_stat) {
-		case 102: // Pending
-		case 202: // Good
+		if (202 == $uphelp->getStatus()) {
 			return;
 		}
 
@@ -44,7 +39,7 @@ class Export
 		$dbc = _dbc();
 
 		$arg = [
-			':l0' => $this->License['id']
+			':l0' => $this->_License['id']
 		];
 
 		$sql = <<<SQL
@@ -54,6 +49,7 @@ class Export
 		  AND stat IN (100, 102, 200, 404)
 		ORDER BY id
 		SQL;
+
 		$res_source = $dbc->fetchAll($sql, $arg);
 
 		foreach ($res_source as $rec_source) {
@@ -102,7 +98,7 @@ class Export
 				continue;
 			}
 
-			$rec_export = $this->createRecord($rec_source);
+			$rec_export = $this->createRecord($rec_source, $cmd);
 
 			$csv->addRow($rec_export);
 
@@ -117,7 +113,7 @@ class Export
 		$csv_name = $csv->getName();
 		$csv_temp = $csv->getData('stream');
 
-		_upload_to_queue_only($this->_License, $csv_name, $csv_temp);
+		\OpenTHC\Bong\CRE\CCRS\Upload::enqueue($this->_License, $csv_name, $csv_temp);
 
 		$uphelp->setStatus(102);
 
@@ -126,7 +122,7 @@ class Export
 	/**
 	 * Format from OpenTHC to CCRS
 	 */
-	function createRecord($src_record)
+	function createRecord($rec_source, $cmd)
 	{
 		$rec_source['data'] = json_decode($rec_source['data'], true);
 
@@ -143,7 +139,7 @@ class Export
 		}
 
 		$obj = [
-			$this->License['code']
+			$this->_License['code']
 			, $rec_source['id']
 			, CCRS::sanatize($rec_source['data']['@source']['section']['name'], 50)
 			, CCRS::sanatize($rec_source['data']['@source']['variety']['name'], 100)
@@ -160,6 +156,10 @@ class Export
 			, '' // $dtU->format('m/d/Y')
 			, $cmd
 		];
+
+		if (empty($rec_source['data']['@source']['growthphase'])) {
+			$rec_source['data']['@source']['growthphase'] = 'Growing';
+		}
 
 		switch ($rec_source['data']['@source']['growthphase']) {
 		case 'Flowering':
@@ -184,6 +184,7 @@ class Export
 			$obj[6] = 'Immature';
 			break;
 		default:
+			var_dump($rec_source);
 			throw new \Exception('What to do?');
 		}
 

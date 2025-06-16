@@ -223,10 +223,8 @@ class Export
 		foreach ($csv_data as $row) {
 			CCRS::fputcsv_stupidly($csv_temp, $row);
 		}
-		fseek($csv_temp, 0);
 
-		// Upload
-		_upload_to_queue_only($this->_License, $csv_name, $csv_temp);
+		\OpenTHC\Bong\CRE\CCRS\Upload::enqueue($this->_License, $csv_name, $csv_temp);
 
 		$uphelp->setStatus(102);
 	}
