@@ -23,6 +23,9 @@ class Adjust extends \OpenTHC\Bong\Controller\Base\Update
 			'id' => $ARG['id']
 		];
 		$source_data = \Opis\JsonSchema\Helper::toJSON($source_data);
+		if (empty($source_data->id)) {
+			$source_data->id = _ulid();
+		}
 		// $source_data->inventory_id = $ARG['id'];
 		$source_data->qty = floatval($source_data->qty);
 
@@ -44,7 +47,7 @@ class Adjust extends \OpenTHC\Bong\Controller\Base\Update
 
 		$arg = [
 			':o1' => $source_data->id,
-			':i1' => $ARG['id'],
+			':i1' => $source_data->inventory->id,
 			':l0' => $_SESSION['License']['id'],
 			':n0' => $source_data->type,
 			':d0' => json_encode([
