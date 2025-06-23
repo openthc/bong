@@ -27,6 +27,7 @@ foreach ($license_list as $License) {
 
 	// _eval_object($dbc, $License, 'crop_finish');
 	// _eval_object($dbc, $License, 'inventory_adjust');
+
 	if (in_array('b2b-outgoing', $obj_want_list)) {
 		_eval_b2b_outgoing($dbc, $License);
 	}
@@ -46,7 +47,6 @@ function _eval_object($dbc, $License, string $obj)
 	SELECT id, data
 	FROM $obj
 	WHERE license_id = :l0
-		AND created_at >= '2025-01-01'
 		AND stat = 400
 		-- Filter to just find specific errors
 		-- AND data::text LIKE '%Invalid Area%'
@@ -125,6 +125,7 @@ function _eval_object($dbc, $License, string $obj)
 				break;
 
 			case 'HarvestDate must be a date':
+			case 'Total Cost cannot equal zero':
 				// Known errors w/no special case handling, just re-sync
 				break;
 			default:
@@ -153,7 +154,8 @@ function _eval_b2b_incoming($dbc, $License)
 	FROM b2b_incoming
 	JOIN b2b_incoming_item ON b2b_incoming.id = b2b_incoming_item.b2b_incoming_id
 	WHERE b2b_incoming.target_license_id = :l0
-	  AND b2b_incoming.created_at >= '2025-01-01'
+	  AND b2b_incoming.created_at >= '2024-01-01'
+	--   AND b2b_incoming.created_at >= '2021-01-01' AND b2b_incoming.created_at < '2023-01-01'
 	  AND b2b_incoming_item.stat IN (400, 404)
 	ORDER BY b2b_incoming.target_license_id, b2b_incoming_item.id
 	SQL;
@@ -226,7 +228,7 @@ function _eval_b2b_outgoing($dbc, $License)
 	FROM b2b_outgoing
 	JOIN b2b_outgoing_item ON b2b_outgoing.id = b2b_outgoing_item.b2b_outgoing_id
 	WHERE b2b_outgoing.source_license_id = :l0
-	  AND b2b_outgoing.created_at >= '2025-01-01'
+	--   AND b2b_outgoing.created_at >= '2025-01-01'
 	--   AND (b2b_outgoing.stat IN (400, 404)
 	  AND b2b_outgoing_item.stat IN (400, 404)
 	ORDER BY b2b_outgoing.source_license_id, b2b_outgoing_item.id
