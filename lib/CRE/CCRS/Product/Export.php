@@ -18,6 +18,7 @@ class Export
 	function __construct($License)
 	{
 		$this->_License = $License;
+		$this->_tz0 = new \DateTimezone(\OpenTHC\Config::get('cre/usa/wa/ccrs/tz'));
 	}
 
  	/**
@@ -36,8 +37,6 @@ class Export
 		}
 
 		$dbc = _dbc();
-
-		$tz0 = new \DateTimezone(\OpenTHC\Config::get('cre/usa/wa/ccrs/tz'));
 
 		// Get Data
 		$csv_data = [];
@@ -122,8 +121,10 @@ class Export
 			}
 
 
-			$dtC = new \DateTime($product['created_at'], $tz0);
-			$dtU = new \DateTime($product['updated_at'], $tz0);
+			$dtC = new \DateTime($product['created_at'], $this->_tz0);
+			$dtC->setTimezone($this->_tz0);
+			$dtU = new \DateTime($product['updated_at'], $this->_tz0);
+			$dtU->setTimezone($this->_tz0);
 
 			$row = [];
 

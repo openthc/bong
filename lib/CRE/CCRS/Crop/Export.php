@@ -18,6 +18,7 @@ class Export
 	function __construct($License)
 	{
 		$this->_License = $License;
+		$this->_tz0 = new \DateTimezone(\OpenTHC\Config::get('cre/usa/wa/ccrs/tz'));
 	}
 
 	function create($force=false)
@@ -126,15 +127,18 @@ class Export
 	{
 		$rec_source['data'] = json_decode($rec_source['data'], true);
 
-		$dtC = new \DateTime($rec_source['created_at'], $tz0);
+		$dtC = new \DateTime($rec_source['created_at'], $this->_tz0);
+		$dtC->setTimezone($this->_tz0);
 		$created_at_f = $dtC->format('m/d/Y');
 
-		$dtU = new \DateTime($rec_source['updated_at'], $tz0);
+		$dtU = new \DateTime($rec_source['updated_at'], $this->_tz0);
+		$dtU->setTimezone($this->_tz0);
 		$updated_at_f = $dtU->format('m/d/Y');
 
 		$collect_at_f = '';
 		if ( ! empty($rec_source['data']['@source']['collect_at'])) {
-			$dtH = new \DateTime($rec_source['data']['@source']['collect_at'], $tz0);
+			$dtH = new \DateTime($rec_source['data']['@source']['collect_at'], $this->_tz0);
+			$dtH->setTimezone($this->_tz0);
 			$collect_at_f = $dtH->format('m/d/Y');
 		}
 

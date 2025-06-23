@@ -18,6 +18,7 @@ class Export
 	function __construct($License)
 	{
 		$this->_License = $License;
+		$this->_tz0 = new \DateTimezone(\OpenTHC\Config::get('cre/usa/wa/ccrs/tz'));
 	}
 
 	/**
@@ -40,6 +41,7 @@ class Export
 		// $cre = new \OpenTHC\CRE\CCRS();
 		// $csv = $cre->createCSV('variety');
 		// $cre->saveCSV($csv_data?) ?
+
 		$api_code = \OpenTHC\Config::get('cre/usa/wa/ccrs/service-key');
 		$csv = new \OpenTHC\Bong\CRE\CCRS\CSV($api_code, 'variety');
 
@@ -57,6 +59,9 @@ class Export
 		]);
 		foreach ($res_variety as $variety) {
 
+			$dtC = new \DateTime($variety['created_at'], $this->_tz0);
+			$dtC->setTimezone($this->_tz0);
+
 			switch ($variety['stat']) {
 				case 100:
 
@@ -65,7 +70,7 @@ class Export
 						, CCRS::sanatize($variety['name'], 100)
 						, 'Hybrid'
 						, '-system-'
-						, date('m/d/Y')
+						, $dtC->format('m/d/Y')
 					]);
 
 					$dbc->query('UPDATE variety SET stat = 102, data = data #- \'{ "@result" }\' WHERE id = :s0', [
@@ -89,7 +94,7 @@ class Export
 						, CCRS::sanatize($variety['name'], 100)
 						, 'Hybrid'
 						, '-system-'
-						, date('m/d/Y')
+						, $dtC->format('m/d/Y')
 					]);
 
 					$dbc->query('UPDATE variety SET stat = 202, data = data #- \'{ "@result" }\' WHERE id = :x0', [

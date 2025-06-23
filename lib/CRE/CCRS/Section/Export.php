@@ -18,6 +18,7 @@ class Export
 	function __construct($License)
 	{
 		$this->_License = $License;
+		$this->_tz0 = new \DateTimezone(\OpenTHC\Config::get('cre/usa/wa/ccrs/tz'));
 	}
 
 	/**
@@ -40,8 +41,6 @@ class Export
 		$api_code = \OpenTHC\Config::get('cre/usa/wa/ccrs/service-key');
 		$csv = new \OpenTHC\Bong\CRE\CCRS\CSV($api_code, 'section');
 
-		$tz0 = new \DateTimezone(\OpenTHC\Config::get('cre/usa/wa/ccrs/tz'));
-
 		// Get Data
 		$csv_data = [];
 		$sql = <<<SQL
@@ -61,10 +60,10 @@ class Export
 		$res_section = $dbc->fetchAll($sql, $arg);
 		foreach ($res_section as $section) {
 
-			$dtC = new \DateTime($section['created_at'], $tz0);
-			$dtC->setTimezone($tz0);
-			$dtU = new \DateTime($section['updated_at'], $tz0);
-			$dtU->setTimezone($tz0);
+			$dtC = new \DateTime($section['created_at'], $this->_tz0);
+			$dtC->setTimezone($this->_tz0);
+			$dtU = new \DateTime($section['updated_at'], $this->_tz0);
+			$dtU->setTimezone($this->_tz0);
 
 			$cmd = '';
 			switch ($section['stat']) {
