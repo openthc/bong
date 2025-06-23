@@ -62,7 +62,9 @@ class Export
 		foreach ($res_section as $section) {
 
 			$dtC = new \DateTime($section['created_at'], $tz0);
+			$dtC->setTimezone($tz0);
 			$dtU = new \DateTime($section['updated_at'], $tz0);
+			$dtU->setTimezone($tz0);
 
 			$cmd = '';
 			switch ($section['stat']) {

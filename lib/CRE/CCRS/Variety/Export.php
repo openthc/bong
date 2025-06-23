@@ -74,15 +74,7 @@ class Export
 
 					break;
 
-				case 102: // Upload a Second Time, No Flag
-
-					$csv->addRow([
-						$this->_License['code'] // v1
-						, CCRS::sanatize($variety['name'], 100)
-						, 'Hybrid'
-						, '-system-'
-						, date('m/d/Y')
-					]);
+				case 102:
 
 					$dbc->query('UPDATE variety SET stat = 200, data = data #- \'{ "@result" }\' WHERE id = :s0', [
 						':s0' => $variety['id'],
@@ -118,7 +110,7 @@ class Export
 		$csv_name = $csv->getName();
 		$csv_temp = $csv->getData('stream');
 
-		_upload_to_queue_only($this->_License, $csv_name, $csv_temp);
+		\OpenTHC\Bong\CRE\CCRS\Upload::enqueue($this->_License, $csv_name, $csv_temp);
 
 		$uphelp->setStatus(102);
 
