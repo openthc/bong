@@ -313,6 +313,7 @@ class Response {
 			case 'Strain is required':
 			case 'Strain Name reported is not linked to the license number. Please ensure the strain being reported belongs to the licensee':
 			case 'ToInventoryExternalIdentifier is required':
+			case 'ToLicense cannot be the same license number as FromLicense':
 			case 'ToLicenseNumber is required':
 			case 'ToLicenseNumber must be numeric':
 			case 'TotalCost must be numeric':
