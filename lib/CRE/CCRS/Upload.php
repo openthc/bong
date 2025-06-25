@@ -20,6 +20,11 @@ class Upload
 	 */
 	static function enqueue(array $License, string $csv_name, $csv_data)
 	{
+		// If a Stream, then Rewind
+		if (is_resource($csv_data)) {
+			fseek($csv_data, 0);
+		}
+
 		$url_base = \OpenTHC\Config::get('openthc/bong/origin');
 
 		$cfg = array(
@@ -60,13 +65,20 @@ class Upload
 
 		$res = $api_bong->post('/upload/outgoing', $arg);
 
-		$hrc = $res->getStatusCode();
-		$buf = $res->getBody()->getContents();
-		$buf = trim($buf);
+		$ret = [];
+		$ret['code'] = $res->getStatusCode();
+		$ret['data'] = $res->getBody()->getContents();
 
-		echo "## BONG $csv_name = $hrc\n";
-		echo ">> $buf ..\n";
+		switch ($ret['code']) {
+		case 200:
+		case 201:
+			// OK
+			break;
+		default:
+			throw new \Exception('Invalid Response from BONG on Upload');
+		}
 
+		return $ret;
 	}
 
 	/**
@@ -98,10 +110,13 @@ class Upload
 		}
 
 		$max_age = 86400; // 24 hours
-		$max_age = 60 * 60 * 8; // 8 hours
 		switch ($tmp_stat) {
 		case 102:
-			$max_age = 60 * 60; // 60 minutes
+			// $max_age = 60 * 30;  // 30 minutes
+			// $max_age = 60 * 60;  // 60 minutes
+			// $max_age = 60 * 120; // 120 minutes
+			// $max_age = 60 * 60 * 4; // 240 minutes, 4h gap for Re-Upload
+			$max_age = 60 * 60 * 8; // 8 hours -- CCRS keeps getting slower /djb 2025-05-05
 			break;
 		}
 

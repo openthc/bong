@@ -55,6 +55,14 @@ foreach ($obj_list as $obj) {
 			$csv = new \OpenTHC\Bong\CRE\CCRS\Crop\Export($License);
 			$csv->create($cli_args['--force']);
 			break;
+		case 'inventory':
+			$csv = new \OpenTHC\Bong\CRE\CCRS\Inventory\Export($License);
+			$csv->create($cli_args['--force']);
+			break;
+		case 'inventory-adjust':
+			$csv = new \OpenTHC\Bong\CRE\CCRS\Inventory\Adjust\Export($License);
+			$csv->create($cli_args['--force']);
+			break;
 		case 'product':
 			$csv = new \OpenTHC\Bong\CRE\CCRS\Product\Export($License);
 			$csv->create($cli_args['--force']);
@@ -112,59 +120,5 @@ function _load_license($dbc, $license_id, $object_table=null)
 	}
 
 	return $License;
-
-}
-
-/**
- *
- */
-function _upload_to_queue_only(array $License, string $csv_name, $csv_data)
-{
-	$url_base = \OpenTHC\Config::get('openthc/bong/origin');
-
-	$cfg = array(
-		'base_uri' => $url_base,
-		'allow_redirects' => false,
-		'cookies' => false,
-		'http_errors' => false,
-		'verify' => false,
-	);
-	$api_bong = new \GuzzleHttp\Client($cfg);
-
-	$arg = [
-		'headers' => [
-			'content-name' => basename($csv_name),
-			'content-type' => 'text/csv',
-			'openthc-company' => $License['company_id'], // v0
-			'openthc-company-id' => $License['company_id'], // v1
-			'openthc-license' => $License['id'], // v0
-			'openthc-license-id' => $License['id'], // v1
-			'openthc-license-code' => $License['code'],
-			'openthc-license-name' => $License['name'],
-			'openthc-disable-update' => true,
-		],
-		'body' => $csv_data // this resource is closed by Guzzle
-	];
-
-	if ( ! empty($_SERVER['argv'])) {
-		$argv = implode(' ', $_SERVER['argv']);
-		if (strpos($argv, '--dump')) {
-			if (is_resource($arg['body'])) {
-				$arg['body'] = stream_get_contents($arg['body']);
-			}
-			var_dump($arg['headers']);
-			echo ">>>\n{$arg['body']}###\n";
-			return;
-		}
-	}
-
-	$res = $api_bong->post('/upload/outgoing', $arg);
-
-	$hrc = $res->getStatusCode();
-	$buf = $res->getBody()->getContents();
-	$buf = trim($buf);
-
-	echo "## BONG $csv_name = $hrc\n";
-	echo ">> $buf ..\n";
 
 }
