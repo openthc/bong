@@ -24,7 +24,7 @@ if (empty($b2b['id'])) {
 $b2b['data'] = json_decode($b2b['data'], true);
 
 $req_ulid = _ulid();
-$req_code = sprintf('MANIFEST UPLOAD %s', $req_ulid);
+$req_code = sprintf('B2B_MANIFEST UPLOAD %s', $req_ulid);
 
 $b2b_helper = new \OpenTHC\CRE\CCRS\B2B();
 $csv_name = sprintf('Manifest_%s_%s.csv', $cre_service_key, $req_ulid);
