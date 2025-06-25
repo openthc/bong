@@ -31,6 +31,7 @@ function _cre_ccrs_upload_b2b_outgoing($cli_args)
 	// Get CRE Configuration
 	$cfg = \OpenTHC\CRE::getConfig('usa-wa');
 	$tz0 = new DateTimezone($cfg['tz']);
+	$dt0 = new \DateTime('now', $tz0);
 	$cre_service_key = $cfg['service-sk'];
 
 	$dbc = _dbc();
@@ -49,7 +50,7 @@ function _cre_ccrs_upload_b2b_outgoing($cli_args)
 		, b2b_outgoing.stat
 	FROM b2b_outgoing
 	WHERE b2b_outgoing.source_license_id = :l0
-	  AND b2b_outgoing.stat IN (100, 102, 200, 404)
+	  AND b2b_outgoing.stat IN (100, 102, 200, 400, 404)
 	  -- AND b2b_outgoing.created_at >= '2023-01-01' AND b2b_outgoing.created_at < '2024-01-01'
 	  -- AND b2b_outgoing.created_at >= '2024-01-01' AND b2b_outgoing.created_at < '2025-01-01'
 	  AND b2b_outgoing.created_at >= '2025-01-01' AND b2b_outgoing.created_at < '2026-01-01'
@@ -63,7 +64,9 @@ function _cre_ccrs_upload_b2b_outgoing($cli_args)
 	foreach ($res_b2b_outgoing as $b2b) {
 
 		$dtC = new DateTime($b2b['created_at'], $tz0);
+		$dtC->setTimezone($tz0);
 		$dtU = new DateTime($b2b['updated_at'], $tz0);
+		$dtU->setTimezone($tz0);
 
 		$src_b2b = json_decode($b2b['data'], true);
 		$src_b2b = $src_b2b['@source'];
@@ -84,11 +87,6 @@ function _cre_ccrs_upload_b2b_outgoing($cli_args)
 		$res_b2b_outgoing_item = $dbc->fetchAll($sql, $arg);
 		foreach ($res_b2b_outgoing_item as $b2b_outgoing_item) {
 
-			// echo "  ITEM: {$b2b_outgoing_item['id']} = {$b2b_outgoing_item['stat']}\n";
-
-			$src_b2b_item = json_decode($b2b_outgoing_item['data'], true);
-			$src_b2b_item = $src_b2b_item['@source'];
-
 			$cmd = '';
 			switch ($b2b_outgoing_item['stat']) {
 			case 100:
@@ -103,8 +101,10 @@ function _cre_ccrs_upload_b2b_outgoing($cli_args)
 				]);
 				break;
 			case 102:
-				// SECOND UPLOAD
 				$cmd = 'INSERT';
+				$dbc->query('UPDATE b2b_outgoing_item SET stat = 200, data = data #- \'{ "@result" }\' WHERE id = :s0', [
+					':s0' => $b2b_outgoing_item['id'],
+				]);
 				break;
 			case 200:
 				// Move to 202 -- will get error from CCRS if NOT Good
@@ -129,6 +129,9 @@ function _cre_ccrs_upload_b2b_outgoing($cli_args)
 				continue;
 			}
 
+			$src_b2b_item = json_decode($b2b_outgoing_item['data'], true);
+			$src_b2b_item = $src_b2b_item['@source'];
+
 			$rec = [
 				$License['code'] // LicenseNumber
 				, $src_b2b['target']['code'] ?: $src_b2b['target_license']['code'] // SoldToLicenseNumber
@@ -140,7 +143,7 @@ function _cre_ccrs_upload_b2b_outgoing($cli_args)
 				, floatval($src_b2b_item['unit_price']) // UnitPrice
 				, '0' // Discount
 				, '0' // SalesTax
-				, '0' // OtherTax
+				, '0' // CannabisExciseTax
 				, $src_b2b['id'] // SaleExternalIdentifier
 				, $src_b2b_item['id'] // SaleDetailExternalIdentifier
 				, '-system-' // CreatedBy
@@ -158,11 +161,13 @@ function _cre_ccrs_upload_b2b_outgoing($cli_args)
 				throw new \Exception('Invalid B2B Missing Target [UBO-130]');
 			}
 			if (empty($rec[2])) {
+				$msg = 'Invalid B2B Missing Inventory [UBO-135]';
+				echo "$msg\n";
 				// var_dump($src_b2b);
-				var_dump($b2b_outgoing_item);
+				// var_dump($b2b_outgoing_item);
 				echo "./bin/sync.php --company {$License['company_id']} --license {$License['id']} --object b2b-outgoing --object-id {$src_b2b['id']}\n";
 				continue 2;
-				// throw new \Exception('Invalid B2B Missing Inventory [UBO-135]');
+				// throw new \Exception($msg);
 			}
 			if (empty($rec[6])) {
 				// var_dump($src_b2b);
@@ -209,11 +214,11 @@ function _cre_ccrs_upload_b2b_outgoing($cli_args)
 			break;
 		case 1: // Awesome
 			$stat = $res_b2b_outgoing_item_stat[0]['stat'];
+			// echo "  UPDATE STAT {$b2b['stat']} => $stat\n";
 			$dbc->query('UPDATE b2b_outgoing SET stat = :s1 WHERE id = :b0', [
 				':b0' => $b2b['id'],
 				':s1' => $stat,
 			]);
-			echo "  UPDATE STAT {$b2b['stat']} => $stat\n";
 			break;
 		}
 
@@ -227,21 +232,22 @@ function _cre_ccrs_upload_b2b_outgoing($cli_args)
 
 	$req_ulid = _ulid();
 	$csv_name = sprintf('Sale_%s_%s.csv', $cre_service_key, $req_ulid);
-	$csv_head = explode(',', 'LicenseNumber,SoldToLicenseNumber,InventoryExternalIdentifier,PlantExternalIdentifier,SaleType,SaleDate,Quantity,UnitPrice,Discount,SalesTax,OtherTax,SaleExternalIdentifier,SaleDetailExternalIdentifier,CreatedBy,CreatedDate,UpdatedBy,UpdatedDate,Operation');
+	$csv_head = explode(',', 'LicenseNumber,SoldToLicenseNumber,InventoryExternalIdentifier,PlantExternalIdentifier,SaleType,SaleDate,Quantity,UnitPrice,Discount,RetailSalesTax,CannabisExciseTax,SaleExternalIdentifier,SaleDetailExternalIdentifier,CreatedBy,CreatedDate,UpdatedBy,UpdatedDate,Operation');
 	$col_size = count($csv_head);
+	// $req_data = [ '-canary-', '-canary-', "B2B_OUTGOING UPLOAD $req_ulid", '-canary-', '0', '', '-canary-', '-system-', date('m/d/Y'), '', '', 'UPDATE' ];
+	// array_unshift($csv_data, $req_data);
 
 	$csv_temp = fopen('php://temp', 'w');
+
 	\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'SubmittedBy',   'OpenTHC' ], $col_size, '')));
-	\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'SubmittedDate', date('m/d/Y') ], $col_size, '')));
+	\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'SubmittedDate', $dt0->format('m/d/Y') ], $col_size, '')));
 	\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'NumberRecords', count($csv_data) ], $col_size, '')));
 	\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values($csv_head));
 	foreach ($csv_data as $row) {
 		\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, $row);
 	}
-	fseek($csv_temp, 0);
 
-	// Upload
-	_upload_to_queue_only($License, $csv_name, $csv_temp);
+	OpenTHC\Bong\CRE\CCRS\Upload::enqueue($License, $csv_name, $csv_temp);
 
 	$uphelp->setStatus(102);
 

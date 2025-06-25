@@ -31,6 +31,7 @@ function _cre_ccrs_upload_b2b_incoming($cli_args)
 	// Get CRE Configuration
 	$cfg = \OpenTHC\CRE::getConfig('usa/wa');
 	$tz0 = new DateTimezone($cfg['tz']);
+	$dt0 = new \DateTime('now', $tz0);
 	$cre_service_key = $cfg['service-sk'];
 
 	$dbc = _dbc();
@@ -50,20 +51,21 @@ function _cre_ccrs_upload_b2b_incoming($cli_args)
 	FROM b2b_incoming
 	WHERE b2b_incoming.target_license_id = :l0
 	  AND b2b_incoming.stat IN (100, 102, 200, 404)
-	  -- AND b2b_incoming.created_at >= '2023-01-01' AND b2b_incoming.created_at < '2024-01-01'
-	  -- AND b2b_incoming.created_at >= '2024-01-01' AND b2b_incoming.created_at < '2025-01-01'
-	  AND b2b_incoming.created_at >= '2025-01-01' AND b2b_incoming.created_at < '2026-01-01'
 	ORDER BY b2b_incoming.id
-	LIMIT 100
+	LIMIT 1000
 	SQL;
 
-	$res_b2b_incoming = $dbc->fetchAll($sql, [ ':l0' => $License['id'] ]);
+	$arg = [ ':l0' => $License['id'] ];
+
+	$res_b2b_incoming = $dbc->fetchAll($sql, $arg);
 	foreach ($res_b2b_incoming as $b2b) {
 
 		$res_b2b_incoming_stat = [];
 
 		$dtC = new DateTime($b2b['created_at'], $tz0);
+		$dtC->setTimezone($tz0);
 		$dtU = new DateTime($b2b['updated_at'], $tz0);
+		$dtU->setTimezone($tz0);
 
 		$src_b2b = json_decode($b2b['data'], true);
 		$src_b2b = $src_b2b['@source'];
@@ -100,7 +102,7 @@ function _cre_ccrs_upload_b2b_incoming($cli_args)
 				break;
 			case 102:
 				// SECOND UPLOAD
-				$cmd = 'INSERT';
+				// $cmd = 'INSERT';
 				break;
 			case 200:
 				// Move to 202 -- will get error from CCRS if NOT Good
@@ -147,8 +149,8 @@ function _cre_ccrs_upload_b2b_incoming($cli_args)
 			$rec = [
 				$src_b2b['source']['code'] // FromLicenseNumber
 				, $License['code'] // ToLicenseNumber
-				, $src_b2b_item['source_lot']['id'] //   ['origin_lot_id'] // FromInventoryExternalIdentifier
-				, $src_b2b_item['target_lot']['id'] //   ['target_lot_id'] // ToInventoryExternalIdentifier
+				, $src_b2b_item['source_inventory']['id'] ?: $src_b2b_item['source_lot']['id'] // FromInventoryExternalIdentifier
+				, $src_b2b_item['target_inventory']['id'] ?: $src_b2b_item['target_lot']['id'] // ToInventoryExternalIdentifier
 				, $src_b2b_item['unit_count'] // Quantity
 				, $dtC->format('m/d/Y') // date('m/d/Y', strtotime($x['created_at']))
 				, $b2b_incoming_item['id'] // , sprintf('%s/%s', $x['b2b_sale_id'], $x['b2b_sale_item_id'])
@@ -158,6 +160,20 @@ function _cre_ccrs_upload_b2b_incoming($cli_args)
 				, $dtU->format('m/d/Y')
 				, $cmd
 			];
+
+			// Skip Bad Data
+			if (empty($rec[2])) {
+				$dbc->query('UPDATE b2b_incoming_item SET stat = 400 WHERE id = :i0', [
+					':i0' => $b2b_incoming_item['id'],
+				]);
+				continue;
+			}
+			if (empty($rec[3])) {
+				$dbc->query('UPDATE b2b_incoming_item SET stat = 400 WHERE id = :i0', [
+					':i0' => $b2b_incoming_item['id'],
+				]);
+				continue;
+			}
 
 			$csv_data[] = $rec;
 
@@ -206,17 +222,14 @@ function _cre_ccrs_upload_b2b_incoming($cli_args)
 	$csv_temp = fopen('php://temp', 'w');
 
 	\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'SubmittedBy',   'OpenTHC' ], $col_size, '')));
-	\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'SubmittedDate', date('m/d/Y') ], $col_size, '')));
+	\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'SubmittedDate', $dt0->format('m/d/Y') ], $col_size, '')));
 	\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'NumberRecords', count($csv_data) ], $col_size, '')));
 	\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values($csv_head));
 	foreach ($csv_data as $row) {
 		\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, $row);
 	}
 
-	// Upload
-	fseek($csv_temp, 0);
-
-	_upload_to_queue_only($License, $csv_name, $csv_temp);
+	OpenTHC\Bong\CRE\CCRS\Upload::enqueue($License, $csv_name, $csv_temp);
 
 	$uphelp->setStatus(102);
 
