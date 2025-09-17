@@ -5,14 +5,18 @@
 FROM openthc/web:latest
 
 #
-# Install
-COPY ./ /opt/openthc/bong
-RUN cd /opt/openthc/bong \
-	&& /opt/openthc/bong/make.sh
+# Environment
+ENV OPENTHC_SERVER_NAME="bong.docker.openthc.me"
 
 
 #
-# Copy
+# Install
+COPY ./ /opt/openthc/bong
+RUN /opt/openthc/bong/make.sh
+
+
+#
+# Configure
 COPY ./docker/apache2.conf         /etc/apache2/sites-enabled/bong.conf
 COPY ./docker/init.sh              /init.sh
 # COPY ./docker/cre-openthc.yaml   /opt/openthc/app/etc/cre/openthc.yaml
@@ -28,11 +32,6 @@ EXPOSE 80
 #
 # Volumes
 VOLUME [ "/opt/openthc/gfs" ]
-
-
-#
-# Environment
-ENV OPENTHC_SERVER_NAME="bong.docker.openthc.me"
 
 
 ENTRYPOINT [ "/init.sh" ]
