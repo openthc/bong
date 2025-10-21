@@ -1,13 +1,12 @@
 #!/bin/bash
 #
+# OpenTHC Bong Docker Init
 #
 
 set -o errexit
 set -o errtrace
 set -o nounset
 set -o pipefail
-
-# printenv | sort
 
 
 #
@@ -18,6 +17,21 @@ then
 	echo "DEBUG ENABLED"
 	phpenmod xdebug
 fi
+
+
+#
+# Uses Environment to Create App
+/opt/openthc/bong/docker/init.php
+
+
+#
+# Unsets All OpenTHC Environment Variables
+# Except for OPENTHC_SERVICE and OPENTHC_SERVER_NAME
+for var in $(env | cut -d= -f1 | grep OPENTHC | grep -v OPENTHC_SER)
+do
+	# echo "unset $var"
+	unset "$var"
+done
 
 
 #

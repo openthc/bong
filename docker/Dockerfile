@@ -6,11 +6,12 @@ FROM openthc/web:latest
 
 #
 # Environment
+ENV OPENTHC_SERVICE="bong"
 ENV OPENTHC_SERVER_NAME="bong.docker.openthc.org"
 
 #
 # Install
-COPY ./ /opt/openthc/bong
+COPY --exclude=docker/ ./ /opt/openthc/bong
 RUN /opt/openthc/bong/make.sh
 
 #
@@ -18,7 +19,7 @@ RUN /opt/openthc/bong/make.sh
 COPY ./docker/apache2.conf  /etc/apache2/sites-enabled/000-default.conf
 COPY ./docker/xdebug.ini    /etc/php/7.4/mods-available/xdebug.ini
 COPY ./docker/init.sh       /init.sh
-# COPY ./docker/cre-openthc.yaml   /opt/openthc/app/etc/cre/openthc.yaml
+COPY ./docker/init.php      /opt/openthc/bong/docker/init.php
 
 #
 # Volumes
@@ -30,4 +31,4 @@ EXPOSE 80
 
 #
 # Go!
-ENTRYPOINT [ "/init.sh" ]
+CMD [ "/init.sh" ]
