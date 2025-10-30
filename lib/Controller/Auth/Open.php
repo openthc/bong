@@ -78,9 +78,6 @@ class Open extends \OpenTHC\Controller\Base
 		case 'ccrs':
 			$RES = $this->_ccrs($RES);
 			break;
-		case 'leafdata':
-			$RES = $this->_leafdata($RES);
-			break;
 		case 'metrc':
 			$RES = $this->_metrc($RES);
 			break;
@@ -315,53 +312,6 @@ class Open extends \OpenTHC\Controller\Base
 				'hash' => '-',
 			]);
 		}
-
-		return $RES->withJSON([
-			'data' => session_id(),
-			'meta' => [],
-		]);
-
-	}
-
-	/**
-	 * Connect to a LeafData System
-	 */
-	function _leafdata($RES)
-	{
-		$lic = trim($_POST['license']);
-		$lic = strtoupper($lic);
-
-		$key = trim($_POST['license-key']);
-
-		if (!preg_match('/^(G|J|L|M|R|T)\w+$/', $lic)) {
-			return $RES->withJSON(array(
-				'meta' => [ 'note' => 'Invalid License [CAO-209]' ],
-			), 400);
-		}
-
-		if (empty($key)) {
-			return $RES->withJSON(array(
-				'meta' => [ 'note' => 'Invalid API Key [CAO-216]' ],
-			), 400);
-		}
-
-		$_SESSION['cre-auth'] = array(
-			'license' => $lic,
-			'license-key' => $key,
-		);
-
-		$cfg = array_merge($_SESSION['cre'], $_SESSION['cre-auth']);
-
-		$cre = \OpenTHC\CRE::factory($cfg);
-		$res = $cre->ping();
-
-		if (empty($res)) {
-			return $RES->withJSON(array(
-				'meta' => [ 'note' => 'Invalid License or API Key [CAO-239]' ],
-			), 403);
-		}
-
-		$_SESSION['sql-name'] = sprintf('openthc_bong_%s', md5($_SESSION['cre-auth']['license']));
 
 		return $RES->withJSON([
 			'data' => session_id(),

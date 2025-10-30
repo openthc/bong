@@ -108,9 +108,6 @@ switch ($_SESSION['cre']['engine']) {
 	case 'ccrs':
 		require_once(__DIR__ . '/lib/Sync/CCRS.php');
 		break;
-	case 'leafdata':
-		require_once(__DIR__ . '/sync-leafdata.php');
-		break;
 	case 'metrc':
 		require_once(__DIR__ . '/sync-metrc.php');
 		break;

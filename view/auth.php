@@ -38,25 +38,25 @@
 		placeholder="CCRS, METRC" value="<?= h($data['cre_service_key']) ?>">
 </div>
 
-<div class="mb-2" data-ccrs="true" data-biotrack="true" data-leafdata="true">
+<div class="mb-2" data-ccrs="true" data-biotrack="true">
 	<label>Company:</label>
 	<input autocomplete="off"
 		class="form-control company-autocomplete" name="company"
-		placeholder="Company ID, like a UBI or something - BioTrack, CCRS, LeafData" value="<?= h($data['cre_company']) ?>">
+		placeholder="Company ID, like a UBI or something - BioTrack, CCRS" value="<?= h($data['cre_company']) ?>">
 </div>
 
-<div class="mb-2" data-ccrs="true" data-leafdata="true" data-metrc="true">
+<div class="mb-2" data-ccrs="true" data-metrc="true">
 	<label>License:</label>
 	<input autocomplete="off"
 		class="form-control license-autocomplete" name="license"
-		placeholder="CCRS, LeafData, METRC*" value="<?= h($data['cre_license']) ?>">
+		placeholder="CCRS, METRC*" value="<?= h($data['cre_license']) ?>">
 </div>
 
-<div class="mb-2" data-leafdata="true" data-metrc="true">
+<div class="mb-2" data-metrc="true">
 	<label>License API Key:</label>
 	<input autocomplete="off"
 		class="form-control" name="license-key"
-		placeholder="LeafData, METRC" value="<?= h($data['cre_license_key']) ?>">
+		placeholder="METRC" value="<?= h($data['cre_license_key']) ?>">
 </div>
 
 <div class="mb-2" data-biotrack="true">
@@ -112,7 +112,6 @@ $(function() {
 		var eng = $opt.data('engine');
 
 		$('div[data-biotrack="true"]').hide();
-		$('div[data-leafdata="true"]').hide();
 		$('div[data-metrc="true"]').hide();
 
 		var sel = 'div[data-' + eng + '="true"]';
