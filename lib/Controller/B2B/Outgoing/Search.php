@@ -9,7 +9,7 @@ namespace OpenTHC\Bong\Controller\B2B\Outgoing;
 
 class Search extends \OpenTHC\Bong\Controller\Base\Search
 {
-	public $tab = 'product';
+	public $tab = 'b2b_outgoing_full';
 
 	/**
 	 *
@@ -19,12 +19,10 @@ class Search extends \OpenTHC\Bong\Controller\Base\Search
 
 		$dbc = $REQ->getAttribute('dbc');
 
-		$tab = 'b2b_outgoing';
-
 		// Search the Table
 		$sql = <<<SQL
 		SELECT *
-		FROM $tab
+		FROM {$this->tab}
 		{WHERE}
 		ORDER BY updated_at DESC
 		OFFSET 0
@@ -38,7 +36,7 @@ class Search extends \OpenTHC\Bong\Controller\Base\Search
 		$sql_param[':l0'] = $_SESSION['License']['id'];
 
 		if ( ! empty($_GET['q'])) {
-			$sql_where[] = 'data::text LIKE :q23';
+			$sql_where[] = '(data::text LIKE :q23 OR b2b_outgoing_item_data::text LIKE :q23)';
 			$sql_param[':q23'] = sprintf('%%%s%%', $_GET['q']);
 		}
 
@@ -66,12 +64,12 @@ class Search extends \OpenTHC\Bong\Controller\Base\Search
 				$data['column_list'] = [
 					'id',
 					'created_at',
-					'updated_at',
+					// 'updated_at',
 					'stat',
 					'source_license_id',
 					'target_license_id',
 					'name',
-					'data',
+					// 'data',
 				];
 				$data['column_function'] = [
 					'id' => function($val, $rec) { return sprintf('<td><a href="/b2b/outgoing/%s">%s</a></td>', $val, $val); },
@@ -83,7 +81,7 @@ class Search extends \OpenTHC\Bong\Controller\Base\Search
 					},
 				];
 
-				return $this->render('search.php', $data);
+				return $this->asHTML($data);
 
 		}
 	}

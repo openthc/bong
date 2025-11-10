@@ -55,12 +55,12 @@ class Update extends \OpenTHC\Bong\Controller\Base\Update
 			], 400);
 		}
 		if (empty($_POST['target']['phone'])) {
-			return $RES->withJSON([
-				'data' => $ARG['id'],
-				'meta' => [
-					'note' => 'Invalid Target License; Phone Required [BOU-049]'
-				]
-			], 400);
+			// return $RES->withJSON([
+			// 	'data' => $ARG['id'],
+			// 	'meta' => [
+			// 		'note' => 'Invalid Target License; Phone Required [BOU-049]'
+			// 	]
+			// ], 400);
 		}
 		if (empty($_POST['target']['email'])) {
 			return $RES->withJSON([
@@ -108,10 +108,14 @@ class Update extends \OpenTHC\Bong\Controller\Base\Update
 
 		$b2b_ret = [];
 		$b2b_ret['id'] = $arg[':o1'];
+		$b2b_ret['file_list'] = [];
 		$b2b_ret['item_list'] = [];
 
 		// UPSERT B2B Outgoing Item
 		foreach ($_POST['item_list'] as $b2b_item) {
+
+			// $unit_count = floatval($b2b_item['unit_count']);
+			// Reject?
 
 			$sql = <<<SQL
 			INSERT INTO b2b_outgoing_item (id, b2b_outgoing_id, name, hash, data) VALUES (:o1, :b2b1, :n0, :h0, :d0)
@@ -155,6 +159,17 @@ class Update extends \OpenTHC\Bong\Controller\Base\Update
 
 		}
 
+		// File Attachment
+		$file = $dbc->fetchRow('SELECT id, name FROM b2b_outgoing_file WHERE id = :b0', [ ':b0' => $ret['id'] ]);
+		if ( ! empty($file['id'])) {
+			$b2b_ret['file_list'][0] = [
+				'id' => $file['id'],
+				'name' => $file['name'],
+				'stat' => 200,
+			];
+		}
+
+		// Why the Want?
 		if ($want > 0) {
 
 			if ($have == $want) {
