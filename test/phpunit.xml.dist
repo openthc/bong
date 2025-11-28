@@ -27,8 +27,8 @@
 
 		<env name="OPENTHC_TEST_ORIGIN" value="https://bong.openthc.example.com" />
 
-		<!-- If defined, it will spew debug -->
-		<env name="OPENTHC_TEST_HTTP_DEBUG" value="0" />
+		<!-- If truthy, it will spew debug -->
+		<env name="OPENTHC_TEST_HTTP_DEBUG" value="" />
 
 		<env name="OPENTHC_TEST_CLIENT_SERVICE_ID" value="" />
 		<env name="OPENTHC_TEST_CLIENT_SERVICE_SK" value="" />
@@ -38,13 +38,6 @@
 		<env name="OPENTHC_TEST_LICENSE_ID" value="" />
 		<env name="OPENTHC_TEST_LICENSE_CODE" value="" />
 		<env name="OPENTHC_TEST_LICENSE_SK" value="" />
-
-		<!-- # BioTrack -->
-		<!-- # Company is from the special list in Bunk -->
-		<env name="OPENTHC_TEST_BIOTRACK_SERVICE" value="usa/nm/test" />
-		<env name="OPENTHC_TEST_BIOTRACK_COMPANY" value="999000001" />
-		<env name="OPENTHC_TEST_BIOTRACK_USERNAME" value="test+bunk@openthc.dev" />
-		<env name="OPENTHC_TEST_BIOTRACK_PASSWORD" value="password" />
 
 		<!-- # CCRS -->
 		<env name="OPENTHC_TEST_CCRS_SERVICE" value="https://cannabisreporting.lcb.wa.gov/" />
@@ -64,15 +57,16 @@
 		<testsuite name="All">
 			<file>Unit/Config_Test.php</file>
 			<file>Unit/CRE_Ping_Test.php</file>
-			<!-- <directory>B_Auth</directory> -->
+			<directory>Auth</directory>
 			<!-- <directory>CCRS</directory> -->
-			<!-- <directory>BioTrack2014</directory> -->
-			<!-- <directory>BioTrack2022</directory> -->
 			<!-- <directory>Metrc2014</directory> -->
 			<!-- <directory>Metrc2022</directory> -->
 			<!-- <directory>Cannafax</directory> -->
 		</testsuite>
 	</testsuites>
+
+	<!-- XDEBUG_MODE=coverage (environment variable) or xdebug.mode=coverage (PHP configuration setting) has to be set -->
+	<!-- <coverage /> -->
 
 	<!-- https://docs.phpunit.de/en/10.5/code-coverage.html -->
 	<!-- <coverage> -->
@@ -83,5 +77,6 @@
 			<!-- xml -->
 		<!-- </report> -->
 	<!-- </coverage> -->
+
 
 </phpunit>
