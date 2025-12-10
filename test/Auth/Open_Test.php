@@ -3,27 +3,29 @@
  * SPDX-License-Identifier: MIT
  */
 
-namespace OpenTHC\Bong\Test\B_Auth;
+namespace OpenTHC\Bong\Test\Auth;
 
-class A_Open_Test extends \OpenTHC\Bong\Test\Base
+class Open_Test extends \OpenTHC\Bong\Test\Base
 {
 	/**
 	 *
 	 */
 	function test_biotrack()
 	{
+		$chk = $_ENV['OPENTHC_TEST_BIOTRACK_SERVICE'];
+		if (empty($chk)) {
+			$this->markTestSkipped('No BioTrack Configuration');
+		}
+
 		$api = $this->_api();
 		$res = $api->post('/auth/open', [ 'form_params' => [
-			'cre' => 'usa/nm',
+			'cre' => $_ENV['OPENTHC_TEST_BIOTRACK_SERVICE'],
 			'company' => $_ENV['OPENTHC_TEST_BIOTRACK_COMPANY'],
 			'username' => $_ENV['OPENTHC_TEST_BIOTRACK_USERNAME'],
 			'password' => $_ENV['OPENTHC_TEST_BIOTRACK_PASSWORD'],
 		]]);
 
-
-		$this->assertValidResponse($res, 405);
-		// $loc = $res->getHeaderLine('location');
-		// var_dump($loc);
+		$this->assertValidResponse($res, 200);
 
 	}
 
@@ -51,8 +53,13 @@ class A_Open_Test extends \OpenTHC\Bong\Test\Base
 
 	}
 
-	function x_test_metrc()
+	function test_metrc()
 	{
+		$chk = $_ENV['OPENTHC_TEST_METRC_SERVICE'];
+		if (empty($chk)) {
+			$this->markTestSkipped('No Metrc Configuration');
+		}
+
 		$api = $this->_api();
 		$res = $api->get('/auth/ping');
 		$this->assertValidResponse($res, 200);

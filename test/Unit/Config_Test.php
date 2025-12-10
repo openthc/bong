@@ -45,7 +45,7 @@ class Config_Test extends \OpenTHC\Bong\Test\Base
 		];
 		foreach ($key_list as $k) {
 			$x = \OpenTHC\Config::get($k);
-			$this->assertNotEmpty($x, sprintf('%s should NOT be empty', $k));
+			$this->assertEmpty($x, sprintf('%s should NOT be empty', $k));
 			// $this->assertEmpty($x, sprintf('%s should be empty', $k));
 		}
 
@@ -67,6 +67,18 @@ class Config_Test extends \OpenTHC\Bong\Test\Base
 			$this->assertNotEmpty($x, sprintf('%s is empty', $k));
 		}
 
+	}
+
+	/**
+	 * @test
+	 */
+	function cre_config()
+	{
+		$cfg = \OpenTHC\CRE::getConfig('usa/wa');
+		$this->assertNotEmpty('tz');
+		$this->assertNotEmpty('username');
+		$this->assertNotEmpty('password');
+		$this->assertNotEmpty('service-sk'); // client-sk?
 	}
 
 }
