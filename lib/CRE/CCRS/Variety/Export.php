@@ -27,13 +27,11 @@ class Export
 	function create($force=false)
 	{
 		// Check Cache
-		$uphelp = new \OpenTHC\Bong\CRE\CCRS\Upload([
-			'license' => $this->_License['id'],
-			'object' => 'variety',
-			'force' => $force
-		]);
-		if (202 == $uphelp->getStatus()) {
-			return;
+		$status = new \OpenTHC\Bong\CRE\CCRS\Status($this->_License['id'], 'variety');
+		$chk = $status->getStat();
+		switch ($chk) {
+			case 202:
+				return;
 		}
 
 		$dbc = _dbc();
@@ -108,7 +106,7 @@ class Export
 
 		// No Data, In Sync
 		if ($csv->isEmpty()) {
-			$uphelp->setStatus(202);
+			$status->setPush(202);
 			return;
 		}
 
@@ -117,7 +115,7 @@ class Export
 
 		\OpenTHC\Bong\CRE\CCRS\Upload::enqueue($this->_License, $csv_name, $csv_temp);
 
-		$uphelp->setStatus(102);
+		$status->setPush(102);
 
 	}
 }

@@ -18,7 +18,9 @@ class Export
 	function __construct($License)
 	{
 		$this->_License = $License;
-		$this->_tz0 = new \DateTimezone(\OpenTHC\Config::get('cre/usa/wa/ccrs/tz'));
+		$this->_cre_config = \OpenTHC\CRE::getConfig('usa-wa');
+		$this->_tz0 = new \DateTimezone($this->_cre_config['tz']);
+		$this->_dt0 = new \DateTime('now', $this->_tz0);
 	}
 
  	/**
@@ -27,13 +29,11 @@ class Export
 	function create($force=false)
 	{
 		// Check Cache
-		$uphelp = new \OpenTHC\Bong\CRE\CCRS\Upload([
-			'license' => $this->_License['id'],
-			'object' => 'product',
-			'force' => $force
-		]);
-		if (202 == $uphelp->getStatus()) {
-			return;
+		$status = new \OpenTHC\Bong\CRE\CCRS\Status($this->_License['id'], 'product');
+		$chk = $status->getStat();
+		switch ($chk) {
+			case 202:
+				return;
 		}
 
 		$dbc = _dbc();
@@ -56,20 +56,13 @@ class Export
 			$product_source = $product['data']['@source'];
 
 			if ('018NY6XC00PR0DUCTTYPE00000' == $product_source['type']) {
-				$dbc->query('UPDATE product SET stat = 540 WHERE id = :p0', [
+				$dbc->query('UPDATE product SET stat = 422 WHERE id = :p0', [
 					':p0' => $product['id']
 				]);
 				continue;
 			}
 			if ('018NY6XC00PR0DUCTTYPE00001' == $product_source['type']) {
-				$dbc->query('UPDATE product SET stat = 540 WHERE id = :p0', [
-					':p0' => $product['id']
-				]);
-				continue;
-			}
-			// Waste -- Should be Uploaded?
-			if ('018NY6XC00PT8AXVZGNZN3A0QT' == $product_source['type']) {
-				$dbc->query('UPDATE product SET stat = 546 WHERE id = :p0', [
+				$dbc->query('UPDATE product SET stat = 422 WHERE id = :p0', [
 					':p0' => $product['id']
 				]);
 				continue;
@@ -102,16 +95,9 @@ class Export
 					// 	':s0' => $product['id'],
 					// ]);
 					break;
-				case 403:
-					// Ignore
-					break;
 				case 410:
 					// $cmd = 'DELETE'; ?
 					// continue 2; // foreach
-					break;
-				case 540:
-				case 546:
-					// Ignore
 					break;
 				default:
 					throw new \Exception("Invalid Product Status '{$product['stat']}'");
@@ -195,6 +181,10 @@ class Export
 				case 'each':
 					$row[5] = sprintf('%0.2f', $product_source['package']['unit']['weight']);
 					break;
+				case 'pack':
+					$w = $product_source['package']['unit']['weight'] * $product_source['package']['unit']['count'];
+					$row[5] = sprintf('%0.2f', $w);
+					break;
 			}
 
 			$csv_data[] = $row;
@@ -202,8 +192,9 @@ class Export
 		}
 
 		// No Data, In Sync
-		if (empty($csv_data)) {
-			$uphelp->setStatus(202);
+		$row_size = count($csv_data);
+		if (0 == $row_size) {
+			$status->setPush(202);
 			return;
 		}
 
@@ -227,7 +218,7 @@ class Export
 
 		\OpenTHC\Bong\CRE\CCRS\Upload::enqueue($this->_License, $csv_name, $csv_temp);
 
-		$uphelp->setStatus(102);
+		$status->setPush(102);
 	}
 
 }

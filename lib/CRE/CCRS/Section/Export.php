@@ -18,7 +18,9 @@ class Export
 	function __construct($License)
 	{
 		$this->_License = $License;
-		$this->_tz0 = new \DateTimezone(\OpenTHC\Config::get('cre/usa/wa/ccrs/tz'));
+		$this->_cre_config = \OpenTHC\CRE::getConfig('usa-wa');
+		$this->_tz0 = new \DateTimezone($this->_cre_config['tz']);
+		$this->_dt0 = new \DateTime('now', $this->_tz0);
 	}
 
 	/**
@@ -27,18 +29,16 @@ class Export
 	function create($force=false)
 	{
 		// Check Cache
-		$uphelp = new \OpenTHC\Bong\CRE\CCRS\Upload([
-			'license' => $this->_License['id'],
-			'object' => 'section',
-			'force' => $force
-		]);
-		if (202 == $uphelp->getStatus()) {
-			return;
+		$status = new \OpenTHC\Bong\CRE\CCRS\Status($this->_License['id'], 'section');
+		$chk = $status->getStat();
+		switch ($chk) {
+			case 202:
+				return;
 		}
 
 		$dbc = _dbc();
 
-		$api_code = \OpenTHC\Config::get('cre/usa/wa/ccrs/service-key');
+		$api_code = $this->_cre_config['service-sk'];
 		$csv = new \OpenTHC\Bong\CRE\CCRS\CSV($api_code, 'section');
 
 		// Get Data
@@ -51,11 +51,6 @@ class Export
 		ORDER BY id
 		SQL;
 		$arg = [ ':l0' => $this->_License['id'] ];
-
-		if ( ! empty($cli_args['--object-id'])) {
-			$sql.= ' AND section.id = :pk';
-			$arg[':pk'] = $cli_args['--object-id'];
-		}
 
 		$res_section = $dbc->fetchAll($sql, $arg);
 		foreach ($res_section as $section) {
@@ -126,7 +121,7 @@ class Export
 
 		// No Data, In Sync
 		if ($csv->isEmpty()) {
-			$uphelp->setStatus(202);
+			$status->setPush(202);
 			return;
 		}
 
@@ -135,7 +130,7 @@ class Export
 
 		\OpenTHC\Bong\CRE\CCRS\Upload::enqueue($this->_License, $csv_name, $csv_temp);
 
-		$uphelp->setStatus(102);
+		$status->setPush(102);
 	}
 
 }

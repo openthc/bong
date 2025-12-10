@@ -19,17 +19,13 @@ function _cre_ccrs_upload_b2b_incoming($cli_args)
 	}
 
 	// Check Cache
-	$uphelp = new \OpenTHC\Bong\CRE\CCRS\Upload([
-		'license' => $cli_args['--license'],
-		'object' => 'b2b/incoming',
-		'force' => $cli_args['--force']
-	]);
-	if (202 == $uphelp->getStatus()) {
+	$status = new \OpenTHC\Bong\CRE\CCRS\Status($cli_args['--license'], 'b2b/incoming');
+	if (202 == $status->getStat()) {
 		return 0;
 	}
 
 	// Get CRE Configuration
-	$cfg = \OpenTHC\CRE::getConfig('usa/wa');
+	$cfg = \OpenTHC\CRE::getConfig('usa-wa');
 	$tz0 = new DateTimezone($cfg['tz']);
 	$dt0 = new \DateTime('now', $tz0);
 	$cre_service_key = $cfg['service-sk'];
@@ -51,6 +47,9 @@ function _cre_ccrs_upload_b2b_incoming($cli_args)
 	FROM b2b_incoming
 	WHERE b2b_incoming.target_license_id = :l0
 	  AND b2b_incoming.stat IN (100, 102, 200, 404)
+	--   AND b2b_incoming.created_at >= '2023-01-01' AND b2b_incoming.created_at < '2024-01-01'
+	--   AND b2b_incoming.created_at >= '2024-01-01' AND b2b_incoming.created_at < '2025-01-01'
+	  AND b2b_incoming.created_at >= '2025-01-01' AND b2b_incoming.created_at < '2026-01-01'
 	ORDER BY b2b_incoming.id
 	LIMIT 1000
 	SQL;
@@ -147,7 +146,7 @@ function _cre_ccrs_upload_b2b_incoming($cli_args)
 			$src_b2b_item = $src_b2b_item['@source'];
 
 			$rec = [
-				$src_b2b['source']['code'] // FromLicenseNumber
+				$src_b2b['source']['code'] // str_replace('-0', '', ) // FromLicenseNumber
 				, $License['code'] // ToLicenseNumber
 				, $src_b2b_item['source_inventory']['id'] ?: $src_b2b_item['source_lot']['id'] // FromInventoryExternalIdentifier
 				, $src_b2b_item['target_inventory']['id'] ?: $src_b2b_item['target_lot']['id'] // ToInventoryExternalIdentifier
@@ -196,7 +195,7 @@ function _cre_ccrs_upload_b2b_incoming($cli_args)
 			break;
 		case 1: // Awesome
 			$stat = $res_b2b_incoming_item_stat[0]['stat'];
-			// echo "  UPDATE STAT {$b2b['stat']} => $stat\n";
+			echo "  UPDATE STAT {$b2b['stat']} => $stat\n";
 			$dbc->query('UPDATE b2b_incoming SET stat = :s1 WHERE id = :b0', [
 				':b0' => $b2b['id'],
 				':s1' => $stat,
@@ -208,7 +207,7 @@ function _cre_ccrs_upload_b2b_incoming($cli_args)
 
 	// No Data, In Sync
 	if (empty($csv_data)) {
-		$uphelp->setStatus(202);
+		$status->setPush(202);
 		return;
 	}
 
@@ -231,6 +230,6 @@ function _cre_ccrs_upload_b2b_incoming($cli_args)
 
 	OpenTHC\Bong\CRE\CCRS\Upload::enqueue($License, $csv_name, $csv_temp);
 
-	$uphelp->setStatus(102);
+	$status->setPush(102);
 
 }

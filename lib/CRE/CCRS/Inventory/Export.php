@@ -18,7 +18,7 @@ class Export
 	function __construct($License)
 	{
 		$this->_License = $License;
-		$this->_cre_config = \OpenTHC\CRE::getConfig('usa/wa');
+		$this->_cre_config = \OpenTHC\CRE::getConfig('usa-wa');
 		$this->_tz0 = new \DateTimezone($this->_cre_config['tz']);
 		$this->_dt0 = new \DateTime('now', $this->_tz0);
 	}
@@ -28,14 +28,11 @@ class Export
 	 */
 	function create($force=false)
 	{
-		// Check Cache
-		$uphelp = new \OpenTHC\Bong\CRE\CCRS\Upload([
-			'license' => $this->_License['id'],
-			'object' => 'inventory',
-			'force' => $force
-		]);
-		if (202 == $uphelp->getStatus()) {
-			return;
+		$status = new \OpenTHC\Bong\CRE\CCRS\Status($this->_License['id'], 'inventory');
+		$chk = $status->getStat();
+		switch ($chk) {
+			case 202:
+				return;
 		}
 
 		$dbc = _dbc();
@@ -61,9 +58,7 @@ class Export
 			$inv_source = $inv_data['@source'];
 
 			if (empty($inv_data['@version'])) {
-				// wtf /mbw 2023-142
-				// var_dump($inv);
-				// throw new \Exception('Missing @version [CUI-065]');
+				throw new \Exception('Missing @version [CUI-065]');
 				$dbc->query('UPDATE inventory SET stat = 400 where id = :i0', [
 					':i0' => $inv['id'],
 				]);
@@ -71,10 +66,13 @@ class Export
 				continue;
 			}
 
-			$dtC = new DateTime($inv['created_at']);
+			$inv_source['cost'] = floatval($inv_source['cost']);
+			$inv_source['qty'] = floatval($inv_source['qty']);
+
+			$dtC = new \DateTime($inv['created_at']);
 			$dtC->setTimezone($this->_tz0);
 
-			$dtU = new DateTime($inv['updated_at']);
+			$dtU = new \DateTime($inv['updated_at']);
 			$dtU->setTimezone($this->_tz0);
 
 			$cmd = '';
@@ -82,22 +80,21 @@ class Export
 				case 100:
 				case 404:
 					$cmd = 'INSERT';
-					$dbc->query('UPDATE inventory SET stat = 102, data = data #- \'{ "@result" }\' WHERE id = :s0', [
+					$dbc->query('UPDATE inventory SET stat = 102 WHERE id = :s0', [
 						':s0' => $inv['id'],
 					]);
 					break;
 				case 102:
-					// Skip, 102 should resolve to a 200 or 400 level response
-					// $cmd = 'INSERT';
+					$cmd = 'UPDATE';
+					$dbc->query('UPDATE inventory SET stat = 200 WHERE id = :s0', [
+						':s0' => $inv['id'],
+					]);
 					break;
 				case 200:
 					$cmd = 'UPDATE';
 					$dbc->query('UPDATE inventory SET stat = 202, data = data #- \'{ "@result" }\' WHERE id = :s0', [
 						':s0' => $inv['id'],
 					]);
-					break;
-				case 202:
-					// Fully Uploaded
 					break;
 				case 400:
 					// Ignore
@@ -111,9 +108,6 @@ class Export
 					$dbc->query('UPDATE inventory SET stat = 410202, data = data #- \'{ "@result" }\' WHERE id = :s0', [
 						':s0' => $inv['id'],
 					]);
-					break;
-				case 666:
-					// $cmd = 'DELETE';
 					break;
 				default:
 					throw new \Exception("Invalid Inventory Stat '{$inv['stat']}'");
@@ -139,13 +133,18 @@ class Export
 				continue;
 			}
 
+			$qty_max = [];
+			$qty_max[] = floatval($inv_source['qty_initial']);
+			$qty_max[] = floatval($inv_source['qty']);
+			$qty_max = max($qty_max);
+
 			// Insert
 			$row = [
-				$License['code']
+				$this->_License['code']
 				, \OpenTHC\CRE\CCRS::sanatize($inv_source['variety']['name'], 100)
 				, \OpenTHC\CRE\CCRS::sanatize($inv_source['section']['name'], 50)
 				, \OpenTHC\CRE\CCRS::sanatize($inv_source['product']['name'], 75)
-				, sprintf('%0.2f', $inv_source['qty_initial'])
+				, $qty_max // sprintf('%0.2f', $inv_source['qty_initial']) // InitialQuantity
 				, sprintf('%0.2f', $inv_source['qty'])
 				, $inv_source['cost'] ?: '0.01'  // New Default
 				, 'FALSE'
@@ -173,16 +172,15 @@ class Export
 		// No Data, In Sync
 		$row_size = count($csv_data);
 		if (0 == $row_size) {
-			$uphelp->setStatus(202);
+			$status->setPush(202);
 			return;
 		}
 
 		$req_ulid = _ulid();
-		$cre_service_key = $this->_cre_config['service-sk'];
-		$csv_name = sprintf('Inventory_%s_%s.csv', $cre_service_key, $req_ulid);
+		$api_code = $this->_cre_config['service-sk'];
+		$csv_name = sprintf('Inventory_%s_%s.csv', $api_code, $req_ulid);
 		$csv_head = explode(',', 'LicenseNumber,Strain,Area,Product,InitialQuantity,QuantityOnHand,TotalCost,IsMedical,ExternalIdentifier,CreatedBy,CreatedDate,UpdatedBy,UpdatedDate,Operation');
 		$col_size = count($csv_head);
-
 
 		$csv_temp = fopen('php://temp', 'w');
 		\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'SubmittedBy',   'OpenTHC' ], $col_size, '')));
@@ -193,9 +191,9 @@ class Export
 			\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, $row);
 		}
 
-		OpenTHC\Bong\CRE\CCRS\Upload::enqueue($License, $csv_name, $csv_temp);
+		\OpenTHC\Bong\CRE\CCRS\Upload::enqueue($this->_License, $csv_name, $csv_temp);
 
-		$uphelp->setStatus(102);
+		$status->setPush(102);
 
 		return $req_ulid;
 

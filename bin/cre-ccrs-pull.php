@@ -10,7 +10,7 @@ use \Edoceo\Radix\DB\SQL;
 
 require_once(__DIR__ . '/../boot.php');
 
-openlog('openthc-bong', LOG_ODELAY | LOG_PERROR | LOG_PID, LOG_LOCAL0);
+openlog('openthc-bong', LOG_ODELAY | LOG_PID, LOG_LOCAL0);
 
 // Lock
 $lock = new \OpenTHC\CLI\Lock(implode('/', [ __FILE__, $cli_args['--license'] ]));
@@ -121,6 +121,7 @@ foreach ($message_file_list as $message_file)
 		default:
 			throw new \Exception('Invalid Message Type');
 	}
+	// var_dump($upload_result);
 
 	$res_pull = '100';
 	if ( ! empty($upload_result['code'])) {
@@ -129,16 +130,13 @@ foreach ($message_file_list as $message_file)
 
 	// Set Redis Success
 	$tab_name = _ccrs_object_name_map($RES->req_type);
-	$k0 = sprintf('/license/%s', $RES->license_id);
-	$rdb = \OpenTHC\Service\Redis::factory();
-	$rdb->hset($k0, sprintf('%s/pull', $tab_name), $res_pull);
-	$rdb->hset($k0, sprintf('%s/pull/time', $tab_name), date(\DateTimeInterface::RFC3339));
 
 	// Update Record in Database?
-
+	$status = new \OpenTHC\Bong\CRE\CCRS\Status($RES->license_id, $tab_name);
+	$status->setPull($res_pull);
+	// $status->setData($res_pull);
 
 	// Move Message File
-
 
 	// Move Message-Attachment File
 
@@ -192,6 +190,8 @@ function _ccrs_object_name_map($t) : string {
 		return 'b2b/outgoing/file';
 	case 'PLANT':
 		return 'crop';
+	case 'HARVEST':
+		return 'crop/collect';
 	case 'SALE':
 		return 'b2b/outgoing';
 	case 'STRAIN':
@@ -412,17 +412,9 @@ function _ccrs_pull_manifest_file(string $message_file, $RES) : array {
 	$cmd->bindParam(':b1', file_get_contents($output_file), \PDO::PARAM_LOB);
 	$cmd->execute();
 
-	// Update b2b_outgoing with Stat 200?
-	// Still Need to do the B2B_Outgoing (Sales) Upload
-	$sql = 'UPDATE b2b_outgoing SET stat = 200 WHERE id = :b2b0';
-	$arg = [ ':b2b0' => $b2b_outgoing['id'] ];
-	$dbc->query($sql, $arg);
-
 	// How to Find the CCRS Upload to Re-Map?
 	$message_data = file_get_contents($message_file);
 	if (preg_match('/Manifest_\w+_(\w+)_\d+T\d+\.csv/', $message_data, $m)) {
-
-		// $req_ulid = $m[1];
 
 		// Need to Trap the Email Here Too
 		$sql = <<<SQL
@@ -523,6 +515,9 @@ function _csv_file_incoming($RES, string $csv_file) : bool
 		case 'LicenseNumber,PlantIdentifier,Area,Strain,PlantSource,PlantState,GrowthStage,MotherPlantExternalIdentifier,HarvestDate,IsMotherPlant,ExternalIdentifier,CreatedBy,CreatedDate,UpdatedBy,UpdatedDate,Operation,ErrorMessage':
 			$tab_name = 'crop';
 			break;
+		case 'LicenseNumber,PlantIdentifier,InventoryExternalIdentifier,ExternalIdentifier,InventoryType,CreatedBy,CreatedDate,UpdatedBy,UpdatedDate,Operation,ErrorMessage':
+			$tab_name = 'crop_collect';
+			break;
 		case 'LicenseNumber,PlantExternalIdentifier,DestructionReason,DestructionDetail,DestructionMethod,DestructionDate,ExternalIdentifier,CreatedBy,CreatedDate,UpdatedBy,UpdatedDate,Operation,ErrorMessage':
 			$csv_pkid = 'PlantExternalIdentifier';
 			$tab_name = 'crop_finish';
@@ -548,7 +543,7 @@ function _csv_file_incoming($RES, string $csv_file) : bool
 			_process_csv_file_b2b_outgoing_manifest($RES, $csv_file, $csv_pipe, $csv_head);
 			return false;
 			break;
-		case 'InventoryExternalIdentifier,PlantExternalIdentifier,Quantity,UOM,WeightPerUnit,ServingsPerUnit,ExternalIdentifier,CreatedBy,CreatedDate,UpdatedBy,UpdatedDate,Operation,ErrorMessage':
+		case 'InventoryExternalIdentifier,PlantExternalIdentifier,Quantity,UOM,WeightPerUnit,ServingsPerUnit,ExternalIdentifier,LabTestExternalIdentifier,CreatedBy,CreatedDate,UpdatedBy,UpdatedDate,Operation,ErrorMessage':
 			$tab_name = 'b2b_outgoing_manifest_line_item';
 			_process_csv_file_b2b_outgoing_manifest_item($RES, $csv_file, $csv_pipe, $csv_head);
 			return false;
@@ -602,15 +597,6 @@ function _csv_file_incoming($RES, string $csv_file) : bool
 			}
 		}
 
-		// License Map Because CCRS Truncates
-		switch ($csv_line['LicenseNumber']) {
-			case '739766888':
-				$csv_line['LicenseNumber'] = '7397668881';
-				break;
-			case '':
-				break;
-		}
-
 		// Discover License
 		if (empty($lic_code)) {
 
@@ -626,6 +612,8 @@ function _csv_file_incoming($RES, string $csv_file) : bool
 		}
 
 		$err = $RES->errorExtractFromLine($csv_line);
+		// var_dump($err);
+
 		$err_list = $err['data'];
 
 		switch ($err['code']) {

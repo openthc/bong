@@ -10,6 +10,9 @@ use OpenTHC\Bong\CRE;
 
 function _cre_ccrs_upload_b2b_outgoing($cli_args)
 {
+	// echo "_cre_ccrs_upload_b2b_outgoing\n";
+	// var_dump($cli_args);
+
 	// Lock
 	$key = implode('/', [ __FILE__, $cli_args['--license'] ]);
 	$lock = new \OpenTHC\CLI\Lock($key);
@@ -19,12 +22,8 @@ function _cre_ccrs_upload_b2b_outgoing($cli_args)
 	}
 
 	// Check Cache
-	$uphelp = new \OpenTHC\Bong\CRE\CCRS\Upload([
-		'license' => $cli_args['--license'],
-		'object' => 'b2b/outgoing',
-		'force' => $cli_args['--force']
-	]);
-	if (202 == $uphelp->getStatus()) {
+	$status = new \OpenTHC\Bong\CRE\CCRS\Status($cli_args['--license'], 'b2b/outgoing');
+	if (202 == $status->getStat()) {
 		return 0;
 	}
 
@@ -58,7 +57,31 @@ function _cre_ccrs_upload_b2b_outgoing($cli_args)
 	LIMIT 1000
 	SQL;
 
-	$arg = [ ':l0' => $License['id'] ];
+	$arg = [];
+	$arg[':l0'] = $License['id'];
+
+	if ( ! empty($cli_args['--object-id'])) {
+
+		$arg[':oid1'] = $cli_args['--object-id'];
+
+		$sql = <<<SQL
+		SELECT b2b_outgoing.id AS id
+			, b2b_outgoing.created_at
+			, b2b_outgoing.updated_at
+			, b2b_outgoing.data
+			, b2b_outgoing.stat
+		FROM b2b_outgoing
+		WHERE b2b_outgoing.source_license_id = :l0
+		  AND b2b_outgoing.id = :oid1
+		-- AND b2b_outgoing.stat IN (100, 102, 200, 400, 404)
+		-- AND b2b_outgoing.created_at >= '2023-01-01' AND b2b_outgoing.created_at < '2024-01-01'
+		-- AND b2b_outgoing.created_at >= '2024-01-01' AND b2b_outgoing.created_at < '2025-01-01'
+		-- AND b2b_outgoing.created_at >= '2025-01-01' AND b2b_outgoing.created_at < '2026-01-01'
+		ORDER BY b2b_outgoing.id
+		LIMIT 1000
+		SQL;
+
+	}
 
 	$res_b2b_outgoing = $dbc->fetchAll($sql, $arg);
 	foreach ($res_b2b_outgoing as $b2b) {
@@ -76,7 +99,7 @@ function _cre_ccrs_upload_b2b_outgoing($cli_args)
 		SELECT b2b_outgoing_item.*
 		FROM b2b_outgoing_item
 		WHERE b2b_outgoing_item.b2b_outgoing_id = :b0
-		  AND b2b_outgoing_item.stat IN (100, 102, 200, 400, 404)
+		  AND b2b_outgoing_item.stat IN (100, 102, 200, 202, 400, 404)
 		ORDER BY id
 		SQL;
 
@@ -107,6 +130,7 @@ function _cre_ccrs_upload_b2b_outgoing($cli_args)
 				]);
 				break;
 			case 200:
+			case 202:
 				// Move to 202 -- will get error from CCRS if NOT Good
 				$cmd = 'UPDATE';
 				$dbc->query('UPDATE b2b_outgoing_item SET stat = 202, data = data #- \'{ "@result" }\' WHERE id = :s0', [
@@ -153,22 +177,15 @@ function _cre_ccrs_upload_b2b_outgoing($cli_args)
 				, $cmd // OPERATION
 			];
 
-			if (empty($rec[1])) {
-				// var_dump($src_b2b);
-				// var_dump($src_b2b_item);
-				echo "./bin/sync.php --company {$License['company_id']} --license {$License['id']} --object b2b-outgoing --object-id {$src_b2b['id']}\n";
-				// continue;
-				throw new \Exception('Invalid B2B Missing Target [UBO-130]');
+			if ($rec[0] == $rec[1]) {
+				$dbc->query('UPDATE b2b_outgoing SET stat = 409 WHERE id = :b0 AND source_license_id = :l0', [
+					':l0' => $License['id'],
+					':b0' => $b2b['id'],
+				]);
+				continue;
 			}
-			if (empty($rec[2])) {
-				$msg = 'Invalid B2B Missing Inventory [UBO-135]';
-				echo "$msg\n";
-				// var_dump($src_b2b);
-				// var_dump($b2b_outgoing_item);
-				echo "./bin/sync.php --company {$License['company_id']} --license {$License['id']} --object b2b-outgoing --object-id {$src_b2b['id']}\n";
-				continue 2;
-				// throw new \Exception($msg);
-			}
+
+
 			if (empty($rec[6])) {
 				// var_dump($src_b2b);
 				// var_dump($src_b2b_item);
@@ -222,11 +239,27 @@ function _cre_ccrs_upload_b2b_outgoing($cli_args)
 			break;
 		}
 
+		// Check for File
+		$arg = [];
+		$arg[':b2b0'] = $b2b['id'];
+
+		$sql = <<<SQL
+		SELECT id
+		FROM b2b_outgoing_file
+		WHERE id = :b2b0
+		SQL;
+
+		$chk = $dbc->fetchRow($sql, $arg);
+		if (empty($chk['id'])) {
+			// echo "  Create Manifest File for {$b2b['id']}\n";
+			echo "  ./bin/cre-ccrs.php upload-b2b-outgoing-file --license {$License['id']} --object-id {$b2b['id']}\n";
+		}
+
 	}
 
 	// No Data, In Sync
 	if (empty($csv_data)) {
-		$uphelp->setStatus(202);
+		$status->setPush(202);
 		return;
 	}
 
@@ -249,6 +282,6 @@ function _cre_ccrs_upload_b2b_outgoing($cli_args)
 
 	OpenTHC\Bong\CRE\CCRS\Upload::enqueue($License, $csv_name, $csv_temp);
 
-	$uphelp->setStatus(102);
+	$status->setPush(102);
 
 }

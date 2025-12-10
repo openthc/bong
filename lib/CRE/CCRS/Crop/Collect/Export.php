@@ -18,22 +18,22 @@ class Export
 	function __construct($License)
 	{
 		$this->_License = $License;
-		$this->_cre_config = \OpenTHC\CRE::getConfig('usa-wa');
-		$this->_tz0 = new \DateTimezone($this->_cre_config['tz']);
-		$this->_dt0 = new \DateTime('now', $this->_tz0);
+		$this->_tz0 = new \DateTimezone(\OpenTHC\Config::get('cre/usa/wa/ccrs/tz'));
 	}
 
 	function create($force=false)
 	{
 		// Check Cache
-		$status = new \OpenTHC\Bong\CRE\CCRS\Status($this->_License['id'], 'crop');
-		$chk = $status->getStat();
-		switch ($chk) {
-			case 202:
-				return;
+		$uphelp = new \OpenTHC\Bong\CRE\CCRS\Upload([
+			'license' => $this->_License['id'],
+			'object' => 'crop',
+			'force' => $force
+		]);
+		if (202 == $uphelp->getStatus()) {
+			return;
 		}
 
-		$api_code = $this->_cre_config['service-sk'];
+		$api_code = \OpenTHC\Config::get('cre/usa/wa/ccrs/service-key');
 		$csv = new \OpenTHC\Bong\CRE\CCRS\CSV($api_code, 'crop');
 
 		// Lets Go!
@@ -107,7 +107,7 @@ class Export
 
 		// No Data, In Sync
 		if ($csv->isEmpty()) {
-			$status->setPush(202);
+			$uphelp->setStatus(202);
 			return;
 		}
 
@@ -116,7 +116,7 @@ class Export
 
 		\OpenTHC\Bong\CRE\CCRS\Upload::enqueue($this->_License, $csv_name, $csv_temp);
 
-		$status->setPush(102);
+		$uphelp->setStatus(102);
 
 	}
 
