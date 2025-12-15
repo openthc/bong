@@ -10,20 +10,11 @@ use OpenTHC\Bong\CRE;
 
 function _cre_ccrs_upload_b2b_outgoing($cli_args)
 {
-	// echo "_cre_ccrs_upload_b2b_outgoing\n";
-	// var_dump($cli_args);
-
 	// Lock
 	$key = implode('/', [ __FILE__, $cli_args['--license'] ]);
 	$lock = new \OpenTHC\CLI\Lock($key);
 	if ( ! $lock->create()) {
 		syslog(LOG_DEBUG, sprintf('LOCK: "%s" Failed', $key));
-		return 0;
-	}
-
-	// Check Cache
-	$status = new \OpenTHC\Bong\CRE\CCRS\Status($cli_args['--license'], 'b2b/outgoing');
-	if (202 == $status->getStat()) {
 		return 0;
 	}
 
@@ -34,8 +25,40 @@ function _cre_ccrs_upload_b2b_outgoing($cli_args)
 	$cre_service_key = $cfg['service-sk'];
 
 	$dbc = _dbc();
-
 	$License = _load_license($dbc, $cli_args['--license']);
+
+	// Check Cache
+	$status = new \OpenTHC\Bong\CRE\CCRS\Status($License['id'], 'b2b/outgoing');
+	$chk = $status->getStat();
+	// echo "STAT: $chk\n";
+	if (202 == $chk) {
+		return 0;
+	}
+
+
+//                              View "public.b2b_outgoing_full"
+//             Column            |           Type           | Collation | Nullable | Default
+// ------------------------------+--------------------------+-----------+----------+---------
+//  id                           | character varying(64)    |           |          |
+//  source_license_id            | character varying(64)    |           |          |
+//  target_license_id            | character varying(64)    |           |          |
+//  created_at                   | timestamp with time zone |           |          |
+//  updated_at                   | timestamp with time zone |           |          |
+//  stat                         | integer                  |           |          |
+//  flag                         | integer                  |           |          |
+//  hash                         | character varying(64)    |           |          |
+//  name                         | text                     |           |          |
+//  data                         | jsonb                    |           |          |
+//  b2b_outgoing_item_id         | character varying(64)    |           |          |
+//  b2b_outgoing_item_flag       | integer                  |           |          |
+//  b2b_outgoing_item_stat       | integer                  |           |          |
+//  b2b_outgoing_item_created_at | timestamp with time zone |           |          |
+//  b2b_outgoing_item_updated_at | timestamp with time zone |           |          |
+//  b2b_outgoing_item_hash       | character varying(64)    |           |          |
+//  b2b_outgoing_item_name       | text                     |           |          |
+//  b2b_outgoing_item_data       | jsonb                    |           |          |
+
+
 
 	// CSV Data
 	$csv_data = [];
@@ -49,7 +72,7 @@ function _cre_ccrs_upload_b2b_outgoing($cli_args)
 		, b2b_outgoing.stat
 	FROM b2b_outgoing
 	WHERE b2b_outgoing.source_license_id = :l0
-	  AND b2b_outgoing.stat IN (100, 102, 200, 400, 404)
+	  AND b2b_outgoing.stat IN (100, 102, 200, 404)
 	  -- AND b2b_outgoing.created_at >= '2023-01-01' AND b2b_outgoing.created_at < '2024-01-01'
 	  -- AND b2b_outgoing.created_at >= '2024-01-01' AND b2b_outgoing.created_at < '2025-01-01'
 	  AND b2b_outgoing.created_at >= '2025-01-01' AND b2b_outgoing.created_at < '2026-01-01'
@@ -99,7 +122,7 @@ function _cre_ccrs_upload_b2b_outgoing($cli_args)
 		SELECT b2b_outgoing_item.*
 		FROM b2b_outgoing_item
 		WHERE b2b_outgoing_item.b2b_outgoing_id = :b0
-		  AND b2b_outgoing_item.stat IN (100, 102, 200, 202, 400, 404)
+		  AND b2b_outgoing_item.stat IN (100, 102, 200, 400, 404)
 		ORDER BY id
 		SQL;
 
@@ -124,13 +147,12 @@ function _cre_ccrs_upload_b2b_outgoing($cli_args)
 				]);
 				break;
 			case 102:
-				$cmd = 'INSERT';
+				$cmd = 'UPDATE';
 				$dbc->query('UPDATE b2b_outgoing_item SET stat = 200, data = data #- \'{ "@result" }\' WHERE id = :s0', [
 					':s0' => $b2b_outgoing_item['id'],
 				]);
 				break;
 			case 200:
-			case 202:
 				// Move to 202 -- will get error from CCRS if NOT Good
 				$cmd = 'UPDATE';
 				$dbc->query('UPDATE b2b_outgoing_item SET stat = 202, data = data #- \'{ "@result" }\' WHERE id = :s0', [
@@ -280,8 +302,24 @@ function _cre_ccrs_upload_b2b_outgoing($cli_args)
 		\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, $row);
 	}
 
-	OpenTHC\Bong\CRE\CCRS\Upload::enqueue($License, $csv_name, $csv_temp);
+	// OpenTHC\Bong\CRE\CCRS\Upload::enqueue($License, $csv_name, $csv_temp);
+
+	fseek($csv_temp, 0);
+	$csv_data = stream_get_contents($csv_temp);
+
+	$rec = [];
+	$rec['id'] = $req_ulid;
+	$rec['license_id'] = $License['id'];
+	$rec['name'] = sprintf('B2B_OUTGOING UPLOAD %s', $req_ulid);
+	$rec['source_data'] = json_encode([
+		'name' => $csv_name,
+		'data' => $csv_data
+	]);
+
+	$output_file = $dbc->insert('log_upload', $rec);
+
 
 	$status->setPush(102);
 
+	return $req_ulid;
 }

@@ -866,6 +866,12 @@ function _csv_file_incoming($RES, string $csv_file) : bool
 		'stat' => $cre_stat,
 	], [ 'id' => $RES->req_ulid ]);
 
+	_stat_count('bong_cre_ccrs_upload_rx', 1);
+	_stat_count(sprintf('bong_cre_ccrs_upload_rx_%d', $cre_stat), 1);
+
+	// $status = new
+	// $status->setPull($cre_stat);
+
 	// Archive
 	$csv_name = basename($csv_file);
 	rename($csv_file, sprintf('%s/var/ccrs-incoming-done/%s', APP_ROOT, $csv_name));

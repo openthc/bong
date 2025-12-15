@@ -232,6 +232,7 @@ class Response {
 	// function _process_err_list($csv_line)
 	function errorExtractFromLine($csv_line) {
 
+		$err_return_code = 400;
 		$err_return_list = [];
 
 		$err_source_list = explode(':', $csv_line['ErrorMessage']);
@@ -240,6 +241,7 @@ class Response {
 			switch ($err_text) {
 			case 'Area is required':
 			case 'Area name is over 75 characters':
+			case 'Cannabis Excise Tax does not equal 37% of Unit Price':
 			case 'CreatedDate must be a date':
 			case 'Created Date cannot be a date past submission date for Insert':
 			case 'DestinationLicenseeEmailAddress is required':
@@ -286,6 +288,7 @@ class Response {
 			case 'Invalid VehicleMake':
 			case 'Invalid VehiclePlateNumber':
 			case 'Invalid VINNumber':
+			case 'Inventory Type is invalid':
 			case 'InventoryCategory is required':
 			case 'InventoryExternalIdentifier or PlantExternalIdentifier is required':
 			case 'InventoryType is required':
@@ -295,6 +298,7 @@ class Response {
 			case 'Name is over 50 characters': // Variety
 			case 'Name is over 75 characters':
 			case 'Name is required':
+			case 'No Negative Entries Allowed':
 			case 'Only Medical Sales Excise tax can be 0':
 			case 'Operation is invalid must be INSERT UPDATE or DELETE':
 			case 'OriginLicenseeEmailAddress is required':
@@ -309,6 +313,7 @@ class Response {
 			case 'QuantityOnHand is greater than InitialQuantity':
 			case 'SaleDetailExternalIdentifier is required':
 			case 'SaleExternalIdentifier is required':
+			case 'Sales cannot be self-reported':
 			case 'SoldToLicenseNumber required for wholesale':
 			case 'Strain is required':
 			case 'Strain Name reported is not linked to the license number. Please ensure the strain being reported belongs to the licensee':
@@ -322,6 +327,7 @@ class Response {
 			case 'UnitPrice must be numeric':
 			case 'UpdatedBy is required for Update or Delete Operations':
 			case 'Updated Date cannot be a date past submission date for Update':
+			case 'Updated Date cannot be prior to Created Date':
 			case 'UpdatedDate is required for Update or Delete Operations':
 			case 'UpdatedDate must be a date for Update and Delete operations':
 			case 'VehicleColor is required':
@@ -368,10 +374,8 @@ class Response {
 			case 'Invalid SaleDetail':
 			case 'SaleDetailExternalIdentifier not found':
 			case 'SaleExternalIdentifier not found':
-				return [
-					'code' => 404,
-					'data' => [ $err_text ],
-				];
+				$err_return_code = 404;
+				$err_return_list[] = $err_text;
 				break;
 			default:
 				var_dump($csv_line);
@@ -380,17 +384,28 @@ class Response {
 			}
 		}
 
-		if (count($err_return_list)) {
-			return [
-				'code' => 400,
-				'data' => $err_return_list
-			];
-		}
+		switch (count($err_return_list)) {
+			case 0: // No Errors
+				return [
+					'code' => 200,
+					'data' => [],
+				];
+				break;
+			case 1:
+				// With 1 it may be 404, maybe 400
+				// So use the set value
+				return [
+					'code' => $err_return_code,
+					'data' => $err_return_list
+				];
+				break;
+			default:
+				return [
+					'code' => 400,
+					'data' => $err_return_list
+				];
 
-		return [
-			'code' => 200,
-			'data' => [],
-		];
+		}
 
 	}
 

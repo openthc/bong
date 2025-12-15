@@ -17,13 +17,14 @@ Usage:
 
 Options:
 	--license=ID        The license ID of the one to work on.
-	--object=TYPE...    The type of record to work on. [default: section,variety,product,crop,inventory,inventory-adjust,b2b-incoming,b2b-outgoing]
+	--object=TYPE...    The type of record to work on. [default: section,variety,product,crop,crop-collect,inventory,inventory-adjust,b2b-incoming,b2b-outgoing]
 	--object-id=ID      To UPLOAD only a single item.
 	--force
 DOC;
 
 $res = Docopt::handle($doc);
 $cli_args = $res->args;
+// print_r($cli_args);
 
 // Lock
 $key = implode('/', [ __FILE__, $cli_args['--license'] ]);
@@ -41,7 +42,7 @@ $obj_list = explode(',', $cli_args['--object']);
 
 // Check Parameters
 foreach ($obj_list as $obj) {
-	if ( ! preg_match('/^(section|variety|product|crop|crop\-finish|inventory|inventory\-adjust|b2b\-incoming|b2b\-outgoing|b2b\-outgoing\-manifest)$/', $obj)) {
+	if ( ! preg_match('/^(section|variety|product|crop|crop\-collect|crop\-finish|inventory|inventory\-adjust|b2b\-incoming|b2b\-outgoing|b2b\-outgoing\-manifest)$/', $obj)) {
 		echo "Cannot Match Object [CCU-058]\n";
 		exit(1);
 	}
@@ -55,13 +56,17 @@ foreach ($obj_list as $obj) {
 			$csv = new \OpenTHC\Bong\CRE\CCRS\Crop\Export($License);
 			$csv->create($cli_args['--force']);
 			break;
+		case 'crop-collect':
+			$csv = new \OpenTHC\Bong\CRE\CCRS\Crop\Collect\Export($License);
+			$csv->create($cli_args['--force']);
+			break;
 		case 'inventory':
 			$csv = new \OpenTHC\Bong\CRE\CCRS\Inventory\Export($License);
 			$csv->create($cli_args['--force']);
 			break;
 		case 'inventory-adjust':
-			$csv = new \OpenTHC\Bong\CRE\CCRS\Inventory\Adjust\Export($License);
-			$csv->create($cli_args['--force']);
+			// $csv = new \OpenTHC\Bong\CRE\CCRS\Inventory\Adjust\Export($License);
+			// $csv->create($cli_args['--force']);
 			break;
 		case 'product':
 			$csv = new \OpenTHC\Bong\CRE\CCRS\Product\Export($License);
@@ -73,52 +78,18 @@ foreach ($obj_list as $obj) {
 			break;
 		case 'variety':
 			$csv = new \OpenTHC\Bong\CRE\CCRS\Variety\Export($License);
-			// $csv->setForce($cli_args['--force']);
 			$csv->create($cli_args['--force']);
 			break;
 		default:
 
 			$obj_file = sprintf('%s/cre-ccrs-upload-%s.php', __DIR__, $obj);
-			require_once($obj_file);
+			$obj_func = sprintf('_cre_ccrs_upload_%s', str_replace('-', '_', $obj));
 
-			$obj = str_replace('-', '_', $obj);
-			$obj_func = sprintf('_cre_ccrs_upload_%s', $obj);
+			require_once($obj_file);
 
 			// Improve Args?
 			$res = call_user_func($obj_func, $cli_args);
+			// Always Null
+			// var_dump($res);
 	}
-}
-
-
-/**
- * Utility Functions
- */
-function _load_license($dbc, $license_id, $object_table=null)
-{
-	$License = $dbc->fetchRow('SELECT * FROM license WHERE id = :l0', [ ':l0' => $license_id ]);
-	if (empty($License['id'])) {
-		echo "Invalid License '{$license_id}' [CCU-071]\n";
-		exit(1);
-	}
-	switch ($License['stat']) {
-		case 100:
-		case 102:
-		case 200:
-			// OK
-			break;
-		case 403:
-		case 500:
-		case 666:
-			// $dbc->query("UPDATE {$object_table} SET stat = :s1 WHERE license_id = :l0 AND stat != :s1", [
-			// 	':l0' => $license_id,
-			// 	':s1' => $License['stat']
-			// ]);
-			// Pass Thru
-		default:
-			echo "Invalid License:'$license_id' status:'{$License['stat']}'\n";
-			exit(1);
-	}
-
-	return $License;
-
 }

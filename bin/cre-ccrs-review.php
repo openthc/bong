@@ -67,11 +67,30 @@ function _eval_object($dbc, $License, string $obj)
 	foreach ($res as $rec) {
 
 		$rec['data'] = json_decode($rec['data'], true);
-
-		$err = $rec['data']['@result']['data'][0];
-		if (empty($err)) {
+		if (empty($rec['data']['@result']['data'])) {
 			continue;
 		}
+		if ( ! is_array($rec['data']['@result']['data'])) {
+			continue;
+		}
+		// $err = implode(', ', $rec['data']['@result']['data']);
+		// if (empty($err)) {
+		// 	continue;
+		// }
+
+		$cmd = _eval_object_error_list($dbc, $License, $obj, $rec);
+		echo "$cmd\n";
+		echo "\n";
+	}
+
+}
+
+function _eval_object_error_list($dbc, $License, $obj, $rec)
+{
+	$cmd_list = [];
+	$err_list = $rec['data']['@result']['data'];
+
+	foreach ($err_list as $err) {
 
 		switch ($err) {
 			case 'Integrator is not authorized to update licensee':
@@ -85,54 +104,50 @@ function _eval_object($dbc, $License, string $obj)
 					':l0' => $rec['license_id']
 				]);
 
-				continue 2; // foreach
-
-				break;
+				return;
 
 			case 'LicenseNumber is required':
 
 				$cmd = _sync_command($dbc, $License, 'section', $rec['data']['@source']['section']['id'], $err);
-				echo "$cmd\n";
-
-				continue 2; // foreach
+				$cmd_list[] = $cmd;
 
 				break;
 
 			case 'Invalid Area':
 
-				echo "## SECTION: {$rec['data']['@source']['section']['id']} = {$rec['data']['@source']['section']['name']}\n";
-				echo "## SELECT id, stat FROM section WHERE license_id = '{$License['id']}' AND id = '{$rec['data']['@source']['section']['id']}';\n";
+				// echo "## SECTION: {$rec['data']['@source']['section']['id']} = {$rec['data']['@source']['section']['name']}\n";
+				// echo "## SELECT id, stat FROM section WHERE license_id = '{$License['id']}' AND id = '{$rec['data']['@source']['section']['id']}';\n";
 
-				$n = \OpenTHC\CRE\CCRS::sanatize($rec['data']['@source']['section']['name'], 100);
-				echo "## SELECT id FROM log_upload WHERE name LIKE 'SECTION UPLOAD%' AND license_id = '{$License['id']}' AND source_data::text ILIKE '%$n%';\n";
+				// $n = \OpenTHC\CRE\CCRS::sanatize($rec['data']['@source']['section']['name'], 100);
+				// echo "## SELECT id FROM log_upload WHERE name LIKE 'SECTION UPLOAD%' AND license_id = '{$License['id']}' AND source_data::text ILIKE '%$n%';\n";
 
 				$cmd = _sync_command($dbc, $License, 'section', $rec['data']['@source']['section']['id'], $err);
-				echo "$cmd\n";
+				$cmd_list[] = $cmd;
 
 				break;
 
 			case 'Invalid Product':
 
-				$n = \OpenTHC\CRE\CCRS::sanatize($rec['data']['@source']['product']['name'], 100);
+				// $n = \OpenTHC\CRE\CCRS::sanatize($rec['data']['@source']['product']['name'], 100);
 
-				echo "## PRODUCT: {$rec['data']['@source']['product']['id']} = {$rec['data']['@source']['product']['name']}\n";
-				echo "## SELECT id, stat FROM product WHERE license_id = '{$License['id']}' AND id = '{$rec['data']['@source']['product']['id']}';\n";
-				echo "## SELECT id FROM log_upload WHERE name LIKE 'PRODUCT UPLOAD%' AND license_id = '{$License['id']}' AND source_data::text ILIKE '%$n%';\n";
+				// echo "## PRODUCT: {$rec['data']['@source']['product']['id']} = {$rec['data']['@source']['product']['name']}\n";
+				// echo "## SELECT id, stat FROM product WHERE license_id = '{$License['id']}' AND id = '{$rec['data']['@source']['product']['id']}';\n";
+				// echo "## SELECT id FROM log_upload WHERE name LIKE 'PRODUCT UPLOAD%' AND license_id = '{$License['id']}' AND source_data::text ILIKE '%$n%';\n";
 
 				$cmd = _sync_command($dbc, $License, 'product', $rec['data']['@source']['product']['id'], $err);
-				echo "$cmd\n";
+				$cmd_list[] = $cmd;
 
 				break;
 
 			case 'Strain Name reported is not linked to the license number. Please ensure the strain being reported belongs to the licensee':
 
-				$n = \OpenTHC\CRE\CCRS::sanatize($rec['data']['@source']['variety']['name'], 100);
-				echo "## VARIETY: {$rec['data']['@source']['variety']['id']} = {$rec['data']['@source']['variety']['name']}\n";
-				echo "## SELECT id, stat FROM variety WHERE license_id = '{$License['id']}' AND name = '$n';\n";
-				echo "## SELECT id FROM log_upload WHERE name LIKE 'VARIETY UPLOAD%' AND license_id = '{$License['id']}' AND source_data::text ILIKE '%$n%';\n";
+				// $n = \OpenTHC\CRE\CCRS::sanatize($rec['data']['@source']['variety']['name'], 100);
+				// echo "## VARIETY: {$rec['data']['@source']['variety']['id']} = {$rec['data']['@source']['variety']['name']}\n";
+				// echo "## SELECT id, stat FROM variety WHERE license_id = '{$License['id']}' AND name = '$n';\n";
+				// echo "## SELECT id FROM log_upload WHERE name LIKE 'VARIETY UPLOAD%' AND license_id = '{$License['id']}' AND source_data::text ILIKE '%$n%';\n";
 
 				$cmd = _sync_command($dbc, $License, 'variety', $rec['data']['@source']['variety']['id'], $err);
-				echo "$cmd\n";
+				$cmd_list[] = $cmd;
 
 				break;
 
@@ -154,12 +169,12 @@ function _eval_object($dbc, $License, string $obj)
 				break;
 
 		}
-
-		$cmd = _sync_command($dbc, $License, $obj, $rec['id'], $err);
-		echo "$cmd\n";
-
-		echo "\n";
 	}
+
+	$cmd = _sync_command($dbc, $License, $obj, $rec['id'], implode('; ', $err_list));
+	$cmd_list[] = $cmd;
+
+	return implode("\n", $cmd_list);
 
 }
 

@@ -8,22 +8,35 @@
  * Upload the files one at a time, was some transactional lock like issues with bulk
  */
 
+namespace OpenTHC\Bong\CRE\CCRS\Inventory\Adjust;
 
- use OpenTHC\CRE\CCRS;
- use OpenTHC\Bong\CRE;
+use OpenTHC\CRE\CCRS;
+use OpenTHC\Bong\CRE;
+
+class Export
+{
+	/**
+	 *
+	 */
+	function __construct($License)
+	{
+		$this->_License = $License;
+		$this->_cre_config = \OpenTHC\CRE::getConfig('usa/wa');
+		$this->_tz0 = new \DateTimezone($this->_cre_config['tz']);
+		$this->_dt0 = new \DateTime('now', $this->_tz0);
+	}
+
+}
+
 
 function _cre_ccrs_upload_inventory_adjust($cli_args)
 {
 	// Check Cache
-	$uphelp = new \OpenTHC\Bong\CRE\CCRS\Upload([
-		'license' => $cli_args['--license'],
-		'object' => 'inventory-adjust',
-		'force' => $cli_args['--force']
-	]);
-
-	// Only Create Upload if Data is "FRESH"
-	if (202 == $uphelp->getStatus()) {
-		return;
+	$status = new \OpenTHC\Bong\CRE\CCRS\Status($this->_License['id'], 'inventory/adjust');
+	$chk = $status->getStat();
+	switch ($chk) {
+		case 202:
+			return;
 	}
 
 	$dbc = _dbc();
@@ -145,29 +158,27 @@ function _cre_ccrs_upload_inventory_adjust($cli_args)
 	}
 
 	$row_size = count($csv_data);
-	if ($row_size > 1) {
-
-		$csv_name = sprintf('InventoryAdjustment_%s_%s.csv', $cre_service_key, $req_ulid);
-		$csv_head = explode(',', 'LicenseNumber,InventoryExternalIdentifier,AdjustmentReason,AdjustmentDetail,Quantity,AdjustmentDate,ExternalIdentifier,CreatedBy,CreatedDate,UpdatedBy,UpdatedDate,Operation');
-		$col_size = count($csv_head);
-
-		$csv_temp = fopen('php://temp', 'w');
-		\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'SubmittedBy',   'OpenTHC' ], $col_size, '')));
-		\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'SubmittedDate', date('m/d/Y') ], $col_size, '')));
-		\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'NumberRecords', $row_size ], $col_size, '')));
-		\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values($csv_head));
-		foreach ($csv_data as $row) {
-			\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, $row);
-		}
-
-		// Upload
-		OpenTHC\Bong\CRE\CCRS\Upload::enqueue($License, $csv_name, $csv_temp);
-
-		$rdb = \OpenTHC\Service\Redis::factory();
-		$rdb->hset(sprintf('/license/%s', $License['id']), 'inventory/push', 200);
-		$rdb->hset(sprintf('/license/%s', $License['id']), 'inventory/push/time', time());
-
+	if (0 == $row_size) {
+		$status->setPush(202);
 	}
 
+	$csv_name = sprintf('InventoryAdjustment_%s_%s.csv', $cre_service_key, $req_ulid);
+	$csv_head = explode(',', 'LicenseNumber,InventoryExternalIdentifier,AdjustmentReason,AdjustmentDetail,Quantity,AdjustmentDate,ExternalIdentifier,CreatedBy,CreatedDate,UpdatedBy,UpdatedDate,Operation');
+	$col_size = count($csv_head);
+
+	$csv_temp = fopen('php://temp', 'w');
+	\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'SubmittedBy',   'OpenTHC' ], $col_size, '')));
+	\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'SubmittedDate', date('m/d/Y') ], $col_size, '')));
+	\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values(array_pad([ 'NumberRecords', $row_size ], $col_size, '')));
+	\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, array_values($csv_head));
+	foreach ($csv_data as $row) {
+		\OpenTHC\CRE\CCRS::fputcsv_stupidly($csv_temp, $row);
+	}
+
+	// Upload
+	// $this->_License
+	OpenTHC\Bong\CRE\CCRS\Upload::enqueue($License, $csv_name, $csv_temp);
+
+	$status->setPush(102);
 
  }

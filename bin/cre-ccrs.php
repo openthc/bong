@@ -10,6 +10,8 @@ use OpenTHC\Bong\CRE;
 
 require_once(__DIR__ . '/../boot.php');
 
+openlog('openthc-bong', LOG_ODELAY | LOG_PID, LOG_LOCAL0);
+
 $doc = <<<DOC
 BONG CRE CCRS Upload Tool
 Usage:
@@ -18,7 +20,6 @@ Usage:
 Commands:
 	auth                  Authenticate to CCRS
 	push                  Does upload-single for all the stuff in the queue
-	push-b2b-old          Push (or check-up on) the old B2B Laggards
 	upload-create         from source data create the csv files in the upload queue
 	upload-single         Uploads a Single Job
 	upload-status         Show Status of The Upload Thoughts
@@ -51,16 +52,15 @@ switch ($cli_args['<command>']) {
 	case 'push':
 		_cre_ccrs_push($cli_args['<command-options>']);
 		break;
-	case 'push-b2b-old':
-		require_once(__DIR__ . '/cre-ccrs-upload-b2b-outgoing-redo.php');
-		_cre_ccrs_push_b2b_old($cli_args['<command-options>']);
+	case 'upload-b2b-outgoing-file':
+		require_once(__DIR__ . '/cre-ccrs-upload-b2b-outgoing-file.php');
+		_cre_ccrs_upload_b2b_outgoing_file($cli_args['<command-options>']);
 		break;
 	case 'review':
 		_cre_ccrs_review($cli_args['<command-options>']);
 		// require_once(__DIR__ . '/cre-ccrs-review-inventory-variety.php');
 		break;
 	case 'upload-create':
-		// require_once(APP_ROOT . '/lib/CRE/CCRS/CSV/Create.php');
 		_cre_ccrs_csv_upload_create($cli_args['<command-options>']);
 		break;
 	case 'upload-single':
@@ -95,11 +95,10 @@ function _cre_ccrs_auth($cli_args)
 	]);
 	$cli_args = $res->args;
 
-	$rdb = \OpenTHC\Service\Redis::factory();
-
 	// Get
 	$cfg = \OpenTHC\Config::get('cre/usa/wa/ccrs');
 	$cfg['cookie-list'] = _cre_ccrs_auth_cookies();
+	// var_dump($cfg['cookie-list']);
 
 	$cre = new \OpenTHC\CRE\CCRS($cfg);
 
@@ -110,6 +109,7 @@ function _cre_ccrs_auth($cli_args)
 
 	// Check & Refresh if Needed
 	if (empty($cli_args['--ping']) && empty($cli_args['--refresh'])) {
+		_stat_count('bong_cre_ccrs_auth_ping', 1);
 		$res = $cre->ping();
 		if (200 != $res['code']) {
 			$cli_args['--refresh'] = true;
@@ -119,6 +119,7 @@ function _cre_ccrs_auth($cli_args)
 	if ( ! empty($cli_args['--ping'])) {
 
 		$res = $cre->ping();
+		echo $res['code'] . "\n";
 
 		switch ($res['code']) {
 			case 200:
@@ -143,25 +144,35 @@ function _cre_ccrs_auth($cli_args)
 				break;
 
 			default:
-				syslog(LOG_DEBUG, 'Invalid Response from CRE [CCA-049]');
+				throw new \Exception('Invalid Response from CRE [CCA-049]');
 		}
 
 	} elseif ( ! empty($cli_args['--refresh'])) {
 
+		_stat_count('bong_cre_ccrs_auth_open', 1);
+
 		// Needs Auth
 		try {
-			$cookie_data = $cre->auth($cfg['username'], $cfg['password']);
+
+			// $cookie_data = $cre->auth($cfg['username'], $cfg['password']);
+			// $cookie_data = json_encode($cookie_data, JSON_PRETTY_PRINT);
+
+			$cookie_data = shell_exec('docker container exec -t ed1a966198ed /opt/openthc/bong/lcb-sign-in.php 2>&1');
+			if (empty($cookie_data)) {
+				_stat_count('bong_cre_ccrs_auth_open_fail', 1);
+			}
+
+			// Save
+			$rdb = \OpenTHC\Service\Redis::factory();
+			$chk = $rdb->set('/cre/ccrs/auth-cookie-list', $cookie_data, 60 * 10);
+
+			syslog(LOG_DEBUG, 'AUTH UPDATED');
+
+
 		} catch (\Exception $e) {
-				var_dump($e);
-				syslog(LOG_DEBUG, 'AUTH FAILURE [BCC-158]');
+			var_dump($e);
+			syslog(LOG_DEBUG, 'AUTH FAILURE [BCC-158]');
 		}
-
-		// Save
-		$val = json_encode($cookie_data, JSON_PRETTY_PRINT);
-
-		$chk = $rdb->set('/cre/ccrs/auth-cookie-list', $val, 60 * 10);
-
-		syslog(LOG_DEBUG, 'AUTH UPDATED');
 
 	}
 
@@ -174,27 +185,12 @@ function _cre_ccrs_auth($cli_args)
 function _cre_ccrs_auth_cookies()
 {
 	$cookie_list = [];
-	$cookie_life_max = 60 * 4;
 
 	$rdb = \OpenTHC\Service\Redis::factory();
 	$chk = $rdb->get('/cre/ccrs/auth-cookie-list');
 	if ( ! empty($chk)) {
 		$cookie_list = json_decode($chk, true);
 	}
-
-	// DELETE if older than 4 minutes
-	// if (is_file(COOKIE_FILE)) {
-	// 	$t0 = time();
-	// 	$t1 = filemtime(COOKIE_FILE);
-	// 	$tX = $t0 - $t1;
-	// 	if ($tX > $cookie_life_max) {
-	// 		unlink(COOKIE_FILE);
-	// 	}
-	// }
-
-	// if (is_file(COOKIE_FILE)) {
-	// 	$cookie_list = json_decode(file_get_contents(COOKIE_FILE), true);
-	// }
 
 	return $cookie_list;
 
@@ -203,8 +199,6 @@ function _cre_ccrs_auth_cookies()
 
 /**
  * Generate CSV Files for the Pending Objects
- *
- * ./bin/cre-ccrs-upload.php upload --license=01CAV11D7R24EZQA630CCKEJ84 --object=section,variety,product
  */
 function _cre_ccrs_csv_upload_create($cli_args)
 {
@@ -214,11 +208,11 @@ function _cre_ccrs_csv_upload_create($cli_args)
 	Create a shell script to upload data for each license
 
 	Usage:
-		csv-upload-create [--license=<LIST>] [--object=<LIST>] [--force]
+		upload-create [--license=<LIST>] [--object=<LIST>] [--force]
 
 	Options:
 		--license=<LIST>      comma-list of license [default: ALL]
-		--object=<LIST>       comma-list of objects [default: section,variety,product,crop,inventory,inventory-adjust,b2b-incoming,b2b-outgoing]
+		--object=<LIST>       comma-list of objects [default: section,variety,product,crop,crop-collect,inventory,inventory-adjust,b2b-incoming,b2b-outgoing]
 		--force
 	DOC;
 
@@ -249,7 +243,7 @@ function _cre_ccrs_csv_upload_create($cli_args)
 
 	foreach ($license_list as $license0) {
 
-		syslog(LOG_NOTICE, "cre-ccrs-upload-create for {$license0['id']} / {$license0['name']}");
+		syslog(LOG_NOTICE, "cre-ccrs-upload-create {$license0['id']} {$license0['name']}");
 
 		$cmd = [];
 		$cmd[] = sprintf('%s/bin/cre-ccrs-upload.php', APP_ROOT);
@@ -260,6 +254,7 @@ function _cre_ccrs_csv_upload_create($cli_args)
 		}
 		$cmd[] = '2>&1';
 		$cmd = implode(' ', $cmd);
+		// echo "$cmd\n";
 		passthru($cmd);
 
 	}
@@ -309,6 +304,7 @@ function _cre_ccrs_push($cli_args)
 	$res_upload = $dbc->fetchAll($sql, $arg);
 
 	if (0 == count($res_upload)) {
+		syslog(LOG_DEBUG, 'No Files to Upload');
 		exit(0);
 	}
 
@@ -321,13 +317,13 @@ function _cre_ccrs_push($cli_args)
 		$opt = [ 'upload-single', "--upload-id={$rec['id']}" ];
 		$res = _cre_ccrs_upload_single($opt);
 		switch ($res['code']) {
-			case 200:
-			case 204:
-				// OK
-				break;
-			default:
-				var_dump($res);
-				exit(1);
+		case 200:
+		case 204:
+			// OK
+			break;
+		default:
+			var_dump($res);
+			return $res['code'];
 		}
 
 		// go slow to not make their IDS trip up
@@ -371,7 +367,7 @@ function _cre_ccrs_review($cli_args)
 function _cre_ccrs_upload_single($cli_args)
 {
 	$doc = <<<DOC
-	BONG CRE CCRS Authentication
+	BONG CRE CCRS Upload
 	Usage:
 		cre-ccrs upload-single --upload-id=ULID
 	DOC;
@@ -443,51 +439,19 @@ function _cre_ccrs_upload_single($cli_args)
 				exit(1);
 			}
 
-			// Special Case to fix email So we can send the old ones
-			$fix_target_email = false;
-			$fix_source_email = false;
-
-			if (preg_match('/SubmittedDate,([^,]+),,/', $src['data'], $m)) {
-
-				$dtS = new \DateTime($m[1]);
-				$dt0 = new \DateTime();
-				$ddX = $dt0->diff($dtS);
-
-				if ($ddX->days >= 1) {
-					$fix_target_email = sprintf('code+target-%s@openthc.com', $req_ulid);
-					$fix_source_email = sprintf('code+source-%s@openthc.com', $req_ulid);
-				}
-
-			}
-
-			if ($fix_target_email) {
-				echo "fix_target_email = $fix_target_email\n";
-				$src['data'] = preg_replace(
-					'/DestinationLicenseeEmailAddress,(.+),,,,,,,,,,/',
-					sprintf('DestinationLicenseeEmailAddress,%s,,,,,,,,,,', $fix_target_email),
-					$src['data']);
-			}
-
-			if ($fix_source_email) {
-				echo "fix_source_email = $fix_source_email\n";
-				$src['data'] = preg_replace(
-					'/OriginLicenseeEmailAddress,(.+),,,,,,,,,,/',
-					sprintf('OriginLicenseeEmailAddress,%s,,,,,,,,,,', $fix_target_email),
-					$src['data']);
-			}
-
 			// Plate Number
-			if (preg_match('/VehiclePlateNumber,(.+),,,,,,,,,,/', $src['data'], $m)) {
-				$tag0 = $m[1];
-				$tag1 = str_replace(' ', '', $tag0);
-				$tag1 = substr($tag1, 0, 7);
-				if ($tag0 != $tag1) {
-					echo "Fixing Vehicle Tag\n";
-					$src['data'] = preg_replace('/VehiclePlateNumber,(.+),,,,,,,,,,/',
-						sprintf('VehiclePlateNumber,%s,,,,,,,,,,', $tag1),
-						$src['data']);
-				}
-			}
+			// Shouldn't have to do this after 2025-11-25
+			// if (preg_match('/VehiclePlateNumber,(.+),,,,,,,,,,/', $src['data'], $m)) {
+			// 	$tag0 = $m[1];
+			// 	$tag1 = str_replace(' ', '', $tag0);
+			// 	$tag1 = substr($tag1, 0, 7);
+			// 	if ($tag0 != $tag1) {
+			// 		echo "Fixing Vehicle Tag\n";
+			// 		$src['data'] = preg_replace('/VehiclePlateNumber,(.+),,,,,,,,,,/',
+			// 			sprintf('VehiclePlateNumber,%s,,,,,,,,,,', $tag1),
+			// 			$src['data']);
+			// 	}
+			// }
 
 			// $src['data'] = preg_replace(
 			// 	'/VehicleColor,,,,,,,,,,,/',
@@ -502,13 +466,18 @@ function _cre_ccrs_upload_single($cli_args)
 		}
 
 		// Upload
-		$cfg = \OpenTHC\Config::get('cre/usa/wa/ccrs');
+		$cfg = \OpenTHC\CRE::getConfig('usa-wa');
+		// $cfg = \OpenTHC\Config::get('cre/usa/wa/ccrs');
 		$cfg['cookie-list'] = _cre_ccrs_auth_cookies();
 		$cre = new \OpenTHC\CRE\CCRS($cfg);
+
+		_stat_count('bong_cre_ccrs_upload', 1);
 
 		$res = $cre->upload($src);
 		switch ($res['code']) {
 			case 200:
+
+				_stat_count('bong_cre_ccrs_upload_200', 1);
 
 				$log_stat = 102;
 
@@ -517,6 +486,8 @@ function _cre_ccrs_upload_single($cli_args)
 						$log_stat = 102;
 						break;
 					case 102:
+						// Second Upload Attempt?
+						// Only happens if there is a cache-status timeout
 						$log_stat = 104;
 						break;
 				}
@@ -541,7 +512,7 @@ function _cre_ccrs_upload_single($cli_args)
 				syslog(LOG_NOTICE, "Uploaded: {$res['meta']['created_at']}");
 
 				$license_id = $req['license_id'];
-				$upload_type = preg_match('/(B2B_INCOMING|B2B_OUTGOING|CROP|INVENTORY|INVENTORY_ADJUST|PRODUCT|SECTION|VARIETY) UPLOAD/', $req['name'], $m) ? $m[1] : null;
+				$upload_type = preg_match('/(B2B_INCOMING|B2B_OUTGOING|CROP|CROP_COLLECT|INVENTORY|INVENTORY_ADJUST|PRODUCT|SECTION|VARIETY) UPLOAD/', $req['name'], $m) ? $m[1] : null;
 				if (empty($upload_type)) {
 					if (preg_match('/ExternalManifestIdentifier,[^,]+,,,,,,,,,,/', $src['data'], $m)) {
 						// $upload_type = 'manifest';
@@ -554,14 +525,17 @@ function _cre_ccrs_upload_single($cli_args)
 				$upload_type = strtolower($upload_type);
 				$upload_type = str_replace('_', '/', $upload_type);
 
-				$rdb = \OpenTHC\Service\Redis::factory();
-				$rdb->hset(sprintf('/license/%s', $license_id), sprintf('%s/push', $upload_type), 200);
-				$rdb->hset(sprintf('/license/%s', $license_id), sprintf('%s/push/time', $upload_type), date(\DateTimeInterface::RFC3339));
+				$status = new \OpenTHC\Bong\CRE\CCRS\Status($license_id, $upload_type);
+				$status->setPush(200);
 
 				break;
 
 			case 302:
-				// Authentication has timed out
+
+				// typically, authentication has timed out
+				// print_r($res);
+				_stat_count('bong_cre_ccrs_upload_403', 1);
+				syslog(LOG_DEBUG, 'AUTH TIMEOUT [BCC-590]');
 				return [
 					'code' => 403,
 					'data' => '',
@@ -569,9 +543,9 @@ function _cre_ccrs_upload_single($cli_args)
 				];
 
 			default:
+				syslog(LOG_DEBUG, 'FAILED TO UPLOAD [CUS-581]');
 				var_dump($res);
-				echo "FAILED TO UPLOAD\n";
-				exit(1);
+				throw new \Exception('FAILED TO UPLOAD [CUS-581]');
 		}
 
 	}
@@ -624,6 +598,19 @@ function _cre_ccrs_upload_status($cli_args) {
 
 		$stat = $rdb->hgetall(sprintf('/license/%s', $license0['id']));
 		ksort($stat);
+		// var_dump($stat);
+		$key_list = [
+			'variety',
+			'section',
+			'product',
+			'inventory',
+			'crop',
+			'b2b/incoming',
+			'b2b/outgoing',
+		];
+		foreach ($key_list as $key) {
+
+		}
 		// foreach ($stat as $s )
 		// var_dump($stat);
 		// exit;
@@ -708,7 +695,6 @@ function _cre_ccrs_license_verify($cli_args)
 	]);
 
 	$dbc->insert('log_upload', $rec);
-
 
 	// Hard-Reset?
 	if ($cli_args['--reset']) {

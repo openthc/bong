@@ -37,6 +37,7 @@ class Export
 		}
 
 		$dbc = _dbc();
+		// $dbc->query('BEGIN');
 
 		// Get Data
 		$csv_data = [];
@@ -78,7 +79,7 @@ class Export
 					]);
 					break;
 				case 102:
-					$cmd = 'INSERT';
+					$cmd = 'UPDATE';
 					$dbc->query('UPDATE product SET stat = 200, data = data #- \'{ "@result" }\' WHERE id = :s0', [
 						':s0' => $product['id'],
 					]);
@@ -112,13 +113,15 @@ class Export
 			$dtU = new \DateTime($product['updated_at'], $this->_tz0);
 			$dtU->setTimezone($this->_tz0);
 
+			$PT0 = new \OpenTHC\CRE\CCRS\Product\Type($product_source['type']);
+
 			$row = [];
 
 			try {
 				$row = [
 					$this->_License['code']
-					, CCRS::map_product_type0($product_source['type'])
-					, CCRS::map_product_type1($product_source['type'])
+					, $PT0->getCategoryName()
+					, $PT0->getTypeName()
 					, CCRS::sanatize($product['name'], 75)
 					, CCRS::sanatize($product_source['note'])
 					, 0 // 5; sprintf('%0.2f', $product_source['package']['unit']['weight']) // sprintf('%0.2f', ('each' == $product['package_type'] ? $product['package_pack_qom'] : 0)) // if BULK use ZERO? // UnitWeightGrams
@@ -216,9 +219,27 @@ class Export
 			CCRS::fputcsv_stupidly($csv_temp, $row);
 		}
 
-		\OpenTHC\Bong\CRE\CCRS\Upload::enqueue($this->_License, $csv_name, $csv_temp);
+		$res = \OpenTHC\Bong\CRE\CCRS\Upload::enqueue($this->_License, $csv_name, $csv_temp);
+		var_dump($res);
+
+		// fseek($csv_temp, 0);
+		// $csv_data = stream_get_contents($csv_temp);
+
+		// $rec = [];
+		// $rec['id'] = $req_ulid;
+		// $rec['license_id'] = $this->_License['id'];
+		// $rec['name'] = sprintf('PRODUCT UPLOAD %s', $req_ulid);
+		// $rec['source_data'] = json_encode([
+		// 	'name' => $csv_name,
+		// 	'data' => $csv_data
+		// ]);
+
+		// $output_file = $dbc->insert('log_upload', $rec);
+		// $dbc->query('COMMIT');
 
 		$status->setPush(102);
+
+		return $req_ulid;
 	}
 
 }
