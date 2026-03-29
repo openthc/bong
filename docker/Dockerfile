@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1.19
 #
 # OpenTHC BONG Docker Image
 #
@@ -7,7 +8,6 @@ FROM openthc/web:latest
 #
 # Environment
 ENV OPENTHC_SERVICE="bong"
-ENV OPENTHC_SERVER_NAME="bong.docker.openthc.org"
 
 #
 # Install

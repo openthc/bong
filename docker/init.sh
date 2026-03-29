@@ -26,7 +26,7 @@ fi
 
 #
 # Unsets All OpenTHC Environment Variables
-# Except for OPENTHC_SERVICE and OPENTHC_SERVER_NAME
+# Except for OPENTHC_SERVICE
 for var in $(env | cut -d= -f1 | grep OPENTHC | grep -v OPENTHC_SER)
 do
 	# echo "unset $var"
