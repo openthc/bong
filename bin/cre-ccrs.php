@@ -4,13 +4,15 @@
  * Tools for CCRS
  *
  * SPDX-License-Identifier: MIT
+ *
+ * Does this Duplicate Code that is in cre-adapter/lib/CCRS:auth ?
  */
 
 use OpenTHC\Bong\CRE;
 
 require_once(__DIR__ . '/../boot.php');
 
-openlog('openthc-bong', LOG_ODELAY | LOG_PID, LOG_LOCAL0);
+openlog('openthc-bong', LOG_CONSOLE | LOG_ODELAY | LOG_PID, LOG_LOCAL0);
 
 $doc = <<<DOC
 BONG CRE CCRS Upload Tool
@@ -30,6 +32,8 @@ Commands:
 Options:
 	--license=<LIST>
 	--object=<LIST>
+	--object-id=<ID>
+	--force
 DOC;
 
 $res = Docopt::handle($doc, [
@@ -50,11 +54,13 @@ switch ($cli_args['<command>']) {
 		_cre_ccrs_license_verify($cli_args['<command-options>']);
 		break;
 	case 'push':
+	case 'export':
 		_cre_ccrs_push($cli_args['<command-options>']);
 		break;
 	case 'upload-b2b-outgoing-file':
-		require_once(__DIR__ . '/cre-ccrs-upload-b2b-outgoing-file.php');
-		_cre_ccrs_upload_b2b_outgoing_file($cli_args['<command-options>']);
+	case 'upload-b2b-outgoing-manifest':
+		require_once(__DIR__ . '/cre-ccrs-upload-b2b-outgoing-manifest.php');
+		_cre_ccrs_upload_b2b_outgoing_manifest($cli_args['<command-options>']);
 		break;
 	case 'review':
 		_cre_ccrs_review($cli_args['<command-options>']);
@@ -95,104 +101,92 @@ function _cre_ccrs_auth($cli_args)
 	]);
 	$cli_args = $res->args;
 
-	// Get
-	$cfg = \OpenTHC\Config::get('cre/usa/wa/ccrs');
-	$cfg['cookie-list'] = _cre_ccrs_auth_cookies();
-	// var_dump($cfg['cookie-list']);
-
-	$cre = new \OpenTHC\CRE\CCRS($cfg);
-
-	// // The Compliance Engine
-	// $cfg = \OpenTHC\CRE::getConfig('usa/wa');
-	// $cre = \OpenTHC\CRE::factory($cfg);
-	// $tz0 = new DateTimezone($cfg['tz']);
-
-	// Check & Refresh if Needed
-	if (empty($cli_args['--ping']) && empty($cli_args['--refresh'])) {
-		_stat_count('bong_cre_ccrs_auth_ping', 1);
-		$res = $cre->ping();
-		if (200 != $res['code']) {
-			$cli_args['--refresh'] = true;
-		}
-	}
-
-	if ( ! empty($cli_args['--ping'])) {
-
-		$res = $cre->ping();
-		echo $res['code'] . "\n";
-
-		switch ($res['code']) {
-			case 200:
-
-				syslog(LOG_DEBUG, 'AUTH SUCCESS');
-
-				// Good
-				$out = [];
-				$out[] = 'Cookies Alive';
-				if ( ! empty($res['csrf'])) {
-					$out[] = 'Found CSRF';
-				}
-				echo implode('; ', $out);
-				echo "\n";
-
-				exit(0);
-
-			case 302:
-
-				syslog(LOG_DEBUG, 'AUTH FAILURE [BCC-143]');
-
-				break;
-
-			default:
-				throw new \Exception('Invalid Response from CRE [CCA-049]');
-		}
-
-	} elseif ( ! empty($cli_args['--refresh'])) {
-
-		_stat_count('bong_cre_ccrs_auth_open', 1);
-
-		// Needs Auth
-		try {
-
-			// $cookie_data = $cre->auth($cfg['username'], $cfg['password']);
-			// $cookie_data = json_encode($cookie_data, JSON_PRETTY_PRINT);
-
-			$cookie_data = shell_exec('docker container exec -t ed1a966198ed /opt/openthc/bong/lcb-sign-in.php 2>&1');
-			if (empty($cookie_data)) {
-				_stat_count('bong_cre_ccrs_auth_open_fail', 1);
-			}
-
-			// Save
-			$rdb = \OpenTHC\Service\Redis::factory();
-			$chk = $rdb->set('/cre/ccrs/auth-cookie-list', $cookie_data, 60 * 10);
-
-			syslog(LOG_DEBUG, 'AUTH UPDATED');
-
-
-		} catch (\Exception $e) {
-			var_dump($e);
-			syslog(LOG_DEBUG, 'AUTH FAILURE [BCC-158]');
-		}
-
-	}
-
-}
-
-
-/**
- * Get my Auth Cookies
- */
-function _cre_ccrs_auth_cookies()
-{
-	$cookie_list = [];
-
 	$rdb = \OpenTHC\Service\Redis::factory();
-	$chk = $rdb->get('/cre/ccrs/auth-cookie-list');
-	if ( ! empty($chk)) {
-		$cookie_list = json_decode($chk, true);
+	$rdb->del('/cre/ccrs/auth-cookie-list');
+
+	$res_auth = [];
+
+	$cfg = \OpenTHC\CRE::getConfig('usa-wa');
+	$cre = new \OpenTHC\Bong\CRE\CCRS($cfg);
+	$chk = $cre->ping();
+	if (empty($chk)) {
+		echo "AUTH: Loading...\n";
+		$res_auth = $cre->auth();
+	} else {
+		echo "AUTH: Cached\n";
+		$res_auth = $chk;
+	}
+	var_dump($res_auth);
+
+	if (empty($res_auth['access_token'])) {
+		throw new \Exception('No Access Token');
 	}
 
-	return $cookie_list;
+	// Could Try a NULL Upload Here?
+	// Watch for a 400 Level Response?
+
+	// Upload Ping
+	$url = $cfg['v2026-upload-url'];
+	$req = _curl_init($url);
+	$csv_name = sprintf('Area_%s_%s.csv', $cfg['client-key'], _ulid());
+	$csv_data = <<<CSV
+	SubmittedBy,OpenTHC,,,,,,,
+	SubmittedDate,10/13/2026,,,,,,,
+	NumberRecords,1,,,,,,,
+	LicenseNumber,Area,IsQuarantine,ExternalIdentifier,CreatedBy,CreatedDate,UpdatedBy,UpdatedDate,Operation
+	425099,OPENTHC SECTION PING,FALSE,OPENTHC SECTION PING,-system-,10/13/2026,-system-,10/13/2026,DELETE
+	CSV;
+
+	$mark = '----WebKitFormBoundaryAAAA8cKhBUv35ObB';
+	$post = [];
+
+	$post[] = sprintf('--%s', $mark);
+	$post[] = sprintf('content-disposition: form-data; name="files"; filename="%s"', $csv_name);
+	// $post[] = 'content-transfer-encoding: binary';
+	$post[] = 'content-type: text/csv';
+	$post[] = '';
+	$post[] = $csv_data;
+
+	// Username
+	// $post[] = sprintf('--%s', $mark);
+	// $post[] = 'content-disposition: form-data; name="username"';
+	// $post[] = '';
+	// $post[] = $this->_cfg['username'];
+
+	// RVT
+	// $post[] = sprintf('--%s', $mark);
+	// $post[] = 'content-disposition: form-data; name="__RequestVerificationToken"';
+	// $post[] = '';
+	// $post[] = $csrf; // Where to get this text?
+
+	// Closer and Combine
+	$post[] = sprintf('--%s--', $mark);
+	$post = implode("\r\n", $post);
+
+	// curl_setopt($req, CURLOPT_POST, true);
+	// curl_setopt($req, CURLOPT_POSTFIELDS, $post['body']);
+
+	// $arg = [];
+	// $arg['files'] = $req_file;
+	curl_setopt($req, CURLOPT_POST, true);
+	curl_setopt($req, CURLOPT_POSTFIELDS, $post);
+
+	curl_setopt($req, CURLOPT_HTTPHEADER, [
+		'accept: application/json',
+		sprintf('authorization: Bearer %s', $res_auth['access_token']),
+		sprintf('content-type: multipart/form-data; boundary=%s', $mark),
+		'x-uploader-email: code@openthc.com',
+	]);
+
+	$res = curl_exec($req);
+	$inf = curl_getinfo($req);
+	if (200 != $inf['http_code']) {
+		print_r($inf);
+		var_dump($res);
+		echo "FAILURE: {$inf['http_code']}\n";
+	} else {
+		echo "SUCCESS!!\n";
+	}
 
 }
 
@@ -208,12 +202,13 @@ function _cre_ccrs_csv_upload_create($cli_args)
 	Create a shell script to upload data for each license
 
 	Usage:
-		upload-create [--license=<LIST>] [--object=<LIST>] [--force]
+		upload-create [--license=<LIST>] [--object=<LIST>] [--object-id=<OID>] [--force]
 
 	Options:
 		--license=<LIST>      comma-list of license [default: ALL]
 		--object=<LIST>       comma-list of objects [default: section,variety,product,crop,crop-collect,inventory,inventory-adjust,b2b-incoming,b2b-outgoing]
-		--force
+		--object-id=<OID>     id of object to upload
+		--force               force
 	DOC;
 
 	$res = Docopt::handle($doc, [
@@ -249,6 +244,9 @@ function _cre_ccrs_csv_upload_create($cli_args)
 		$cmd[] = sprintf('%s/bin/cre-ccrs-upload.php', APP_ROOT);
 		$cmd[] = sprintf('--license=%s', $license0['id']);
 		$cmd[] = sprintf('--object=%s', $cli_args['--object']);
+		if ( ! empty($cli_args['--object-id'])) {
+			$cmd[] = sprintf('--object-id=%s', $cli_args['--object-id']);
+		}
 		if ( ! empty($cli_args['--force'])) {
 			$cmd[] = '--force';
 		}
@@ -284,15 +282,17 @@ function _cre_ccrs_push($cli_args)
 
 
 	$dbc = _dbc();
-	// $dbc->query('BEGIN');
 
 	$arg = [];
 	$sql = <<<SQL
-	SELECT id, license_id, name, created_at
+	SELECT log_upload.id
+		, log_upload.license_id
+		, log_upload.name
+		, log_upload.created_at
 	FROM log_upload
-	WHERE
-	  stat = 100
-	ORDER BY id ASC
+	JOIN license ON log_upload.license_id = license.id
+	WHERE log_upload.stat = 100 AND license.stat IN (102, 200)
+	ORDER BY log_upload.id ASC
 	LIMIT 100
 	SQL;
 
@@ -308,7 +308,7 @@ function _cre_ccrs_push($cli_args)
 		exit(0);
 	}
 
-	_cre_ccrs_auth([]);
+	// _cre_ccrs_auth([]);
 
 	foreach ($res_upload as $rec) {
 
@@ -379,6 +379,7 @@ function _cre_ccrs_upload_single($cli_args)
 
 	$req_ulid = $cli_args['--upload-id'];
 	if (empty($req_ulid)) {
+		print_r($cli_args);
 		echo "Invalid --upload-id\n";
 		exit(1);
 	}
@@ -409,7 +410,7 @@ function _cre_ccrs_upload_single($cli_args)
 			$b2b_outgoing_id = '';
 
 			// Lookup the Manifest ID?
-			if (preg_match('/ExternalManifestIdentifier,(.+),,,,,,,,,,/', $src['data'], $m)) {
+			if (preg_match('/ExternalManifestIdentifier,([^,]+),,,,,,,/', $src['data'], $m)) {
 
 				$b2b_outgoing_id = $m[1];
 				$chk0 = $dbc->fetchRow('SELECT id, stat FROM b2b_outgoing WHERE id = :b0', [
@@ -435,6 +436,8 @@ function _cre_ccrs_upload_single($cli_args)
 				}
 
 			} else {
+				echo "ULID: {$req_ulid}\n";
+				// echo "DATA: {$src['data']}\n";
 				throw new \Exception('Cannot find Manifest Identifier [BCC-388]');
 				exit(1);
 			}
@@ -468,9 +471,7 @@ function _cre_ccrs_upload_single($cli_args)
 		// Upload
 		$cfg = \OpenTHC\CRE::getConfig('usa-wa');
 		// $cfg = \OpenTHC\Config::get('cre/usa/wa/ccrs');
-		$cfg['cookie-list'] = _cre_ccrs_auth_cookies();
-		$cre = new \OpenTHC\CRE\CCRS($cfg);
-
+		$cre = new \OpenTHC\Bong\CRE\CCRS($cfg);
 		_stat_count('bong_cre_ccrs_upload', 1);
 
 		$res = $cre->upload($src);
@@ -510,11 +511,12 @@ function _cre_ccrs_upload_single($cli_args)
 				$dbc->query($sql, $arg);
 
 				syslog(LOG_NOTICE, "Uploaded: {$res['meta']['created_at']}");
+				// echo "REQUEST NAME: {$req['name']}\n";
 
 				$license_id = $req['license_id'];
 				$upload_type = preg_match('/(B2B_INCOMING|B2B_OUTGOING|CROP|CROP_COLLECT|INVENTORY|INVENTORY_ADJUST|PRODUCT|SECTION|VARIETY) UPLOAD/', $req['name'], $m) ? $m[1] : null;
 				if (empty($upload_type)) {
-					if (preg_match('/ExternalManifestIdentifier,[^,]+,,,,,,,,,,/', $src['data'], $m)) {
+					if (preg_match('/ExternalManifestIdentifier,[^,]+/', $src['data'], $m)) {
 						// $upload_type = 'manifest';
 						$upload_type = 'b2b_outgoing_notice';
 					}
